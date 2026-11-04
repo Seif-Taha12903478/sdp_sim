@@ -16,11 +16,20 @@ wall time including launch and shutdown.
 success = mission completed AND container on the table AND tilt < --max-tilt deg.
 summary.txt: success rate and mean / std / max of the numbers.
 
+Add runs to an existing results folder (e.g. after stopping an evaluation):
+    python3 evaluate.py --out ~/sdp_sim/results/eval_X --append --total 5
+--append loads the folder's runs.csv and continues numbering after the last recorded
+run (leftover files of an unfinished run with that number are removed first);
+--total N runs as many as needed to reach N runs in total (else --runs more).
+Stop cleanly after the current run: touch <out>/STOP (removed when honoured).
+Ctrl+C: stops the simulation, drops the unfinished run, writes runs.csv/summary.
+
 Needs a shell with ROS sourced and CAMERA_TYPE set (as in ~/.bashrc).
 """
 import argparse
 import csv
 import datetime as dt
+import glob
 import json
 import math
 import os
@@ -205,6 +214,8 @@ def main():
     p.add_argument('--max-tilt', type=float, default=10.0)
     p.add_argument('--ready-timeout', type=float, default=900.0, help='wall s to wait for controllers')
     p.add_argument('--mission-timeout', type=float, default=3 * 3600.0, help='wall s per mission')
+    p.add_argument('--append', action='store_true', help='add runs to the existing runs.csv in --out')
+    p.add_argument('--total', type=int, default=None, help='with --append: run until N runs in total')
     a = p.parse_args()
     if 'CAMERA_TYPE' not in os.environ:
         sys.exit('CAMERA_TYPE is not set (source ~/.bashrc or export CAMERA_TYPE=GEMINI)')
@@ -213,7 +224,30 @@ def main():
     os.makedirs(a.out, exist_ok=True)
     log('output: %s' % a.out)
     rows = []
-    for run in range(1, a.runs + 1):
+    csv_path = os.path.join(a.out, 'runs.csv')
+    if a.append:
+        if os.path.exists(csv_path):
+            with open(csv_path) as fh:
+                rows = list(csv.DictReader(fh))
+            for r in rows:
+                r['run'] = int(r['run'])
+        log('appending to %d existing run(s)' % len(rows))
+    elif os.path.exists(csv_path):
+        sys.exit('%s already has runs.csv - use --append to add runs, or another --out' % a.out)
+    first = max([r['run'] for r in rows], default=0) + 1
+    n_new = (a.total - len(rows)) if (a.append and a.total) else a.runs
+    if n_new <= 0:
+        sys.exit('already %d run(s), nothing to do' % len(rows))
+    last = first + n_new - 1
+    stop_file = os.path.join(a.out, 'STOP')
+    for run in range(first, last + 1):
+        if os.path.exists(stop_file):
+            os.remove(stop_file)
+            log('STOP file found - not starting run %d' % run)
+            break
+        for f in glob.glob(os.path.join(a.out, 'run%02d_*' % run)):   # leftovers of an aborted run
+            log('removing leftover %s' % os.path.basename(f))
+            os.remove(f)
         t_run = time.monotonic()
         row = dict.fromkeys(FIELDS)
         # local time WITH its UTC offset, plus UTC: unambiguous across time-zone changes.
@@ -224,8 +258,9 @@ def main():
         launch_log = os.path.join(a.out, 'run%02d_launch.log' % run)
         mission_log = os.path.join(a.out, 'run%02d_mission.log' % run)
         rj = os.path.join(a.out, 'run%02d_result.json' % run)
-        log('run %d/%d: launching' % (run, a.runs))
+        log('run %d/%d: launching' % (run, last))
         proc, fh = start_sim(launch_log)
+        interrupted = False
         try:
             err = wait_ready(proc, launch_log, a.ready_timeout)
             if err:
@@ -243,6 +278,10 @@ def main():
                     except subprocess.TimeoutExpired:
                         code = None
                         row.update(error='mission timed out after %.0f s' % a.mission_timeout)
+                    except KeyboardInterrupt:
+                        interrupted = True
+                if interrupted:
+                    raise KeyboardInterrupt
                 row['mission_wall_s'] = time.monotonic() - t_m
                 res = {}
                 if os.path.exists(rj):
@@ -252,10 +291,16 @@ def main():
                 row.update({k: v for k, v in scoring.score(res, a.max_tilt, code == 0).items()
                             if k not in ('run', 'started', 'started_utc', 'mission_wall_s', 'total_wall_s', 'note')})
                 row['error'] = err0 or row['error']
+        except KeyboardInterrupt:
+            interrupted = True
         finally:
             left = stop_sim(proc, fh)
             if left:
                 row['note'] = (row['note'] or '') + ' leftover processes %s' % left
+        if interrupted:
+            log('interrupted during run %d: simulation stopped, run %d not recorded%s'
+                % (run, run, ' (leftover processes %s)' % left if left else ''))
+            break
         row['total_wall_s'] = time.monotonic() - t_run
         for k in ('placement_error_mm', 'tilt_deg', 'sim_time_s', 'mission_wall_s', 'total_wall_s'):
             if isinstance(row[k], float):
