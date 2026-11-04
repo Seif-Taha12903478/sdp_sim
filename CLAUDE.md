@@ -45,6 +45,9 @@ container on the bedside table, turns round and follows the line home.
 - ~/sdp_sim/scripts/base_moves.py - closed-loop strafe / forward / rotate / turnaround on
   /odom (CLI and BaseMover class). Gazebo-tested.
 - ~/sdp_sim/scripts/mission.py - stage 4 mission node (see Stages).
+- ~/sdp_sim/scripts/scheduler.py + ~/sdp_sim/schedule.yaml - stage 5 scheduler.
+- ~/sdp_sim/tools/evaluate.py - stage 6 evaluation; tools/record_video.py - videos.
+- ~/sdp_sim/results/ (git-ignored) - run outputs; ~/sdp_sim/media/ - kept videos.
 - ~/sdp_sim/tools/sim_screenshot.py - GUI-free screenshots (see Facts).
 - ~/sdp_sim/scripts/planar_base.py - base driver, STARTED BY hospital.launch.py (see
   "Mobile robot model"). The installed launch file runs it from this path.
@@ -187,13 +190,32 @@ Debug image: /tmp/line_follower_debug.jpg (look at it with the Read tool).
 2. DONE, tested 2026-11-04: 3 controllers active, arm home OK, camera OK (after near-clip
    fix), drive OK at the commanded speed with the planar base (height locked).
 3. DONE, tested in Gazebo 2026-11-04: line follower reaches the patient marker (one run).
-4. TODO: mission node (python): spawn+detach container -> arm home -> pick at (0,0.20)
-   (open, above, descend, close 0.75, attach, lift) -> arm home -> follow line to the
-   patient marker -> place at (0,0.20) (above, descend, detach, open, retreat) -> arm home
-   -> strafe right ~0.12 m, rotate 180 deg using /odom, strafe back onto the line ->
-   follow line home. Reuse jetarm_pick_place.py functions and line_follower.py.
-5. TODO: scheduler: YAML of patients/medication times triggers the mission.
-6. TODO: evaluation runs (success rate, placement error from Gazebo poses, cycle time), videos.
+4. DONE, tested 2026-11-04: `scripts/mission.py` (10 steps, `--from/--to N`,
+   `--result-json FILE`, `--label TEXT`): 1 spawn container (removes an old one) +
+   detach, 2 arm home, 3 pick at arm-relative (0, 0.20) (open, above, descend, close
+   0.75 + check > 0.35, attach, lift), 4 arm home (container held, out of the wrist view),
+   5 line_follower.py to the patient, 6 place at (0, 0.20) (above, descend, detach, open,
+   retreat), 7 arm home, 8 turnaround right 0.12, 9 line_follower.py home, 10 park at the
+   start (turnaround LEFT 0.12 - the station is on the right when facing home - then
+   goto (0, 0, yaw 0)) so the next mission can start. Line following runs as a
+   subprocess; BaseMover.pose() waits for fresh /odom afterwards (a stale pose once
+   nearly sent the turnaround across the room; translate() now also aborts if it moves
+   away from its goal). Full run from a fresh launch (headless, video world), triggered
+   by the scheduler: success, 161.5 sim s / 31.4 min wall, container at
+   (1.4992, 1.4734, 0.1300), 0.1 mm from the target, tilt 0.0 deg; parked at
+   (0.002, 0.000, -0.26 deg). Patient stop (1.699, 1.473).
+5. DONE, tested 2026-11-04: `scripts/scheduler.py` + `~/sdp_sim/schedule.yaml`
+   (deliveries: patient, medicine, time "HH:MM" daily or "YYYY-MM-DD HH:MM" once, bed).
+   Wall-clock times; due deliveries are queued and run one after another; each is
+   appended to results/deliveries.csv (+ the mission JSON). Test: `--in-minutes 1
+   [--entry N] --once`; `--list` shows the next due times. Only bed 1 exists.
+6. Evaluation: `tools/evaluate.py --runs N` (fresh headless launch per run, results in
+   results/eval_DATE/: runs.csv, summary.txt, per-run launch/mission logs and JSON).
+   success = mission completed AND container on the table AND tilt < 10 deg.
+   Video: launch with `video:=true` (hospital_video.sdf: overview camera 2 Hz), then
+   `tools/record_video.py OUT.mp4 --caption-log LOG` (H.264, 15 fps = 7.5x real time,
+   caption = current mission step from the log, stops after "[mission] done").
+   media/mission_overview.mp4: the 2026-11-04 scheduled full mission (23 s).
 
 ## First test procedure (stages 1-3)
 1. `bash ~/sdp_sim/install.sh`, new terminal.
