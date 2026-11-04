@@ -42,6 +42,10 @@ container on the bedside table, turns round and follows the line home.
   Edit the copies in ~/sdp_sim/robot_gazebo and run `bash ~/sdp_sim/install.sh` (copies + colcon build).
 - ~/sdp_sim/scripts/jetarm_pick_place.py - arm/gripper control with analytic IK (tested)
 - ~/sdp_sim/scripts/line_follower.py - line follower (Gazebo-tested, see below)
+- ~/sdp_sim/scripts/base_moves.py - closed-loop strafe / forward / rotate / turnaround on
+  /odom (CLI and BaseMover class). Gazebo-tested.
+- ~/sdp_sim/scripts/mission.py - stage 4 mission node (see Stages).
+- ~/sdp_sim/tools/sim_screenshot.py - GUI-free screenshots (see Facts).
 - ~/sdp_sim/scripts/planar_base.py - base driver, STARTED BY hospital.launch.py (see
   "Mobile robot model"). The installed launch file runs it from this path.
 - ~/sdp_sim/scripts/medicine_container.sdf - 3 cm x 6 cm, 30 g cylinder
@@ -152,7 +156,7 @@ container on the bedside table, turns round and follows the line home.
   -> arm-relative pick (0, 0.20). Table tops are at 0.10 m = plate height.
 - Patient stop (offline test): joint1 at ~(1.70, 1.46) facing +y. Bedside table is on the
   robot's left -> arm-relative place (0, 0.20).
-- Home stop (offline test): joint1 at ~(0.07, 0) facing -x.
+- Home stop (offline test): joint1 at ~(0.07, 0) facing -x. Gazebo: (0.044, -0.001).
 - Clearance robot <-> tables is only ~4-5 cm. Turning in place sweeps a 0.27 m radius
   circle, so strafe away from a table before rotating (mecanum: linear.y).
 
@@ -166,7 +170,14 @@ rendered line is HSV ~(111, 250, 255), inside BLUE_HSV; floor is (0, 0, 255). Ga
   - PLANAR base (current): 38.6 sim s, stop (1.6993, 1.4632) yaw 89.99 deg, z 0.00000,
     /odom identical to ground truth; red fraction 0.21 at the stop. Start offset was
     x +3 mm, yaw -0.57 deg. Within 3 mm of the offline prediction (1.70, 1.46).
-Return trip not yet run in Gazebo. Still to tune live if needed:
+  - PLANAR base, wrist camera 4 Hz, headless: 38.7 sim s, stop (1.6992, 1.4723) yaw
+    89.99 (9 mm further than at 10 Hz: fewer frames before the 2-frame red check).
+Return trip in Gazebo (2026-11-04, 4 Hz, headless), all closed-loop on /odom:
+  - `base_moves.py turnaround 0.12`: strafe right 0.12, rotate 180, strafe right 0.12.
+    (1.6992, 1.4723, 89.99 deg) -> (1.6993, 1.4729, -90.31 deg) in ~17 sim s; the
+    wrist camera then sees the line centred (bedside table corner at the image edge).
+  - `line_follower.py` home: `Result: arrived` after 38.2 sim s, stop (0.044, -0.001)
+    yaw 180.01 deg (offline prediction ~0.07; red fraction 0.29). Still to tune live if needed:
 `--stop-frac`, `--kp/--kd`. The node only logs once the first image arrives (can take
 ~10 s wall-clock).
 Debug image: /tmp/line_follower_debug.jpg (look at it with the Read tool).
