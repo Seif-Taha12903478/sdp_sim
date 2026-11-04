@@ -126,11 +126,6 @@ def world():
       <link name="link">
         <collision name="collision">
           <geometry><plane><normal>0 0 1</normal><size>20 20</size></plane></geometry>
-          <!-- frictionless floor: the robot is moved kinematically (VelocityControl).
-               With max_step_size 0.02 any floor friction removes up to mu*g*dt =
-               0.196 m/s per step (0.08 m/s commanded gave 0.006 m/s). mu=0 on the
-               robot alone was not enough. Tables keep normal friction. -->
-          <surface><friction><ode><mu>0</mu><mu2>0</mu2></ode></friction></surface>
         </collision>
         <visual name="visual">
           <geometry><plane><normal>0 0 1</normal><size>20 20</size></plane></geometry>

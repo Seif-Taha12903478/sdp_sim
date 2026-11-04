@@ -7,9 +7,15 @@
   model): ~0.32 m long, ~0.26 m wide incl. wheels, 0.08 m wheels, arm plate
   0.10 m above the floor. Change the properties below if you measure the robot.
 
-  Motion is kinematic: Gazebo's VelocityControl system moves the whole robot
-  from /controller/cmd_vel (linear.x, linear.y, angular.z) like a mecanum base.
-  The wheels are visual only; four frictionless spheres carry the weight.
+  Motion: PLANAR BASE. A static `world` link connects to chassis_link through
+  prismatic X -> base_x_link -> prismatic Y -> base_y_link -> continuous yaw.
+  Gazebo JointController systems drive the three joints with velocity commands
+  (ign topics /base/vel_x, /base/vel_y, /base/vel_yaw, world frame).
+  ~/sdp_sim/scripts/planar_base.py converts /controller/cmd_vel (robot frame:
+  linear.x, linear.y, angular.z) into those and publishes /odom from the joint
+  positions. Height is locked by the joints. The wheels are visual only and
+  nothing touches the floor. (Replaced VelocityControl, whose model drifted
+  up at ~1 mm per sim second.)
 
   Frame: chassis_link origin is on the floor directly under arm joint1.
   +x = robot front (the arm is at the front of the chassis).
@@ -50,12 +56,6 @@
   <xacro:include filename="$(find robot_gazebo)/urdf/jetarm.gazebo.xacro"/>
 
   <!-- ===== chassis ===== -->
-    <xacro:macro name="skid" params="name x y">
-      <collision>  <!-- unnamed on purpose, see the mu note below -->
-        <origin xyz="${x} ${y} ${wheel_r}" rpy="0 0 0"/>
-        <geometry><sphere radius="${wheel_r}"/></geometry>
-      </collision>
-    </xacro:macro>
     <xacro:macro name="wheel" params="name x y">
       <visual name="${name}">
         <origin xyz="${x} ${y} ${wheel_r}" rpy="${PI/2} 0 0"/>
@@ -68,6 +68,43 @@
         <material name="hub_grey"><color rgba="0.6 0.6 0.6 1"/></material>
       </visual>
     </xacro:macro>
+  <!-- planar base: world -> X -> Y -> yaw -> chassis_link. The two intermediate links
+       need a (tiny) mass and inertia, or the URDF->SDF converter drops them. -->
+  <xacro:property name="base_effort" value="1000"/>
+  <link name="world"/>
+  <xacro:macro name="tiny_link" params="name">
+    <link name="${name}">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="0.001"/>
+        <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/>
+      </inertial>
+    </link>
+  </xacro:macro>
+  <xacro:tiny_link name="base_x_link"/>
+  <xacro:tiny_link name="base_y_link"/>
+  <joint name="base_x_joint" type="prismatic">
+    <parent link="world"/>
+    <child link="base_x_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="-20" upper="20" effort="${base_effort}" velocity="5"/>
+  </joint>
+  <joint name="base_y_joint" type="prismatic">
+    <parent link="base_x_link"/>
+    <child link="base_y_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-20" upper="20" effort="${base_effort}" velocity="5"/>
+  </joint>
+  <joint name="base_yaw_joint" type="continuous">
+    <parent link="base_y_link"/>
+    <child link="chassis_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit effort="${base_effort}" velocity="10"/>
+  </joint>
+
   <link name="chassis_link">
     <inertial>
       <origin xyz="${body_cx} 0 ${wheel_r + body_hgt/2}" rpy="0 0 0"/>
@@ -88,24 +125,12 @@
       <origin xyz="${body_cx} 0 ${wheel_r + body_hgt/2 + 0.005}" rpy="0 0 0"/>
       <geometry><box size="${body_len} ${body_wid} ${body_hgt}"/></geometry>
     </collision>
-    <!-- frictionless support spheres at the wheel positions -->
-    <xacro:skid name="skid_fl" x="${body_cx + wheel_dx}" y="${wheel_dy}"/>
-    <xacro:skid name="skid_fr" x="${body_cx + wheel_dx}" y="${-wheel_dy}"/>
-    <xacro:skid name="skid_rl" x="${body_cx - wheel_dx}" y="${wheel_dy}"/>
-    <xacro:skid name="skid_rr" x="${body_cx - wheel_dx}" y="${-wheel_dy}"/>
     <!-- visual mecanum wheels -->
     <xacro:wheel name="wheel_fl" x="${body_cx + wheel_dx}" y="${wheel_dy}"/>
     <xacro:wheel name="wheel_fr" x="${body_cx + wheel_dx}" y="${-wheel_dy}"/>
     <xacro:wheel name="wheel_rl" x="${body_cx - wheel_dx}" y="${wheel_dy}"/>
     <xacro:wheel name="wheel_rr" x="${body_cx - wheel_dx}" y="${-wheel_dy}"/>
   </link>
-  <!-- mu1/mu2 below reach only collisions WITHOUT a name attribute: the URDF->SDF
-       converter matches them by its default names (chassis_link_collision_N).
-       Named collisions silently kept mu=1 and the robot dragged at ~7 % of cmd_vel. -->
-  <gazebo reference="chassis_link">
-    <mu1>0.0</mu1>
-    <mu2>0.0</mu2>
-  </gazebo>
 
   <!-- ===== the arm, standing on the chassis plate ===== -->
   <xacro:jetarm_6dof parent="chassis_link" prefix="$(arg prefix)" camera_type="$(arg camera_type)">
@@ -160,18 +185,22 @@
             name="ignition::gazebo::systems::JointStatePublisher">
       <topic>joint_states</topic>
     </plugin>
-    <!-- mecanum base: holonomic velocity command -->
-    <plugin filename="libignition-gazebo-velocity-control-system.so"
-            name="ignition::gazebo::systems::VelocityControl">
-      <topic>/controller/cmd_vel</topic>
+    <!-- planar base: velocity commands (world frame) for the three base joints,
+         sent by scripts/planar_base.py through the bridge in hospital.launch.py -->
+    <plugin filename="libignition-gazebo-joint-controller-system.so"
+            name="ignition::gazebo::systems::JointController">
+      <joint_name>base_x_joint</joint_name>
+      <topic>/base/vel_x</topic>
     </plugin>
-    <plugin filename="libignition-gazebo-odometry-publisher-system.so"
-            name="ignition::gazebo::systems::OdometryPublisher">
-      <odom_frame>odom</odom_frame>
-      <robot_base_frame>chassis_link</robot_base_frame>
-      <odom_topic>/odom</odom_topic>
-      <odom_publish_frequency>10</odom_publish_frequency>
-      <dimensions>2</dimensions>
+    <plugin filename="libignition-gazebo-joint-controller-system.so"
+            name="ignition::gazebo::systems::JointController">
+      <joint_name>base_y_joint</joint_name>
+      <topic>/base/vel_y</topic>
+    </plugin>
+    <plugin filename="libignition-gazebo-joint-controller-system.so"
+            name="ignition::gazebo::systems::JointController">
+      <joint_name>base_yaw_joint</joint_name>
+      <topic>/base/vel_yaw</topic>
     </plugin>
     <!-- attach / release the medicine container (assisted grasp) -->
     <plugin filename="libignition-gazebo-detachable-joint-system.so"

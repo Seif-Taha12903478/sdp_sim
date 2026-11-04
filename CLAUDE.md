@@ -38,7 +38,9 @@ container on the bedside table, turns round and follows the line home.
   - robot_gazebo/launch/hospital.launch.py
   Edit the copies in ~/sdp_sim/robot_gazebo and run `bash ~/sdp_sim/install.sh` (copies + colcon build).
 - ~/sdp_sim/scripts/jetarm_pick_place.py - arm/gripper control with analytic IK (tested)
-- ~/sdp_sim/scripts/line_follower.py - line follower (tested only offline, see below)
+- ~/sdp_sim/scripts/line_follower.py - line follower (Gazebo-tested, see below)
+- ~/sdp_sim/scripts/planar_base.py - base driver, STARTED BY hospital.launch.py (see
+  "Mobile robot model"). The installed launch file runs it from this path.
 - ~/sdp_sim/scripts/medicine_container.sdf - 3 cm x 6 cm, 30 g cylinder
 - Earlier patches (already applied): worlds.launch.py uses `--render-engine ogre`;
   robot.gazebo.xacro has a DetachableJoint plugin (backup .bak).
@@ -73,36 +75,55 @@ container on the bedside table, turns round and follows the line home.
   ~/.ignition/gui/pictures/ (can take ~10 s at this RTF):
   `ign service -s /gui/screenshot --reqtype ignition.msgs.StringMsg --reptype ignition.msgs.Boolean --timeout 80000 --req 'data: ""'`.
   Whole X screen: `python3 -c "from PIL import ImageGrab; ImageGrab.grab(xdisplay=':0').save('/tmp/s.png')"`.
+  The service answers `data: true` but only writes the file when the 3D view renders.
+  If no file appears, the GUI may be blank (empty Entity Tree, sim time "N/A" - seen
+  once after ~25 min, while the server kept running fine). Starting a second GUI client
+  (`ign gazebo -g`) at that moment coincided with the whole launch getting SIGINT and
+  shutting down; cause unknown, so do that only when the run is finished.
 
 ## Mobile robot model (jetarm_mecanum.gazebo.xacro)
 - Chassis dimensions are ESTIMATES from Hiwonder's installation photos: ~0.32 x 0.26 m,
   0.08 m wheels, arm plate 0.10 m above the floor (`plate_h`).
-- Motion is kinematic: VelocityControl plugin on `/controller/cmd_vel` (Twist: linear.x,
-  linear.y, angular.z) - holonomic like mecanum. Wheels are visual; four frictionless
-  spheres carry the weight. Odometry: OdometryPublisher -> `/odom` (bridged).
-- Until 2026-11-04 the robot moved at only ~7 % of cmd_vel (0.006 m/s odom and Gazebo
-  ground truth for 0.079 m/s commanded; 0.5 commanded gave 0.303). Cause: FLOOR FRICTION.
-  With max_step_size 0.02, Coulomb friction removes up to mu*g*dt = 0.196 m/s per step
-  (0.5 - 0.196 = 0.304, matches). Fix: ground_plane has `<mu>0</mu><mu2>0</mu2>`
-  (tools/make_hospital_world.py). mu=0 on the robot spheres alone did NOT help.
-  Verified after the fix: 0.0800 m/s measured for 0.08 commanded, forward and back.
-  If speed looks wrong again, compare `/controller/cmd_vel` with `/odom` twist first.
-- Two model bugs fixed on the way (both were real, neither was the speed cause):
-  (1) the `jetarm_6dof` macro takes `**origin`, which inserts the CHILDREN of the passed
-  block, so a bare `<origin z=plate_h/>` was dropped and the arm stood on the FLOOR
-  inside the chassis. Now `<origin_block><origin .../></origin_block>`; base_joint is at
-  z=0.10. Check: `xacro ... | grep -A4 'name="base_joint"'`. (2) mu=0 never reached the
-  named support spheres (see "Facts"); they are now unnamed.
-- OPEN ISSUE, z drift: Gazebo ground truth z of the robot rises at a constant ~0.001 m
-  per SIM second from spawn (0.002 at t=0, 0.015 at 13 s, 0.033 at 31.6 s), idle or
-  driving, in or out of floor contact. The robot is level and does not fall although
-  gravity is on (no gravity flags in the SDF); cmd_vel linear.z=-0.01 had no effect. So
-  VelocityControl/DART pins the model velocity and something adds a constant +z bias.
-  Over a ~46 s trip that is ~5 cm (camera and arm plate higher; place height off).
-  Not fixed yet. Ideas: find the source (try without ign_ros2_control / arm joints,
-  smaller step), or drive the base differently (e.g. planar joints, MecanumDrive).
-- Gazebo ground truth: `ign topic -e -n 1 -t /world/robot_world/dynamic_pose/info`
-  (model `robot`).
+- Motion: PLANAR BASE (since 2026-11-04). The model is attached to the world:
+  `world` -> base_x_joint (prismatic X) -> base_x_link -> base_y_joint (prismatic Y)
+  -> base_y_link -> base_yaw_joint (continuous Z) -> chassis_link. The two
+  intermediate links have mass 0.001 / inertia 1e-6 (massless links are dropped by the
+  URDF->SDF converter). Joint effort limit 1000. Nothing touches the floor (skid spheres
+  removed; the chassis body box is 4.5 cm above it), the wheels are visual only.
+  Height is locked by the joints: z stays 0.00000.
+- Driving: three Gazebo JointController systems (velocity mode) on ign topics
+  `/base/vel_x`, `/base/vel_y`, `/base/vel_yaw` (world frame; bridged as
+  std_msgs/Float64 by a second parameter_bridge `base_bridge` in hospital.launch.py).
+  scripts/planar_base.py subscribes `/controller/cmd_vel` (Twist, ROBOT frame: linear.x,
+  linear.y, angular.z, like the mecanum base), rotates it with the current yaw on every
+  `/joint_states` message and publishes the joint velocities; it also publishes `/odom`
+  (odom -> chassis_link, stamps copied from /joint_states = sim time) from the base joint
+  positions/velocities. The last command is held until a new one arrives.
+- `/joint_states` has two publishers: Gazebo JointStatePublisher (all joints, incl. the
+  base joints) and ros2_control joint_state_broadcaster (arm + gripper only). Filter by
+  joint name.
+- No TF from /odom any more (the old OdometryPublisher's odom->chassis_link TF is gone);
+  robot_state_publisher publishes world -> base_x_link -> base_y_link -> chassis_link
+  from the joint states. Hiwonder's bridge still creates an (idle) ROS publisher on /odom
+  and bridges /controller/cmd_vel to an ign topic nobody listens to; both harmless.
+- Speed check after the switch (odom twist): 0.0800 m/s forward/back for 0.08, 0.0500
+  sideways for 0.05, 0.500 rad/s for 0.5; forward at yaw 88.8 deg moved along world +y.
+  /odom matches Gazebo ground truth. One physics step (0.02 s) of command latency: a
+  timed open-loop 90 deg turn stops at 88.8 deg, so turn closed-loop on /odom yaw.
+- Gazebo ground truth now needs composing: in `/world/robot_world/dynamic_pose/info`
+  the model `robot` pose follows its first link (base_x_link, x only) and `chassis_link`
+  is given relative to the model (y and yaw). World pose = model pose * chassis_link pose.
+- History (2026-11-04), why VelocityControl was dropped: (a) the robot moved at ~7 % of
+  cmd_vel because of floor friction with the 0.02 s step (mu*g*dt = 0.196 m/s lost per
+  step); a frictionless floor fixed the speed. (b) But the model also rose at a constant
+  ~0.001 m per sim second from spawn (5 cm by the end of a trip), unaffected by
+  cmd_vel linear.z, gravity or contact; cause not found. The floor friction change was
+  reverted (no floor contact now). Old files: scratchpad backup only.
+- Model bugs fixed on the way: (1) the `jetarm_6dof` macro takes `**origin`, which
+  inserts the CHILDREN of the passed block, so a bare `<origin z=plate_h/>` was dropped
+  and the arm stood on the FLOOR inside the chassis. Now
+  `<origin_block><origin .../></origin_block>`; base_joint is at z=0.10. Check:
+  `xacro ... | grep -A4 'name="base_joint"'`. (2) mu on named collisions (see "Facts").
 - Wrist camera `sim_cam_link` on link4: 320x200 @ 10 Hz, topic `/depth_cam/depth_cam`
   (bridged as sensor_msgs/Image). Image is upright; image-left = robot-left. In the arm's
   `home`/init pose (0, 0.7309, -1.6127, -1.6591, 0) it looks 56 deg down and the bottom
@@ -118,7 +139,6 @@ container on the bedside table, turns round and follows the line home.
 
 ## World (hospital.sdf), robot spawned at (0,0) facing +x
 - Blue line: x from -0.22 to 1.2, 90-deg left arc (r 0.5), then x=1.7 up to y=1.75.
-- Floor (ground_plane) is frictionless (see the speed note above); tables keep default friction.
 - Red markers: patient (1.7, 1.75), home (-0.22, 0).
 - Medicine station on the robot's left at the start: container at (0, 0.20, 0.131)
   -> arm-relative pick (0, 0.20). Table tops are at 0.10 m = plate height.
@@ -132,10 +152,13 @@ container on the bedside table, turns round and follows the line home.
 Offline test: a synthetic camera built from the same geometry + kinematic robot
 model reached the patient marker (max path deviation 2.8 cm), with a 4 cm / 9 deg start
 offset (4.1 cm), and on the return trip. Gazebo (2026-11-04): images are rgb8 (handled);
-rendered line is HSV ~(111, 250, 255), inside BLUE_HSV; floor is (0, 0, 255). Gazebo run
-2026-11-04 (after the fixes, default parameters): `Result: arrived` after 38.4 sim s;
-stopped at ground truth (1.699, 1.450) yaw 90.0 deg, i.e. within ~1 cm of the offline
-prediction; red fraction 0.18 at the stop. Return trip not yet run in Gazebo. Still to tune live if needed:
+rendered line is HSV ~(111, 250, 255), inside BLUE_HSV; floor is (0, 0, 255). Gazebo runs
+2026-11-04, default parameters, both `Result: arrived`:
+  - VelocityControl base (z had drifted to 0.051): 38.4 sim s, stop (1.699, 1.450) yaw 90.0.
+  - PLANAR base (current): 38.6 sim s, stop (1.6993, 1.4632) yaw 89.99 deg, z 0.00000,
+    /odom identical to ground truth; red fraction 0.21 at the stop. Start offset was
+    x +3 mm, yaw -0.57 deg. Within 3 mm of the offline prediction (1.70, 1.46).
+Return trip not yet run in Gazebo. Still to tune live if needed:
 `--stop-frac`, `--kp/--kd`. The node only logs once the first image arrives (can take
 ~10 s wall-clock).
 Debug image: /tmp/line_follower_debug.jpg (look at it with the Read tool).
@@ -143,8 +166,7 @@ Debug image: /tmp/line_follower_debug.jpg (look at it with the Read tool).
 ## Stages
 1. DONE, tested in Gazebo 2026-11-04: world loads, line/markers/tables visible.
 2. DONE, tested 2026-11-04: 3 controllers active, arm home OK, camera OK (after near-clip
-   fix), drive OK at the commanded speed (after the floor-friction fix). Open: z drift
-   (+0.001 m per sim s, see "Mobile robot model").
+   fix), drive OK at the commanded speed with the planar base (height locked).
 3. DONE, tested in Gazebo 2026-11-04: line follower reaches the patient marker (one run).
 4. TODO: mission node (python): spawn+detach container -> arm home -> pick at (0,0.20)
    (open, above, descend, close 0.75, attach, lift) -> arm home -> follow line to the
