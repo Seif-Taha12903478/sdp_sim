@@ -167,11 +167,15 @@ class PickPlace(Node):
         self.arm_pub = self.create_publisher(JointTrajectory, ARM_TOPIC, 10)
         self.grip_pub = self.create_publisher(JointTrajectory, GRIPPER_TOPIC, 10)
         self.pos = {}
+        self.sim_t = None       # sim time of the newest /joint_states message
         self.create_subscription(JointState, JOINT_STATES_TOPIC, self._on_js, 10)
 
     def _on_js(self, msg):
         for n, p in zip(msg.name, msg.position):
             self.pos[n] = p
+        t = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+        if self.sim_t is None or t > self.sim_t:
+            self.sim_t = t
 
     def get(self, names):
         return [self.pos[n] for n in names]
@@ -203,8 +207,19 @@ class PickPlace(Node):
             msg.points.append(pt)
         return msg
 
-    def _wait(self, names, target, tol, timeout, settle):
+    def _wait(self, names, target, tol, timeout, settle, min_sim=0.0):
+        """Wait until within tol of target ('reached') or, with settle=True, until the
+        joints stop moving ('settled', e.g. fingers stopped by the container).
+        Settling is judged on SIM time from /joint_states stamps: only after min_sim
+        sim seconds (the trajectory duration), and when the joints moved < 0.003 rad
+        over the last 0.5 sim s. (It used to be judged on wall-clock time, which at a
+        low real-time factor is a tiny sim interval: at ~4 %% RTF the start of the
+        closing spline looked 'settled' and the gripper was still open.)
+        timeout is a wall-clock safety limit only."""
         start = time.monotonic()
+        while self.sim_t is None and time.monotonic() - start < timeout:
+            rclpy.spin_once(self, timeout_sec=0.1)
+        sim0 = self.sim_t
         hist = []
         err = 9.9
         last_dot = start
@@ -217,11 +232,12 @@ class PickPlace(Node):
                 print('       ... still moving, %.3f rad to go' % err, flush=True)
             if err < tol:
                 return 'reached'
-            if settle:
-                now = time.monotonic()
-                hist.append((now, list(pos)))
-                hist = [h for h in hist if now - h[0] <= 4.0]
-                if now - start > 6.0 and now - hist[0][0] >= 3.5:
+            if settle and self.sim_t is not None:
+                now = self.sim_t
+                if not hist or now > hist[-1][0]:
+                    hist.append((now, list(pos)))
+                hist = [h for h in hist if now - h[0] <= 0.6]
+                if now - sim0 >= min_sim and now - hist[0][0] >= 0.5:
                     if max(abs(x - y) for x, y in zip(hist[0][1], hist[-1][1])) < 0.003:
                         return 'settled'
         self.get_logger().warn('Timed out waiting for %s (error %.3f rad)' % (names, err))
@@ -235,7 +251,7 @@ class PickPlace(Node):
 
     def gripper(self, value, seconds, tol=0.03, timeout=1800.0):
         self.grip_pub.publish(self._traj(GRIP_JOINTS, [[value]], seconds))
-        return self._wait(GRIP_JOINTS, [value], tol, timeout, True)
+        return self._wait(GRIP_JOINTS, [value], tol, timeout, True, min_sim=seconds + 0.2)
 
 
 ATTACH_TOPIC = '/medicine/attach'

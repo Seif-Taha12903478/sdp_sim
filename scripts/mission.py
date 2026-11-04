@@ -99,13 +99,21 @@ def spawn_container(weld):
                         '--timeout', '60000', '--req', 'name: "%s" type: MODEL' % CONTAINER_NAME],
                        capture_output=True, text=True, timeout=120)
     x, y, z = STATION_XYZ
+    n0 = len(weld.states)
     r = subprocess.run(['ros2', 'run', 'ros_ign_gazebo', 'create', '-file', CONTAINER_SDF,
                         '-name', CONTAINER_NAME, '-x', str(x), '-y', str(y), '-z', str(z)],
                        capture_output=True, text=True, timeout=300)
     if r.returncode != 0:
         raise RuntimeError('spawn failed: ' + (r.stderr.strip() or r.stdout.strip()))
-    # the DetachableJoint welds it to the gripper as soon as it exists: release it
-    confirm(weld, 'detach', 'spawn')
+    # The DetachableJoint welds the container to the gripper when it first appears
+    # (state "attached"); release it. A container re-spawned in a running simulation
+    # is NOT welded again (no state message): then there is nothing to release.
+    if weld.wait_state('attached', since=n0, sim_seconds=3.0):
+        confirm(weld, 'detach', 'spawn')
+    else:
+        log('no automatic weld at spawn (re-spawned in a running simulation): nothing to release')
+        WELD_LOG.append({'where': 'spawn', 'kind': 'detach', 'attempts': 0, 'confirmed': True,
+                         'sim_t': weld.sim_t, 'note': 'not welded at spawn'})
     c = gz_model_pose(CONTAINER_NAME)
     if c is None or abs(c[2] - TABLE_Z) > 0.01 or math.hypot(c[0] - x, c[1] - y) > 0.01:
         raise RuntimeError('container not resting at the station after spawn: %s' % (c,))
@@ -190,6 +198,8 @@ def main():
         log('gripper at %.3f rad' % g)
         if g < 0.35:
             raise RuntimeError('gripper closed almost fully: container missed')
+        if g > 1.2:
+            raise RuntimeError('gripper did not close (%.3f rad, open = %.2f)' % (g, pa.open))
         confirm(weld, 'attach', 'pick')
         check(node.arm(plan['pick_lift'], d / 2), 'lift')
         c = gz_model_pose(CONTAINER_NAME)        # it must have come up with the gripper

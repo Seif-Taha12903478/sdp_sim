@@ -181,7 +181,7 @@ def write_outputs(out, rows, a):
         'mission wall time (s) : ' + stats([_f(r['mission_wall_s']) for r in rows if _ok(r['mission_ok'])]),
         'run wall time (s)     : ' + stats([_f(r['total_wall_s']) for r in rows]) + '  (incl. launch/shutdown)',
         '',
-        'attach/detach attempts until confirmed by /medicine/attached (1 = first try):',
+        'attach/detach attempts until confirmed by /medicine/attached (1 = first try, 0 = not needed):',
     ] + ['  %-14s: %s' % (label, stats([_f(r.get(k)) for r in rows]))
          for label, k in (('spawn detach', 'spawn_detach_attempts'), ('pick attach', 'pick_attach_attempts'),
                           ('place detach', 'place_detach_attempts'))] + [

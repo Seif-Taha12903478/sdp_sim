@@ -71,6 +71,10 @@ class Weld:
                                         % (kind, sim_timeout, i, attempts))
         return False, attempts
 
+    def wait_state(self, want, since=0, sim_seconds=3.0):
+        """True if state `want` was received (index >= since) within sim_seconds."""
+        return self._spin_until(lambda: any(st == want for _, st in self.states[since:]), sim_seconds)
+
     def last_state(self):
         return self.states[-1][1] if self.states else None
 

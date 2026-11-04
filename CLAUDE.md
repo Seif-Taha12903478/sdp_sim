@@ -68,8 +68,25 @@ container on the bedside table, turns round and follows the line home.
   "assisted": fingers close to 0.75 without squeezing, then a DetachableJoint weld
   (parent link5, child model `medicine` link `body`) carries it; detach drops it under
   real physics. Topics: `ign topic -t /medicine/attach|/medicine/detach -m ignition.msgs.Empty -p "unused: true"`.
-- The DetachableJoint welds the container as soon as it is spawned. Always detach right
-  after spawning (`python3 jetarm_pick_place.py detach`; `run` from step 1 does it too).
+- DetachableJoint (assisted grasp): it welds the container to link5 when the container
+  FIRST appears (state "attached"); a container re-spawned in a running simulation is
+  NOT welded again. ONE-SHOT `ign topic -p` attach/detach commands GET LOST OR ARRIVE
+  LATE: eval_5runs (2026-11-04, old code) had a lost detach (run 3: container carried
+  in the gripper for the rest of the mission), a lost attach (run 4: container never
+  left the station) and most likely a late detach (run 1: container on the floor).
+  Use scripts/medicine_weld.py (Weld): persistent ROS publisher on /medicine/attach |
+  /medicine/detach (std_msgs/Empty, bridged in hospital.launch.py), waits on sim time
+  for "attached"/"detached" on /medicine/attached (std_msgs/String, published only on
+  CHANGE; a repeated command logs "Already ..." and publishes nothing), resends up to
+  5 times. A first detach after spawn was seen unconfirmed and the resend worked.
+  mission.py also checks physically: container at the station after spawn, risen with
+  the gripper after the lift, on the table within 30 mm of the target after the
+  retreat and again before the robot moves away (stops the mission otherwise).
+- NEVER judge motion on wall-clock time: jetarm_pick_place `_wait` used to call the
+  gripper "settled" after 3.5 s WALL without movement; at ~4 % RTF that is 0.14 sim s,
+  the start of the closing spline, so the mission saw the gripper still open (1.397).
+  Now settling is judged on sim time (/joint_states stamps), only after the trajectory
+  duration; mission.py also requires 0.35 < gripper < 1.2 after closing.
 - Gripper grasp height: tool point 0.038 m above the surface the container stands on
   (pads at the container middle, claw tips ~6 mm above the surface).
 - Humble launch files: a xacro `Command(...)` passed as `robot_description` must be wrapped
@@ -211,7 +228,12 @@ Debug image: /tmp/line_follower_debug.jpg (look at it with the Read tool).
    [--entry N] --once`; `--list` shows the next due times. Only bed 1 exists.
 6. Evaluation: `tools/evaluate.py --runs N` (fresh headless launch per run, results in
    results/eval_DATE/: runs.csv, summary.txt, per-run launch/mission logs and JSON).
-   success = mission completed AND container on the table AND tilt < 10 deg.
+   success = mission completed AND container on the table within 30 mm of the target
+   AND tilt < 10 deg (tools/scoring.py; tools/rescore.py re-scores a results dir from its
+   JSON files). CSV/summary also: attach/detach attempts, unconfirmed commands, UTC
+   start. Durations are monotonic. eval_5runs (old weld code, re-scored): 2/5 success;
+   its `started` column is Hong Kong time (UTC+8; the VM moved to Asia/Dubai mid-run),
+   use started_utc.
    Video: launch with `video:=true` (hospital_video.sdf: overview camera 2 Hz), then
    `tools/record_video.py OUT.mp4 --caption-log LOG` (H.264, 15 fps = 7.5x real time,
    caption = current mission step from the log, stops after "[mission] done").
