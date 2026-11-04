@@ -43,11 +43,14 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import jetarm_pick_place as jp          # noqa: E402
 from base_moves import BaseMover        # noqa: E402
+from medicine_weld import Weld          # noqa: E402
 
 CONTAINER_SDF = os.path.join(HERE, 'medicine_container.sdf')
 CONTAINER_NAME = 'medicine'              # DetachableJoint child_model
 STATION_XYZ = (0.0, 0.20, 0.131)          # container spawn (world), table top 0.10
 REACH_XY = (0.0, 0.20)                    # arm-relative pick and place (left of joint1)
+TABLE_Z = 0.13                            # container centre z when standing on a 0.10 table
+PLACE_TOL = 0.03                          # m: container must stay this close to the target
 WORLD = 'robot_world'
 
 
@@ -88,7 +91,7 @@ def tilt_deg(q):
     return math.degrees(math.acos(max(-1.0, min(1.0, 1.0 - 2.0 * (qx * qx + qy * qy)))))
 
 
-def spawn_container():
+def spawn_container(weld):
     if gz_model_pose(CONTAINER_NAME) is not None:
         log('removing the old container')
         subprocess.run(['ign', 'service', '-s', '/world/%s/remove' % WORLD,
@@ -102,9 +105,41 @@ def spawn_container():
     if r.returncode != 0:
         raise RuntimeError('spawn failed: ' + (r.stderr.strip() or r.stdout.strip()))
     # the DetachableJoint welds it to the gripper as soon as it exists: release it
-    if jp.do_attach_detach(jp.DETACH_TOPIC, 'released') is None:
-        raise RuntimeError('could not release the container after spawning')
-    return gz_model_pose(CONTAINER_NAME)
+    confirm(weld, 'detach', 'spawn')
+    c = gz_model_pose(CONTAINER_NAME)
+    if c is None or abs(c[2] - TABLE_Z) > 0.01 or math.hypot(c[0] - x, c[1] - y) > 0.01:
+        raise RuntimeError('container not resting at the station after spawn: %s' % (c,))
+    return c
+
+
+WELD_LOG = []       # every attach/detach: where, attempts, confirmed (-> result JSON 'weld')
+
+
+def confirm(weld, kind, where):
+    ok, n = weld.command(kind)
+    WELD_LOG.append({'where': where, 'kind': kind, 'attempts': n, 'confirmed': ok, 'sim_t': weld.sim_t})
+    if ok:
+        log('%s (%s) confirmed by /medicine/attached after %d attempt(s)' % (kind, where, n))
+    else:
+        # state message missing (e.g. "Already detached" publishes nothing): the pose
+        # checks that follow decide
+        log('WARNING: %s not confirmed by /medicine/attached after %d attempts '
+            '(last state %s) - relying on the pose check' % (kind, n, weld.last_state()))
+    return ok
+
+
+def check_on_table(target, where):
+    """Container must stand on the table within PLACE_TOL of the target."""
+    c = gz_model_pose_full(CONTAINER_NAME)
+    if c is None:
+        raise RuntimeError('%s: container not found in Gazebo' % where)
+    (cx, cy, cz), q = c
+    d = math.hypot(cx - target[0], cy - target[1])
+    log('%s: container (%.4f, %.4f, %.4f) tilt %.1f deg, %.1f mm from target'
+        % (where, cx, cy, cz, tilt_deg(q), 1000 * d))
+    if abs(cz - TABLE_Z) > 0.01 or d > PLACE_TOL or tilt_deg(q) > 10:
+        raise RuntimeError('%s: container is not standing on the table at the target '
+                           '(z %.3f, %.0f mm away, tilt %.0f deg)' % (where, cz, 1000 * d, tilt_deg(q)))
 
 
 def follow_line(extra=()):
@@ -138,6 +173,7 @@ def main():
     rclpy.init()
     node = jp.PickPlace()
     base = BaseMover(node)
+    weld = Weld(node)
     result = {}
 
     def check(res, what):
@@ -154,8 +190,12 @@ def main():
         log('gripper at %.3f rad' % g)
         if g < 0.35:
             raise RuntimeError('gripper closed almost fully: container missed')
-        check(jp.do_attach_detach(jp.ATTACH_TOPIC, 'attached'), 'attach')
+        confirm(weld, 'attach', 'pick')
         check(node.arm(plan['pick_lift'], d / 2), 'lift')
+        c = gz_model_pose(CONTAINER_NAME)        # it must have come up with the gripper
+        if c is None or c[2] < TABLE_Z + 0.05:
+            raise RuntimeError('container not lifted with the gripper (attach failed?): %s' % (c,))
+        log('lifted: container z %.3f' % c[2])
 
     def place():
         x, y, yaw, _ = base.pose()
@@ -164,30 +204,33 @@ def main():
                             y + math.sin(yaw) * rx + math.cos(yaw) * ry)
         check(node.arm(plan['place_above'], d), 'move above table')
         check(node.arm(plan['place_descent'], d / 2), 'descend')
-        check(jp.do_attach_detach(jp.DETACH_TOPIC, 'released'), 'detach')
+        confirm(weld, 'detach', 'place')
         check(node.gripper(pa.open, d), 'open gripper')
         check(node.arm(plan['place_retreat'], d / 2), 'retreat')
+        check_on_table(result['target'], 'after retreat')
 
     def park():
         base.turnaround(a.offset, side=+1)
         base.goto(0.0, 0.0, 0.0)
 
     steps = [
-        ('spawn container + release weld', lambda: log('container at %s' % (spawn_container(),))),
+        ('spawn container + release weld', lambda: log('container at %s' % (spawn_container(weld),))),
         ('arm home', lambda: check(node.arm(jp.INIT_POSE, d), 'arm home')),
         ('pick', pick),
         ('arm home (carrying)', lambda: check(node.arm(jp.INIT_POSE, d), 'arm home')),
         ('follow line to the patient', lambda: follow_line()),
         ('place on the bedside table', place),
         ('arm home', lambda: check(node.arm(jp.INIT_POSE, d), 'arm home')),
-        ('turn round', lambda: base.turnaround(a.offset)),
+        ('turn round', lambda: (check_on_table(result['target'], 'before moving away')
+                                if 'target' in result else None, base.turnaround(a.offset))),
         ('follow line home', lambda: follow_line()),
         ('park at the start', park),
     ]
 
     code = 1
     out = {'label': a.label, 'success': False, 'failed_step': None, 'error': None,
-           'steps': [], 'wall_start': time.time()}
+           'steps': [], 'wall_start_unix': time.time()}
+    t_wall0 = time.monotonic()          # durations: monotonic (immune to clock/time-zone changes)
     current = None
     try:
         node.wait_ready()
@@ -231,7 +274,8 @@ def main():
         base.stop()
         if not out['success'] and current:
             out['failed_step'] = '%d %s' % current
-        out['wall_time'] = time.time() - out['wall_start']
+        out['wall_time'] = time.monotonic() - t_wall0
+        out['weld'] = WELD_LOG
         # container result (Gazebo ground truth) - also after a failure, if it was placed
         if 'target' in result:
             tx, ty = result['target']

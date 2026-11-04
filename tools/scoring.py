@@ -9,18 +9,24 @@ From the raw values in the JSON:
                        the 0.06 m height); 0.03 means it lies on the floor
   tilt_deg           = angle container z axis <-> world z, from the raw quaternion
                        (normalised; missing protobuf components are 0)
-  success            = mission completed AND on_table AND tilt < max_tilt
+  at_target          = placement_error_mm <= place_tol_mm (default 30). Needed: a
+                       container left standing on the MEDICINE STATION is "on a
+                       table" and upright too (run 4 of eval_5runs: lost attach)
+  success            = mission completed AND on_table AND at_target AND tilt < max_tilt
 """
 import math
 
 TABLE_CENTRE_Z = 0.13
+PLACE_TOL_MM = 30.0
 REACH_LEFT = 0.20
 
-FIELDS = ['run', 'started', 'success', 'mission_ok', 'failed_step', 'error',
+FIELDS = ['run', 'started', 'started_utc', 'success', 'mission_ok', 'failed_step', 'error',
           'container_x', 'container_y', 'container_z',
           'container_qx', 'container_qy', 'container_qz', 'container_qw',
           'target_x', 'target_y', 'patient_stop_x', 'patient_stop_y', 'patient_stop_yaw_deg',
-          'placement_error_mm', 'tilt_deg', 'tilt_source', 'on_table',
+          'placement_error_mm', 'at_target', 'tilt_deg', 'tilt_source', 'on_table',
+          'spawn_detach_attempts', 'pick_attach_attempts', 'place_detach_attempts',
+          'weld_unconfirmed',
           'sim_time_s', 'mission_wall_s', 'total_wall_s',
           'base_final_x', 'base_final_y', 'base_final_yaw_deg', 'note']
 
@@ -32,7 +38,7 @@ def tilt_from_quat(q):
     return math.degrees(math.acos(max(-1.0, min(1.0, 1.0 - 2.0 * (qx * qx + qy * qy)))))
 
 
-def score(res, max_tilt=10.0, mission_exit_ok=True):
+def score(res, max_tilt=10.0, mission_exit_ok=True, place_tol_mm=PLACE_TOL_MM):
     """res: dict from mission.py's JSON (may be empty). Returns a partial CSV row."""
     row = dict.fromkeys(FIELDS)
     row['mission_ok'] = bool(mission_exit_ok and res.get('success'))
@@ -55,6 +61,7 @@ def score(res, max_tilt=10.0, mission_exit_ok=True):
         row['on_table'] = abs(c[2] - TABLE_CENTRE_Z) < 0.01
         if target:
             row['placement_error_mm'] = 1000.0 * math.hypot(c[0] - target[0], c[1] - target[1])
+            row['at_target'] = row['placement_error_mm'] <= place_tol_mm
     q = res.get('container_quat_xyzw')
     if q:
         row['container_qx'], row['container_qy'], row['container_qz'], row['container_qw'] = q
@@ -63,7 +70,18 @@ def score(res, max_tilt=10.0, mission_exit_ok=True):
     elif res.get('tilt_deg') is not None:
         row['tilt_deg'] = res['tilt_deg']
         row['tilt_source'] = 'recorded (no raw quaternion saved)'
+    # confirmed attach/detach (mission.py 'weld' log; absent in runs before the fix)
+    unconf = []
+    for w in res.get('weld') or []:
+        key = {'spawn': 'spawn_detach_attempts', 'pick': 'pick_attach_attempts',
+               'place': 'place_detach_attempts'}.get(w.get('where'))
+        if key:
+            row[key] = w.get('attempts')
+        if not w.get('confirmed'):
+            unconf.append('%s %s' % (w.get('where'), w.get('kind')))
+    if res.get('weld') is not None:
+        row['weld_unconfirmed'] = ', '.join(unconf) or 'none'
     row['sim_time_s'] = res.get('sim_time')
-    row['success'] = bool(row['mission_ok'] and row['on_table'] and
+    row['success'] = bool(row['mission_ok'] and row['on_table'] and row['at_target'] and
                           row['tilt_deg'] is not None and row['tilt_deg'] < max_tilt)
     return row

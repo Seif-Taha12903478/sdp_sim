@@ -64,7 +64,12 @@ def generate_launch_description():
                    '/base/vel_y@std_msgs/msg/Float64]ignition.msgs.Double',
                    '/base/vel_yaw@std_msgs/msg/Float64]ignition.msgs.Double',
                    # fixed overview camera for screenshots (tools/sim_screenshot.py)
-                   '/overview_cam/image@sensor_msgs/msg/Image[ignition.msgs.Image'])
+                   '/overview_cam/image@sensor_msgs/msg/Image[ignition.msgs.Image',
+                   # container weld (DetachableJoint): commands + state, used by
+                   # scripts/medicine_weld.py for confirmed attach/detach
+                   '/medicine/attach@std_msgs/msg/Empty]ignition.msgs.Empty',
+                   '/medicine/detach@std_msgs/msg/Empty]ignition.msgs.Empty',
+                   '/medicine/attached@std_msgs/msg/String[ignition.msgs.StringMsg'])
     planar_base = ExecuteProcess(
         cmd=['python3', os.path.expanduser('~/sdp_sim/scripts/planar_base.py')],
         output='screen')

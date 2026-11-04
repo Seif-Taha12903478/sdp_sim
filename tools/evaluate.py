@@ -138,15 +138,23 @@ def failure_reason(r, max_tilt):
     if not _ok(r['mission_ok']):
         return 'mission failed: %s %s %s' % (r['failed_step'] or '', r['error'] or '', r['note'] or '')
     why = []
+    if _ok(r['on_table']) and _ok(r.get('at_target')) and (_f(r['tilt_deg']) or 0) < max_tilt:
+        return 'unknown'
     if not _ok(r['on_table']):
         z = _f(r['container_z'])
-        why.append('container not on the table (z %.3f%s)' % (z, ', on the floor' if z is not None and z < 0.05 else '')
-                   if z is not None else 'container not found')
+        where = ', on the floor' if z is not None and z < 0.05 else (
+            ', still held by the gripper: not released' if z is not None and z > 0.2 else '')
+        why.append('container not on the table (z %.3f%s)' % (z, where) if z is not None else 'container not found')
     t = _f(r['tilt_deg'])
     if t is not None and t >= max_tilt:
         why.append('tilt %.1f deg' % t)
-    if _f(r['placement_error_mm']) is not None:
-        why.append('placement error %.1f mm' % _f(r['placement_error_mm']))
+    e = _f(r['placement_error_mm'])
+    if e is not None:
+        far = e > scoring.PLACE_TOL_MM
+        cx, cy = _f(r['container_x']), _f(r['container_y'])
+        at_station = cx is not None and abs(cx) < 0.05 and abs(cy - 0.20) < 0.05
+        why.append('placement error %.1f mm%s' % (e, ' (container still at the medicine station: '
+                                                  'not picked)' if at_station else (' (not at the target)' if far else '')))
     return 'mission completed but ' + '; '.join(why)
 
 
@@ -158,17 +166,29 @@ def write_outputs(out, rows, a):
     ok = [r for r in rows if _ok(r['success'])]
     lines = [
         'Evaluation %s - %d run(s), each from a fresh headless launch' % (os.path.basename(out), len(rows)),
-        'success = mission completed AND container on the table AND tilt < %.0f deg' % a.max_tilt,
+        'success = mission completed AND container on the table within %.0f mm of the target AND tilt < %.0f deg'
+        % (scoring.PLACE_TOL_MM, a.max_tilt),
         '',
         'success rate          : %d / %d (%.0f %%)' % (len(ok), len(rows), 100.0 * len(ok) / max(1, len(rows))),
         'mission completed     : %d / %d' % (sum(1 for r in rows if _ok(r['mission_ok'])), len(rows)),
-        'container on table    : %d / %d' % (sum(1 for r in rows if _ok(r['on_table'])), len(rows)),
+        'container on a table  : %d / %d' % (sum(1 for r in rows if _ok(r['on_table'])), len(rows)),
+        'container at target   : %d / %d  (<= %.0f mm)' % (sum(1 for r in rows if _ok(r.get('at_target'))), len(rows),
+                                                          scoring.PLACE_TOL_MM),
         'placement error (mm)  : ' + stats([_f(r['placement_error_mm']) for r in rows]),
         'tilt (deg)            : ' + stats([_f(r['tilt_deg']) for r in rows]) + '  [%s]' % ', '.join(
             sorted(set(str(r.get('tilt_source')) for r in rows if r.get('tilt_source')))),
         'mission sim time (s)  : ' + stats([_f(r['sim_time_s']) for r in rows if _ok(r['mission_ok'])]) + '  (missions completed)',
         'mission wall time (s) : ' + stats([_f(r['mission_wall_s']) for r in rows if _ok(r['mission_ok'])]),
         'run wall time (s)     : ' + stats([_f(r['total_wall_s']) for r in rows]) + '  (incl. launch/shutdown)',
+        '',
+        'attach/detach attempts until confirmed by /medicine/attached (1 = first try):',
+    ] + ['  %-14s: %s' % (label, stats([_f(r.get(k)) for r in rows]))
+         for label, k in (('spawn detach', 'spawn_detach_attempts'), ('pick attach', 'pick_attach_attempts'),
+                          ('place detach', 'place_detach_attempts'))] + [
+        '  not confirmed : %s' % (', '.join('run %d: %s' % (r['run'], r['weld_unconfirmed']) for r in rows
+                                            if r.get('weld_unconfirmed') not in (None, '', 'none'))
+                                  or ('none' if any(r.get('weld_unconfirmed') for r in rows)
+                                      else 'n/a (runs before the confirmed weld)')),
         '',
         'failures:',
     ] + ['  run %d: %s' % (r['run'], failure_reason(r, a.max_tilt)) for r in rows if not _ok(r['success'])] \
@@ -196,7 +216,10 @@ def main():
     for run in range(1, a.runs + 1):
         t_run = time.monotonic()
         row = dict.fromkeys(FIELDS)
-        row.update(run=run, started=dt.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        # local time WITH its UTC offset, plus UTC: unambiguous across time-zone changes.
+        # Durations below use time.monotonic().
+        row.update(run=run, started=dt.datetime.now().astimezone().isoformat(timespec='seconds'),
+                   started_utc=dt.datetime.now(dt.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
                    success=False, mission_ok=False)
         launch_log = os.path.join(a.out, 'run%02d_launch.log' % run)
         mission_log = os.path.join(a.out, 'run%02d_mission.log' % run)
@@ -227,7 +250,7 @@ def main():
                         res = json.load(jf)
                 err0 = row['error']
                 row.update({k: v for k, v in scoring.score(res, a.max_tilt, code == 0).items()
-                            if k not in ('run', 'started', 'mission_wall_s', 'total_wall_s', 'note')})
+                            if k not in ('run', 'started', 'started_utc', 'mission_wall_s', 'total_wall_s', 'note')})
                 row['error'] = err0 or row['error']
         finally:
             left = stop_sim(proc, fh)
