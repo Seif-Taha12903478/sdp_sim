@@ -239,5 +239,21 @@
       </visual>
       </link>
     </model>
+    <model name="overview_cam">
+      <static>true</static>
+      <pose>3.0 -0.9 2.1 0 0.6401 2.4945</pose>
+      <link name="link">
+        <sensor name="overview" type="camera">
+          <camera>
+            <horizontal_fov>1.15</horizontal_fov>
+            <image><width>800</width><height>500</height><format>R8G8B8</format></image>
+            <clip><near>0.1</near><far>20</far></clip>
+          </camera>
+          <always_on>1</always_on>
+          <update_rate>0.5</update_rate>
+          <topic>/overview_cam/image</topic>
+        </sensor>
+      </link>
+    </model>
   </world>
 </sdf>

@@ -83,6 +83,33 @@ def line_model():
       </link>
     </model>"""
 
+def overview_camera():
+    """Fixed camera looking over the whole track, rendered by the server's Sensors
+    system (works with gui:=false). Low rate on purpose: it is only for screenshots
+    (tools/sim_screenshot.py). Topic /overview_cam/image, bridged in hospital.launch.py."""
+    cam = (3.0, -0.9, 2.1)             # camera position (+x side: bed is behind the track)
+    look = (0.75, 0.80, 0.0)           # point it looks at (middle of the track)
+    dx, dy, dz = (look[i] - cam[i] for i in range(3))
+    yaw = math.atan2(dy, dx)
+    pitch = math.atan2(-dz, math.hypot(dx, dy))   # +pitch = nose down for a camera's +x
+    return f"""
+    <model name="overview_cam">
+      <static>true</static>
+      <pose>{cam[0]} {cam[1]} {cam[2]} 0 {pitch:.4f} {yaw:.4f}</pose>
+      <link name="link">
+        <sensor name="overview" type="camera">
+          <camera>
+            <horizontal_fov>1.15</horizontal_fov>
+            <image><width>800</width><height>500</height><format>R8G8B8</format></image>
+            <clip><near>0.1</near><far>20</far></clip>
+          </camera>
+          <always_on>1</always_on>
+          <update_rate>0.5</update_rate>
+          <topic>/overview_cam/image</topic>
+        </sensor>
+      </link>
+    </model>"""
+
 def world():
     xs = X_TURN + R_TURN
     # medicine station: robot's left at the start (container at y = REACH)
@@ -136,7 +163,7 @@ def world():
           </material>
         </visual>
       </link>
-    </model>{line_model()}{st}{bedside}{bed}
+    </model>{line_model()}{st}{bedside}{bed}{overview_camera()}
   </world>
 </sdf>
 """

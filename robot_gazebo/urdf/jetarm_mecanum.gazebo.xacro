@@ -148,7 +148,7 @@
        sensor +z = -link4 x (image "up"), so the image is upright.
        Offset 5 cm "above" the gripper; the gripper still pokes into the lower
        image within 0.11 m, so the near clip (0.15 m) hides it.
-       Low resolution / rate on purpose: the VM is slow.                    -->
+       Low resolution / rate (4 Hz) on purpose: the VM is slow.             -->
   <link name="sim_cam_link"/>
   <joint name="sim_cam_joint" type="fixed">
     <parent link="link4"/>
@@ -169,7 +169,7 @@
         <clip><near>0.15</near><far>5.0</far></clip>
       </camera>
       <always_on>1</always_on>
-      <update_rate>10</update_rate>
+      <update_rate>4</update_rate>
       <visualize>false</visualize>
       <topic>/depth_cam/depth_cam</topic>
     </sensor>
