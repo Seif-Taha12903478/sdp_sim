@@ -31,11 +31,10 @@ import sys
 import time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import scoring                  # noqa: E402  (same scoring as rescore.py)
 MISSION = os.path.join(ROOT, 'scripts', 'mission.py')
-FIELDS = ['run', 'started', 'success', 'mission_ok', 'failed_step', 'error',
-          'container_x', 'container_y', 'container_z', 'target_x', 'target_y',
-          'placement_error_mm', 'tilt_deg', 'on_table', 'sim_time_s', 'mission_wall_s',
-          'total_wall_s', 'base_final_x', 'base_final_y', 'base_final_yaw_deg', 'note']
+FIELDS = scoring.FIELDS
 
 
 def log(msg):
@@ -82,7 +81,9 @@ def wait_ready(proc, logpath, timeout):
             t = fh.read()
         if 'Segmentation fault' in t or 'process has died' in t:
             return 'a launched process died (see %s)' % logpath
-        if 'activated' in t and 'gripper_controller' in t.split('Configured and activated')[-1]:
+        # the gripper spawner's success line (spawned last); both on ONE line - the
+        # spawner's earlier "waiting for service" line also names gripper_controller
+        if any('Configured and activated' in l and 'gripper_controller' in l for l in t.splitlines()):
             return None
         time.sleep(3)
     return 'controllers not active after %.0f s' % timeout
@@ -122,28 +123,56 @@ def stats(xs):
     return 'mean %.2f  std %.2f  min %.2f  max %.2f  (n=%d)' % (st.mean(xs), sd, min(xs), max(xs), len(xs))
 
 
+def _ok(v):
+    return v is True or str(v) == 'True'
+
+
+def _f(v):
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
+def failure_reason(r, max_tilt):
+    if not _ok(r['mission_ok']):
+        return 'mission failed: %s %s %s' % (r['failed_step'] or '', r['error'] or '', r['note'] or '')
+    why = []
+    if not _ok(r['on_table']):
+        z = _f(r['container_z'])
+        why.append('container not on the table (z %.3f%s)' % (z, ', on the floor' if z is not None and z < 0.05 else '')
+                   if z is not None else 'container not found')
+    t = _f(r['tilt_deg'])
+    if t is not None and t >= max_tilt:
+        why.append('tilt %.1f deg' % t)
+    if _f(r['placement_error_mm']) is not None:
+        why.append('placement error %.1f mm' % _f(r['placement_error_mm']))
+    return 'mission completed but ' + '; '.join(why)
+
+
 def write_outputs(out, rows, a):
     with open(os.path.join(out, 'runs.csv'), 'w', newline='') as fh:
-        w = csv.DictWriter(fh, fieldnames=FIELDS)
+        w = csv.DictWriter(fh, fieldnames=FIELDS, extrasaction='ignore')
         w.writeheader()
         w.writerows(rows)
-    ok = [r for r in rows if r['success']]
+    ok = [r for r in rows if _ok(r['success'])]
     lines = [
         'Evaluation %s - %d run(s), each from a fresh headless launch' % (os.path.basename(out), len(rows)),
         'success = mission completed AND container on the table AND tilt < %.0f deg' % a.max_tilt,
         '',
         'success rate          : %d / %d (%.0f %%)' % (len(ok), len(rows), 100.0 * len(ok) / max(1, len(rows))),
-        'mission completed     : %d / %d' % (sum(1 for r in rows if r['mission_ok']), len(rows)),
-        'container on table    : %d / %d' % (sum(1 for r in rows if r['on_table']), len(rows)),
-        'placement error (mm)  : ' + stats([r['placement_error_mm'] for r in rows]),
-        'tilt (deg)            : ' + stats([r['tilt_deg'] for r in rows]),
-        'mission sim time (s)  : ' + stats([r['sim_time_s'] for r in ok]),
-        'mission wall time (s) : ' + stats([r['mission_wall_s'] for r in ok]),
-        'run wall time (s)     : ' + stats([r['total_wall_s'] for r in rows]) + '  (incl. launch/shutdown)',
+        'mission completed     : %d / %d' % (sum(1 for r in rows if _ok(r['mission_ok'])), len(rows)),
+        'container on table    : %d / %d' % (sum(1 for r in rows if _ok(r['on_table'])), len(rows)),
+        'placement error (mm)  : ' + stats([_f(r['placement_error_mm']) for r in rows]),
+        'tilt (deg)            : ' + stats([_f(r['tilt_deg']) for r in rows]) + '  [%s]' % ', '.join(
+            sorted(set(str(r.get('tilt_source')) for r in rows if r.get('tilt_source')))),
+        'mission sim time (s)  : ' + stats([_f(r['sim_time_s']) for r in rows if _ok(r['mission_ok'])]) + '  (missions completed)',
+        'mission wall time (s) : ' + stats([_f(r['mission_wall_s']) for r in rows if _ok(r['mission_ok'])]),
+        'run wall time (s)     : ' + stats([_f(r['total_wall_s']) for r in rows]) + '  (incl. launch/shutdown)',
         '',
         'failures:',
-    ] + ['  run %d: %s %s %s' % (r['run'], r['failed_step'] or '', r['error'] or '', r['note'] or '')
-         for r in rows if not r['success']] + (['  none'] if len(ok) == len(rows) else [])
+    ] + ['  run %d: %s' % (r['run'], failure_reason(r, a.max_tilt)) for r in rows if not _ok(r['success'])] \
+      + (['  none'] if len(ok) == len(rows) else [])
     with open(os.path.join(out, 'summary.txt'), 'w') as fh:
         fh.write('\n'.join(lines) + '\n')
     return lines
@@ -196,20 +225,10 @@ def main():
                 if os.path.exists(rj):
                     with open(rj) as jf:
                         res = json.load(jf)
-                row['mission_ok'] = bool(code == 0 and res.get('success'))
-                row['failed_step'] = res.get('failed_step')
-                row['error'] = row['error'] or res.get('error')
-                if res.get('container'):
-                    row['container_x'], row['container_y'], row['container_z'] = res['container']
-                if res.get('target'):
-                    row['target_x'], row['target_y'] = res['target']
-                for k_out, k_in in (('placement_error_mm', 'placement_error_mm'), ('tilt_deg', 'tilt_deg'),
-                                    ('on_table', 'on_table'), ('sim_time_s', 'sim_time')):
-                    row[k_out] = res.get(k_in)
-                if res.get('base_final'):
-                    row['base_final_x'], row['base_final_y'], row['base_final_yaw_deg'] = res['base_final']
-                row['success'] = bool(row['mission_ok'] and row['on_table'] and
-                                      row['tilt_deg'] is not None and row['tilt_deg'] < a.max_tilt)
+                err0 = row['error']
+                row.update({k: v for k, v in scoring.score(res, a.max_tilt, code == 0).items()
+                            if k not in ('run', 'started', 'mission_wall_s', 'total_wall_s', 'note')})
+                row['error'] = err0 or row['error']
         finally:
             left = stop_sim(proc, fh)
             if left:

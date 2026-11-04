@@ -63,12 +63,17 @@ def gz_model_pose_full(name):
                   % re.escape(name), t)
     if not m:
         return None
-    def f(k, s, d=0.0):
-        r = re.search(k + r': ([-\d.e]+)', s or '')
-        return float(r.group(1)) if r else d
-    o = m.group(2) or ''
-    return ((f('x', m.group(1)), f('y', m.group(1)), f('z', m.group(1))),
-            (f('x', o), f('y', o), f('z', o), f('w', o, 1.0)))
+    # protobuf text output OMITS fields that are exactly 0, so every missing component
+    # is 0 - including w (only a missing orientation block means identity)
+    def f(k, s):
+        r = re.search(r'\b' + k + r': ([-\d.e+]+)', s or '')
+        return float(r.group(1)) if r else 0.0
+    pos = (f('x', m.group(1)), f('y', m.group(1)), f('z', m.group(1)))
+    if m.group(2) is None:
+        return pos, (0.0, 0.0, 0.0, 1.0)
+    q = [f(k, m.group(2)) for k in 'xyzw']
+    n = math.sqrt(sum(v * v for v in q)) or 1.0
+    return pos, tuple(v / n for v in q)
 
 
 def gz_model_pose(name):
@@ -197,8 +202,19 @@ def main():
             x, y, yaw, t = base.pose()
             log('step %d/%d %s  (sim t %.1f, base %.3f %.3f %.1f deg)'
                 % (i, len(steps), label, t, x, y, math.degrees(yaw)))
-            out['steps'].append({'step': i, 'name': label, 'sim_t': t})
+            out['steps'].append({'step': i, 'name': label, 'sim_t': t,
+                                 'base_before': [x, y, math.degrees(yaw)]})
+            if i == 6:
+                out['patient_stop'] = [x, y, math.degrees(yaw)]
             fn()
+            if i >= 6:      # where is the container after each step from placing on?
+                c = gz_model_pose_full(CONTAINER_NAME)
+                if c:
+                    (cx, cy, cz), q = c
+                    out['steps'][-1]['container_after'] = [cx, cy, cz, tilt_deg(q)]
+                    out['steps'][-1]['container_after_pose'] = {'xyz': [cx, cy, cz], 'quat_xyzw': list(q)}
+                    log('  container after step %d: (%.4f, %.4f, %.4f) tilt %.1f deg'
+                        % (i, cx, cy, cz, tilt_deg(q)))
         x, y, yaw, t_end = base.pose()
         out.update(sim_time=t_end - t_start, base_final=[x, y, math.degrees(yaw)])
         log('done: base at %.4f %.4f yaw %.2f deg; cycle time %.1f sim s'
@@ -225,6 +241,7 @@ def main():
                 log('container not found in Gazebo')
             else:
                 (cx, cy, cz), q = c
+                out['container_quat_xyzw'] = list(q)       # raw pose for re-scoring
                 err = 1000 * math.hypot(cx - tx, cy - ty)
                 tilt = tilt_deg(q)
                 on_table = abs(cz - 0.13) < 0.01

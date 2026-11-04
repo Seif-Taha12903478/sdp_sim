@@ -1,0 +1,69 @@
+"""Scoring of one mission result (mission.py --result-json), shared by evaluate.py and
+rescore.py so a run is always scored the same way from its raw values.
+
+From the raw values in the JSON:
+  placement_error_mm = horizontal distance container (Gazebo ground truth) -> target,
+                       target = patient stop pose (chassis_link = under joint1) + R(yaw)
+                       * (0, 0.20), i.e. the spot 0.20 m to the robot's LEFT
+  on_table           = container centre z within 1 cm of 0.13 (table top 0.10 + half
+                       the 0.06 m height); 0.03 means it lies on the floor
+  tilt_deg           = angle container z axis <-> world z, from the raw quaternion
+                       (normalised; missing protobuf components are 0)
+  success            = mission completed AND on_table AND tilt < max_tilt
+"""
+import math
+
+TABLE_CENTRE_Z = 0.13
+REACH_LEFT = 0.20
+
+FIELDS = ['run', 'started', 'success', 'mission_ok', 'failed_step', 'error',
+          'container_x', 'container_y', 'container_z',
+          'container_qx', 'container_qy', 'container_qz', 'container_qw',
+          'target_x', 'target_y', 'patient_stop_x', 'patient_stop_y', 'patient_stop_yaw_deg',
+          'placement_error_mm', 'tilt_deg', 'tilt_source', 'on_table',
+          'sim_time_s', 'mission_wall_s', 'total_wall_s',
+          'base_final_x', 'base_final_y', 'base_final_yaw_deg', 'note']
+
+
+def tilt_from_quat(q):
+    qx, qy, qz, qw = q
+    n = math.sqrt(qx * qx + qy * qy + qz * qz + qw * qw) or 1.0
+    qx, qy = qx / n, qy / n
+    return math.degrees(math.acos(max(-1.0, min(1.0, 1.0 - 2.0 * (qx * qx + qy * qy)))))
+
+
+def score(res, max_tilt=10.0, mission_exit_ok=True):
+    """res: dict from mission.py's JSON (may be empty). Returns a partial CSV row."""
+    row = dict.fromkeys(FIELDS)
+    row['mission_ok'] = bool(mission_exit_ok and res.get('success'))
+    row['failed_step'] = res.get('failed_step')
+    row['error'] = res.get('error')
+    if res.get('base_final'):
+        row['base_final_x'], row['base_final_y'], row['base_final_yaw_deg'] = res['base_final']
+    ps = res.get('patient_stop')
+    if ps:
+        row['patient_stop_x'], row['patient_stop_y'], row['patient_stop_yaw_deg'] = ps
+        yaw = math.radians(ps[2])
+        target = (ps[0] - math.sin(yaw) * REACH_LEFT, ps[1] + math.cos(yaw) * REACH_LEFT)
+    else:
+        target = tuple(res['target']) if res.get('target') else None
+    if target:
+        row['target_x'], row['target_y'] = target
+    c = res.get('container')
+    if c:
+        row['container_x'], row['container_y'], row['container_z'] = c
+        row['on_table'] = abs(c[2] - TABLE_CENTRE_Z) < 0.01
+        if target:
+            row['placement_error_mm'] = 1000.0 * math.hypot(c[0] - target[0], c[1] - target[1])
+    q = res.get('container_quat_xyzw')
+    if q:
+        row['container_qx'], row['container_qy'], row['container_qz'], row['container_qw'] = q
+        row['tilt_deg'] = tilt_from_quat(q)
+        row['tilt_source'] = 'raw quaternion'
+    elif res.get('tilt_deg') is not None:
+        row['tilt_deg'] = res['tilt_deg']
+        row['tilt_source'] = 'recorded (no raw quaternion saved)'
+    row['sim_time_s'] = res.get('sim_time')
+    row['success'] = bool(row['mission_ok'] and row['on_table'] and
+                          row['tilt_deg'] is not None and row['tilt_deg'] < max_tilt)
+    return row
