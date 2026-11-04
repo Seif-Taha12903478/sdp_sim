@@ -6,7 +6,7 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 PKG="$HOME/ros2_ws/src/simulations/robot_gazebo"
 [ -d "$PKG" ] || { echo "robot_gazebo not found at $PKG"; exit 1; }
 
-for f in urdf/jetarm_mecanum.gazebo.xacro worlds/hospital.sdf launch/hospital.launch.py; do
+for f in urdf/jetarm_mecanum.gazebo.xacro worlds/hospital.sdf worlds/hospital_video.sdf launch/hospital.launch.py; do
   if [ -f "$PKG/$f" ] && ! cmp -s "$HERE/robot_gazebo/$f" "$PKG/$f"; then
     cp "$PKG/$f" "$PKG/$f.bak.$(date +%Y%m%d%H%M%S)"
   fi

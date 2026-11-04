@@ -38,14 +38,21 @@ class BaseMover:
         self.node = node
         self.pub = node.create_publisher(Twist, '/controller/cmd_vel', 10)
         self.odom = None
-        node.create_subscription(Odometry, '/odom', self._on_odom, 20)
+        self.count = 0
+        # depth 1: after a long time without spinning (e.g. while line_follower.py
+        # runs as a subprocess) only the newest message is queued, not a stale backlog
+        node.create_subscription(Odometry, '/odom', self._on_odom, 1)
 
     def _on_odom(self, m):
         self.odom = m
+        self.count += 1
 
-    def pose(self):
-        """(x, y, yaw, sim_t) of chassis_link; waits for the first /odom."""
-        while self.odom is None:
+    def pose(self, fresh=True):
+        """(x, y, yaw, sim_t) of chassis_link. fresh=True waits for two new /odom
+        messages, so at least one was published after this call (the node may not
+        have spun for a long time). fresh=False returns the last one received."""
+        target = self.count + 2 if fresh else 1
+        while self.count < target:
             rclpy.spin_once(self.node, timeout_sec=0.5)
         m = self.odom
         p = m.pose.pose.position
@@ -64,7 +71,7 @@ class BaseMover:
     def _next(self, t_prev):
         while True:
             rclpy.spin_once(self.node, timeout_sec=0.5)
-            x, y, yaw, t = self.pose()
+            x, y, yaw, t = self.pose(fresh=False)
             if t > t_prev:
                 return x, y, yaw, t
 
@@ -74,10 +81,15 @@ class BaseMover:
         c, s = math.cos(yaw0), math.sin(yaw0)
         gx, gy = x0 + c * dx_robot - s * dy_robot, y0 + s * dx_robot + c * dy_robot
         x, y, yaw, t = x0, y0, yaw0, t0
+        d0 = math.hypot(dx_robot, dy_robot)
         while True:
             ex_w, ey_w = gx - x, gy - y
             if math.hypot(ex_w, ey_w) < tol:
                 break
+            if math.hypot(ex_w, ey_w) > d0 + 0.05:      # safety: never run away
+                self.stop()
+                raise RuntimeError('translate: %.3f m from the goal, started %.3f m away - '
+                                   'stale or wrong pose? stopped' % (math.hypot(ex_w, ey_w), d0))
             if t - t0 > timeout_sim:
                 self.stop()
                 raise RuntimeError('translate timed out (%.3f m left)' % math.hypot(ex_w, ey_w))
@@ -92,7 +104,7 @@ class BaseMover:
             self.send(vx, vy, 2.0 * wrap(yaw0 - yaw))   # hold heading
             x, y, yaw, t = self._next(t)
         self.stop()
-        x, y, yaw, _ = self.pose()
+        x, y, yaw, _ = self.pose(fresh=False)
         return x, y, yaw
 
     def rotate(self, dyaw, wmax=0.4, tol=math.radians(0.3), timeout_sim=60.0):
@@ -120,10 +132,22 @@ class BaseMover:
         x, y, yaw, _ = self.pose()
         return x, y, yaw
 
-    def turnaround(self, offset=0.12):
-        self.translate(0.0, -offset)
+    def turnaround(self, offset=0.12, side=-1):
+        """Strafe `offset` to one side (side=-1 robot right, +1 robot left), rotate
+        180 deg, strafe the same way again: ends back on the line, facing back."""
+        self.translate(0.0, side * offset)
         self.rotate(math.pi)
-        return self.translate(0.0, -offset)
+        return self.translate(0.0, side * offset)
+
+    def goto(self, gx, gy, gyaw):
+        """Go to an absolute odom pose (short moves only, no obstacle check):
+        translate, then rotate to gyaw."""
+        x, y, yaw, _ = self.pose()
+        c, s = math.cos(yaw), math.sin(yaw)
+        dx, dy = gx - x, gy - y
+        self.translate(c * dx + s * dy, -s * dx + c * dy)
+        x, y, yaw, _ = self.pose()
+        return self.rotate(wrap(gyaw - yaw))
 
 
 def main():

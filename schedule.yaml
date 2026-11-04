@@ -1,0 +1,21 @@
+# Medication delivery schedule for scripts/scheduler.py
+#
+# Each delivery: patient, medicine, time.
+#   time: "HH:MM"            daily at that wall-clock time (24 h)
+#         "YYYY-MM-DD HH:MM" once
+#   bed:  bedside table to deliver to. The hospital world has one patient bed
+#         (bed 1); the field is there so more beds can be added later.
+# Test without waiting:  python3 scheduler.py --in-minutes 1   (first entry only)
+deliveries:
+  - patient: "Patient A"
+    medicine: "Paracetamol 500 mg"
+    time: "08:00"
+    bed: 1
+  - patient: "Patient A"
+    medicine: "Amoxicillin 250 mg"
+    time: "14:00"
+    bed: 1
+  - patient: "Patient A"
+    medicine: "Paracetamol 500 mg"
+    time: "20:00"
+    bed: 1

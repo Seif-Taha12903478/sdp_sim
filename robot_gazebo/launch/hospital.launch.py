@@ -2,6 +2,7 @@
 
     ros2 launch robot_gazebo hospital.launch.py              # with the Gazebo window
     ros2 launch robot_gazebo hospital.launch.py gui:=false   # headless (server only)
+    ros2 launch robot_gazebo hospital.launch.py video:=true  # overview camera 2 Hz (videos)
 
 Screenshots without the GUI: python3 ~/sdp_sim/tools/sim_screenshot.py (fixed
 overview camera in the world, /overview_cam/image, bridged here).
@@ -27,7 +28,9 @@ from launch_ros.parameter_descriptions import ParameterValue
 
 def generate_launch_description():
     pkg = get_package_share_directory('robot_gazebo')
-    world = os.path.join(pkg, 'worlds', 'hospital.sdf')
+    # video:=true -> hospital_video.sdf (same world, overview camera at 2 Hz instead of 0.5)
+    world = PythonExpression(["'", os.path.join(pkg, 'worlds', 'hospital'), "' + ('_video' if '",
+                              LaunchConfiguration('video'), "'.lower() == 'true' else '') + '.sdf'"])
     xacro_file = os.path.join(pkg, 'urdf', 'jetarm_mecanum.gazebo.xacro')
 
     gazebo = IncludeLaunchDescription(
@@ -36,7 +39,7 @@ def generate_launch_description():
         # gui:=false adds -s (server only); sensors still render (camera images work)
         launch_arguments=[('ign_args', PythonExpression([
             "' -r ' + ('' if '", LaunchConfiguration('gui'), "'.lower() == 'true' else '-s ') + ",
-            "'--render-engine ogre " + world + "'"]))])
+            "'--render-engine ogre ' + '", world, "'"]))])
 
     bridge = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(pkg, 'launch', 'ros_ign_bridge.launch.py')),
@@ -76,6 +79,8 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('gui', default_value='true',
                               description='false = headless Gazebo server, no window'),
+        DeclareLaunchArgument('video', default_value='false',
+                              description='true = overview camera at 2 Hz (for tools/record_video.py)'),
         gazebo, bridge, base_bridge, planar_base, robot_state_publisher, spawn,
         RegisterEventHandler(OnProcessExit(target_action=spawn, on_exit=[jsb])),
         RegisterEventHandler(OnProcessExit(target_action=jsb, on_exit=[arm])),

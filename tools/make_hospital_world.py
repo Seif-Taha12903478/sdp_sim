@@ -83,7 +83,7 @@ def line_model():
       </link>
     </model>"""
 
-def overview_camera():
+def overview_camera(rate=0.5):
     """Fixed camera looking over the whole track, rendered by the server's Sensors
     system (works with gui:=false). Low rate on purpose: it is only for screenshots
     (tools/sim_screenshot.py). Topic /overview_cam/image, bridged in hospital.launch.py."""
@@ -104,13 +104,13 @@ def overview_camera():
             <clip><near>0.1</near><far>20</far></clip>
           </camera>
           <always_on>1</always_on>
-          <update_rate>0.5</update_rate>
+          <update_rate>{rate}</update_rate>
           <topic>/overview_cam/image</topic>
         </sensor>
       </link>
     </model>"""
 
-def world():
+def world(overview_rate=0.5):
     xs = X_TURN + R_TURN
     # medicine station: robot's left at the start (container at y = REACH)
     st_edge = REACH - 0.03                    # table edge nearest the robot
@@ -163,7 +163,7 @@ def world():
           </material>
         </visual>
       </link>
-    </model>{line_model()}{st}{bedside}{bed}{overview_camera()}
+    </model>{line_model()}{st}{bedside}{bed}{overview_camera(overview_rate)}
   </world>
 </sdf>
 """
@@ -172,8 +172,11 @@ if __name__ == '__main__':
     out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(
         os.path.dirname(os.path.abspath(__file__)), '..', 'robot_gazebo', 'worlds', 'hospital.sdf')
     open(out, 'w').write(world())
+    # same world with the overview camera at 2 Hz for recording videos (launch video:=true)
+    out_video = out[:-4] + '_video.sdf'
+    open(out_video, 'w').write(world(overview_rate=2))
     xs = X_TURN + R_TURN
-    print('wrote', os.path.abspath(out))
+    print('wrote', os.path.abspath(out), 'and', os.path.basename(out_video))
     print('medicine container spawn  : x=0.000 y=%.3f z=%.3f' % (REACH, PLATE_H + 0.031))
     print('patient stop (approx)     : joint1 at x=%.3f y=%.3f, facing +y' % (xs, Y_END - STOP_AHEAD))
     print('place point (robot left)  : x=%.3f y=%.3f' % (xs - REACH, Y_END - STOP_AHEAD))

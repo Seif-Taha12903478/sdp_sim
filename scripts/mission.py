@@ -17,14 +17,19 @@ Steps
   7 arm home
   8 turn round: strafe right, rotate 180 deg on /odom, strafe right (base_moves.py)
   9 follow the line home                             (line_follower.py)
+ 10 park at the start for the next mission: strafe LEFT (away from the medicine
+    station, which is on the robot's right when it faces home), rotate 180 deg,
+    strafe left, then go to (0, 0) yaw 0 on /odom
 
 Reuses jetarm_pick_place.py (IK, arm/gripper control, attach/detach) and
 base_moves.py. Every wait is on feedback (/joint_states, /odom, camera stamps).
 At the end it prints the container's placement error (Gazebo ground truth vs. the
 intended spot on the bedside table) and the cycle time in sim seconds.
-Exit code 0 = mission complete.
+Exit code 0 = mission complete. --result-json FILE writes all results (used by
+scheduler.py and tools/evaluate.py).
 """
 import argparse
+import json
 import math
 import os
 import re
@@ -50,16 +55,32 @@ def log(msg):
     print('[mission] ' + msg, flush=True)
 
 
-def gz_model_pose(name):
-    """Gazebo ground truth (x, y, z) of a model, or None."""
+def gz_model_pose_full(name):
+    """Gazebo ground truth of a model: ((x, y, z), (qx, qy, qz, qw)), or None."""
     t = subprocess.run(['ign', 'topic', '-e', '-n', '1', '-t', '/world/%s/pose/info' % WORLD],
                        capture_output=True, text=True, timeout=120).stdout
-    m = re.search(r'name: "%s"\s*id: \d+\s*position \{([^}]*)\}' % re.escape(name), t)
+    m = re.search(r'name: "%s"\s*id: \d+\s*position \{([^}]*)\}(?:\s*orientation \{([^}]*)\})?'
+                  % re.escape(name), t)
     if not m:
         return None
-    f = lambda k: float(re.search(k + r': ([-\d.e]+)', m.group(1)).group(1)) \
-        if re.search(k + r': ([-\d.e]+)', m.group(1)) else 0.0
-    return f('x'), f('y'), f('z')
+    def f(k, s, d=0.0):
+        r = re.search(k + r': ([-\d.e]+)', s or '')
+        return float(r.group(1)) if r else d
+    o = m.group(2) or ''
+    return ((f('x', m.group(1)), f('y', m.group(1)), f('z', m.group(1))),
+            (f('x', o), f('y', o), f('z', o), f('w', o, 1.0)))
+
+
+def gz_model_pose(name):
+    """Gazebo ground truth (x, y, z) of a model, or None."""
+    r = gz_model_pose_full(name)
+    return r[0] if r else None
+
+
+def tilt_deg(q):
+    """Angle between the model's z axis and the world z axis (0 = upright)."""
+    qx, qy, qz, qw = q
+    return math.degrees(math.acos(max(-1.0, min(1.0, 1.0 - 2.0 * (qx * qx + qy * qy)))))
 
 
 def spawn_container():
@@ -95,7 +116,9 @@ def follow_line(extra=()):
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument('--from', dest='first', type=int, default=1, help='first step (1-9)')
-    p.add_argument('--to', dest='last', type=int, default=9, help='last step (1-9)')
+    p.add_argument('--to', dest='last', type=int, default=10, help='last step (1-10)')
+    p.add_argument('--result-json', default=None, help='write the results to this JSON file')
+    p.add_argument('--label', default='', help='free text for the log, e.g. patient/medicine')
     p.add_argument('--offset', type=float, default=0.12, help='strafe distance for the turn (m)')
     p.add_argument('--duration', type=float, default=3.0, help='sim seconds per arm move')
     a = p.parse_args()
@@ -140,6 +163,10 @@ def main():
         check(node.gripper(pa.open, d), 'open gripper')
         check(node.arm(plan['place_retreat'], d / 2), 'retreat')
 
+    def park():
+        base.turnaround(a.offset, side=+1)
+        base.goto(0.0, 0.0, 0.0)
+
     steps = [
         ('spawn container + release weld', lambda: log('container at %s' % (spawn_container(),))),
         ('arm home', lambda: check(node.arm(jp.INIT_POSE, d), 'arm home')),
@@ -150,39 +177,65 @@ def main():
         ('arm home', lambda: check(node.arm(jp.INIT_POSE, d), 'arm home')),
         ('turn round', lambda: base.turnaround(a.offset)),
         ('follow line home', lambda: follow_line()),
+        ('park at the start', park),
     ]
 
     code = 1
+    out = {'label': a.label, 'success': False, 'failed_step': None, 'error': None,
+           'steps': [], 'wall_start': time.time()}
+    current = None
     try:
         node.wait_ready()
         t_start = base.pose()[3]
+        out['sim_start'] = t_start
+        if a.label:
+            log(a.label)
         for i, (label, fn) in enumerate(steps, 1):
             if i < a.first or i > a.last:
                 continue
+            current = (i, label)
             x, y, yaw, t = base.pose()
             log('step %d/%d %s  (sim t %.1f, base %.3f %.3f %.1f deg)'
                 % (i, len(steps), label, t, x, y, math.degrees(yaw)))
+            out['steps'].append({'step': i, 'name': label, 'sim_t': t})
             fn()
         x, y, yaw, t_end = base.pose()
+        out.update(sim_time=t_end - t_start, base_final=[x, y, math.degrees(yaw)])
         log('done: base at %.4f %.4f yaw %.2f deg; cycle time %.1f sim s'
             % (x, y, math.degrees(yaw), t_end - t_start))
-        if 'target' in result:
-            c = gz_model_pose(CONTAINER_NAME)
-            tx, ty = result['target']
-            if c is None:
-                log('container not found in Gazebo')
-            else:
-                log('container at (%.4f, %.4f, %.4f); target (%.4f, %.4f); '
-                    'placement error %.1f mm; standing on the table: %s'
-                    % (c[0], c[1], c[2], tx, ty, 1000 * math.hypot(c[0] - tx, c[1] - ty),
-                       'yes' if abs(c[2] - 0.13) < 0.01 else 'NO (z %.3f)' % c[2]))
+        out['success'] = True
         code = 0
     except KeyboardInterrupt:
         log('aborted')
+        out['error'] = 'aborted'
     except RuntimeError as e:
         log('FAILED: %s' % e)
+        out['error'] = str(e)
     finally:
         base.stop()
+        if not out['success'] and current:
+            out['failed_step'] = '%d %s' % current
+        out['wall_time'] = time.time() - out['wall_start']
+        # container result (Gazebo ground truth) - also after a failure, if it was placed
+        if 'target' in result:
+            tx, ty = result['target']
+            out['target'] = [tx, ty]
+            c = gz_model_pose_full(CONTAINER_NAME)
+            if c is None:
+                log('container not found in Gazebo')
+            else:
+                (cx, cy, cz), q = c
+                err = 1000 * math.hypot(cx - tx, cy - ty)
+                tilt = tilt_deg(q)
+                on_table = abs(cz - 0.13) < 0.01
+                out.update(container=[cx, cy, cz], placement_error_mm=err, tilt_deg=tilt,
+                           on_table=on_table)
+                log('container at (%.4f, %.4f, %.4f); target (%.4f, %.4f); placement error '
+                    '%.1f mm; tilt %.1f deg; standing on the table: %s'
+                    % (cx, cy, cz, tx, ty, err, tilt, 'yes' if on_table else 'NO'))
+        if a.result_json:
+            with open(a.result_json, 'w') as fh:
+                json.dump(out, fh, indent=2)
         node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
