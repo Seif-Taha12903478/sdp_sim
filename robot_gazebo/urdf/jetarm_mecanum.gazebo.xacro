@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  JetArm Pro mounted on the Hiwonder mecanum chassis (SDP simulation).
+
+  Chassis dimensions are ESTIMATES from the installation photos in
+  "JetArm and Mecanum Chassis Integration Course" (scaled by the JetArm base
+  model): ~0.32 m long, ~0.26 m wide incl. wheels, 0.08 m wheels, arm plate
+  0.10 m above the floor. Change the properties below if you measure the robot.
+
+  Motion is kinematic: Gazebo's VelocityControl system moves the whole robot
+  from /controller/cmd_vel (linear.x, linear.y, angular.z) like a mecanum base.
+  The wheels are visual only; four frictionless spheres carry the weight.
+
+  Frame: chassis_link origin is on the floor directly under arm joint1.
+  +x = robot front (the arm is at the front of the chassis).
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="robot">
+  <xacro:arg name="prefix" default=""/>
+  <xacro:arg name="camera_type" default="GEMINI"/>
+  <xacro:property name="camera_type" value="$(env CAMERA_TYPE)"/>
+  <xacro:property name="PI" value="3.1415926535897931"/>
+
+  <!-- ===== chassis parameters (estimates) ===== -->
+  <xacro:property name="plate_h"   value="0.10"/>   <!-- arm mounting plate height -->
+  <xacro:property name="body_len"  value="0.30"/>
+  <xacro:property name="body_wid"  value="0.18"/>
+  <xacro:property name="body_hgt"  value="0.055"/>
+  <xacro:property name="body_cx"   value="-0.082"/> <!-- body centre behind joint1 -->
+  <xacro:property name="wheel_r"   value="0.04"/>
+  <xacro:property name="wheel_w"   value="0.035"/>
+  <xacro:property name="wheel_dx"  value="0.115"/>  <!-- half wheelbase -->
+  <xacro:property name="wheel_dy"  value="0.1125"/> <!-- half track -->
+  <xacro:property name="chassis_mass" value="2.0"/>
+
+  <!-- ===== JetArm description (same files as jetarm_6dof_robot.urdf.xacro) ===== -->
+  <xacro:include filename="$(find jetarm_6dof_description)/urdf/jetarm_6dof_description.urdf.xacro"/>
+  <xacro:include filename="$(find jetarm_6dof_description)/urdf/arm.urdf.xacro"/>
+  <xacro:include filename="$(find jetarm_6dof_description)/urdf/connect.urdf.xacro"/>
+  <xacro:include filename="$(find jetarm_6dof_description)/urdf/gripper.urdf.xacro"/>
+  <xacro:if value="${camera_type == 'GEMINI'}">
+    <xacro:include filename="$(find jetarm_6dof_description)/urdf/depth_camera.urdf.xacro"/>
+  </xacro:if>
+  <xacro:if value="${camera_type == 'USB_CAM'}">
+    <xacro:include filename="$(find jetarm_6dof_description)/urdf/usb_cam.urdf.xacro"/>
+  </xacro:if>
+  <xacro:include filename="$(find jetarm_6dof_description)/urdf/materials.xacro"/>
+  <xacro:include filename="$(find jetarm_6dof_description)/gazebo/jetarm.gazebo.xacro"/>
+  <xacro:include filename="$(find jetarm_6dof_description)/gazebo/jetarm.transmission.xacro"/>
+  <!-- ros2_control joint interfaces for the arm and gripper -->
+  <xacro:include filename="$(find robot_gazebo)/urdf/jetarm.gazebo.xacro"/>
+
+  <!-- ===== chassis ===== -->
+    <xacro:macro name="skid" params="name x y">
+      <collision>  <!-- unnamed on purpose, see the mu note below -->
+        <origin xyz="${x} ${y} ${wheel_r}" rpy="0 0 0"/>
+        <geometry><sphere radius="${wheel_r}"/></geometry>
+      </collision>
+    </xacro:macro>
+    <xacro:macro name="wheel" params="name x y">
+      <visual name="${name}">
+        <origin xyz="${x} ${y} ${wheel_r}" rpy="${PI/2} 0 0"/>
+        <geometry><cylinder radius="${wheel_r}" length="${wheel_w}"/></geometry>
+        <material name="wheel_black"><color rgba="0.1 0.1 0.1 1"/></material>
+      </visual>
+      <visual name="${name}_hub">
+        <origin xyz="${x} ${y} ${wheel_r}" rpy="${PI/2} 0 0"/>
+        <geometry><cylinder radius="${wheel_r * 0.55}" length="${wheel_w + 0.004}"/></geometry>
+        <material name="hub_grey"><color rgba="0.6 0.6 0.6 1"/></material>
+      </visual>
+    </xacro:macro>
+  <link name="chassis_link">
+    <inertial>
+      <origin xyz="${body_cx} 0 ${wheel_r + body_hgt/2}" rpy="0 0 0"/>
+      <mass value="${chassis_mass}"/>
+      <inertia ixx="0.006" ixy="0" ixz="0" iyy="0.016" iyz="0" izz="0.020"/>
+    </inertial>
+    <visual name="body">
+      <origin xyz="${body_cx} 0 ${wheel_r + body_hgt/2}" rpy="0 0 0"/>
+      <geometry><box size="${body_len} ${body_wid} ${body_hgt}"/></geometry>
+      <material name="chassis_green"><color rgba="0.4 0.9 0.4 1"/></material>
+    </visual>
+    <visual name="top_plate">
+      <origin xyz="${body_cx} 0 ${plate_h - 0.0025}" rpy="0 0 0"/>
+      <geometry><box size="${body_len + 0.02} ${body_wid} 0.005"/></geometry>
+      <material name="chassis_black"><color rgba="0.15 0.15 0.15 1"/></material>
+    </visual>
+    <collision>
+      <origin xyz="${body_cx} 0 ${wheel_r + body_hgt/2 + 0.005}" rpy="0 0 0"/>
+      <geometry><box size="${body_len} ${body_wid} ${body_hgt}"/></geometry>
+    </collision>
+    <!-- frictionless support spheres at the wheel positions -->
+    <xacro:skid name="skid_fl" x="${body_cx + wheel_dx}" y="${wheel_dy}"/>
+    <xacro:skid name="skid_fr" x="${body_cx + wheel_dx}" y="${-wheel_dy}"/>
+    <xacro:skid name="skid_rl" x="${body_cx - wheel_dx}" y="${wheel_dy}"/>
+    <xacro:skid name="skid_rr" x="${body_cx - wheel_dx}" y="${-wheel_dy}"/>
+    <!-- visual mecanum wheels -->
+    <xacro:wheel name="wheel_fl" x="${body_cx + wheel_dx}" y="${wheel_dy}"/>
+    <xacro:wheel name="wheel_fr" x="${body_cx + wheel_dx}" y="${-wheel_dy}"/>
+    <xacro:wheel name="wheel_rl" x="${body_cx - wheel_dx}" y="${wheel_dy}"/>
+    <xacro:wheel name="wheel_rr" x="${body_cx - wheel_dx}" y="${-wheel_dy}"/>
+  </link>
+  <!-- mu1/mu2 below reach only collisions WITHOUT a name attribute: the URDF->SDF
+       converter matches them by its default names (chassis_link_collision_N).
+       Named collisions silently kept mu=1 and the robot dragged at ~7 % of cmd_vel. -->
+  <gazebo reference="chassis_link">
+    <mu1>0.0</mu1>
+    <mu2>0.0</mu2>
+  </gazebo>
+
+  <!-- ===== the arm, standing on the chassis plate ===== -->
+  <xacro:jetarm_6dof parent="chassis_link" prefix="$(arg prefix)" camera_type="$(arg camera_type)">
+    <!-- the macro takes **origin, which inserts the CHILDREN of this block, so the
+         <origin> must be wrapped (a bare <origin/> was silently dropped and the arm
+         sat on the floor, its base mesh dragging the robot at ~7 % of cmd_vel) -->
+    <origin_block><origin xyz="0 0 ${plate_h}" rpy="0 0 0"/></origin_block>
+  </xacro:jetarm_6dof>
+  <xacro:jetarm_gazebo prefix="$(arg prefix)"/>
+  <xacro:jetarm_gazeboo_transmission prefix="$(arg prefix)"/>
+
+  <!-- ===== simulated wrist camera =====
+       Mounted on link4 like the real Gemini camera (above the gripper,
+       looking along the gripper). Sensor +x = link4 +z (view direction),
+       sensor +z = -link4 x (image "up"), so the image is upright.
+       Offset 5 cm "above" the gripper; the gripper still pokes into the lower
+       image within 0.11 m, so the near clip (0.15 m) hides it.
+       Low resolution / rate on purpose: the VM is slow.                    -->
+  <link name="sim_cam_link"/>
+  <joint name="sim_cam_joint" type="fixed">
+    <parent link="link4"/>
+    <child link="sim_cam_link"/>
+    <origin xyz="-0.05 0 0.03" rpy="0 ${-PI/2} 0"/>
+  </joint>
+  <gazebo reference="sim_cam_link">
+    <sensor name="wrist_cam" type="camera">
+      <camera>
+        <horizontal_fov>1.047</horizontal_fov>
+        <image>
+          <width>320</width>
+          <height>200</height>
+          <format>R8G8B8</format>
+        </image>
+        <!-- near 0.15: gripper parts lie 0.02-0.11 m in front of the lens just below
+             the axis; floor is >= 0.38 m away in the home pose -->
+        <clip><near>0.15</near><far>5.0</far></clip>
+      </camera>
+      <always_on>1</always_on>
+      <update_rate>10</update_rate>
+      <visualize>false</visualize>
+      <topic>/depth_cam/depth_cam</topic>
+    </sensor>
+  </gazebo>
+
+  <!-- ===== Gazebo plugins ===== -->
+  <gazebo>
+    <plugin filename="$(find ign_ros2_control)/../../lib/libign_ros2_control-system.so"
+            name="ign_ros2_control::IgnitionROS2ControlPlugin">
+      <parameters>$(find robot_gazebo)/config/robot_config.yaml</parameters>
+    </plugin>
+    <plugin filename="libignition-gazebo-joint-state-publisher-system.so"
+            name="ignition::gazebo::systems::JointStatePublisher">
+      <topic>joint_states</topic>
+    </plugin>
+    <!-- mecanum base: holonomic velocity command -->
+    <plugin filename="libignition-gazebo-velocity-control-system.so"
+            name="ignition::gazebo::systems::VelocityControl">
+      <topic>/controller/cmd_vel</topic>
+    </plugin>
+    <plugin filename="libignition-gazebo-odometry-publisher-system.so"
+            name="ignition::gazebo::systems::OdometryPublisher">
+      <odom_frame>odom</odom_frame>
+      <robot_base_frame>chassis_link</robot_base_frame>
+      <odom_topic>/odom</odom_topic>
+      <odom_publish_frequency>10</odom_publish_frequency>
+      <dimensions>2</dimensions>
+    </plugin>
+    <!-- attach / release the medicine container (assisted grasp) -->
+    <plugin filename="libignition-gazebo-detachable-joint-system.so"
+            name="ignition::gazebo::systems::DetachableJoint">
+      <parent_link>link5</parent_link>
+      <child_model>medicine</child_model>
+      <child_link>body</child_link>
+      <attach_topic>/medicine/attach</attach_topic>
+      <detach_topic>/medicine/detach</detach_topic>
+      <output_topic>/medicine/attached</output_topic>
+      <suppress_child_warning>true</suppress_child_warning>
+    </plugin>
+  </gazebo>
+</robot>
