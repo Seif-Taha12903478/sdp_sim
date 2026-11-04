@@ -1,0 +1,21 @@
+Evaluation eval_5runs_confirmed - 3 run(s), each from a fresh headless launch
+success = mission completed AND container on the table within 30 mm of the target AND tilt < 10 deg
+
+success rate          : 3 / 3 (100 %)
+mission completed     : 3 / 3
+container on a table  : 3 / 3
+container at target   : 3 / 3  (<= 30 mm)
+placement error (mm)  : mean 0.20  std 0.01  min 0.19  max 0.20  (n=3)
+tilt (deg)            : mean 0.00  std 0.00  min 0.00  max 0.00  (n=3)  [raw quaternion]
+mission sim time (s)  : mean 160.21  std 0.11  min 160.08  max 160.30  (n=3)  (missions completed)
+mission wall time (s) : mean 2799.29  std 165.88  min 2701.70  max 2990.82  (n=3)
+run wall time (s)     : mean 2824.39  std 166.21  min 2723.65  max 3016.23  (n=3)  (incl. launch/shutdown)
+
+attach/detach attempts until confirmed by /medicine/attached (1 = first try, 0 = not needed):
+  spawn detach  : mean 1.00  std 0.00  min 1.00  max 1.00  (n=3)
+  pick attach   : mean 1.00  std 0.00  min 1.00  max 1.00  (n=3)
+  place detach  : mean 1.00  std 0.00  min 1.00  max 1.00  (n=3)
+  not confirmed : none
+
+failures:
+  none

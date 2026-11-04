@@ -4,6 +4,26 @@ Senior design project of a computer-engineering student. The real robot is broke
 so this Gazebo simulation is the final deliverable. Keep explanations short and
 practical; the user reviews everything.
 
+## Next session (written 2026-11-04 evening; the VM was shut down at 20:25)
+State: `results/eval_5runs_confirmed/` holds runs 1-3 of the evaluation WITH the
+confirmed weld: 3/3 success, placement error 0.19-0.20 mm, tilt 0.0 deg, 160.2 sim s
+and ~47 min wall per run, every attach/detach confirmed on the first attempt. The evaluation was stopped on purpose after
+run 3 (run 4 was only launching; it is not recorded). Everything is committed.
+Do, in this order:
+1. Finish the evaluation - 2 more runs appended to the same folder, total 5:
+   `cd ~/sdp_sim && python3 tools/evaluate.py --out results/eval_5runs_confirmed --append --total 5`
+   (~50 min per run; check nothing is running first: `pgrep -af "ign gazebo"`).
+   Then record the summary in "Stages" item 6 and commit.
+2. Record a new mission video with the confirmed weld (the one in media/ is from
+   before it): launch `gui:=false video:=true`, start `tools/record_video.py
+   results/video/mission_confirmed.mp4 --caption-log results/video/scheduler.log`, then
+   `scripts/scheduler.py --in-minutes 1 --once > results/video/scheduler.log`; copy the
+   video to media/ and commit (see "Stages" item 6 for the procedure that worked).
+3. Add the attach/detach attempt counts to results/deliveries.csv: in
+   scripts/scheduler.py add spawn/pick/place attempts and unconfirmed commands from the
+   mission JSON's `weld` list to LOG_FIELDS / the row (same keys as tools/scoring.py).
+   Test with `--in-minutes 1 --once`, commit.
+
 ## Scenario
 At a scheduled time the robot picks a medicine container at the medicine station,
 follows a blue floor line to the patient, stops at a red floor marker, places the
@@ -234,6 +254,10 @@ Debug image: /tmp/line_follower_debug.jpg (look at it with the Read tool).
    start. Durations are monotonic. eval_5runs (old weld code, re-scored): 2/5 success;
    its `started` column is Hong Kong time (UTC+8; the VM moved to Asia/Dubai mid-run),
    use started_utc.
+   eval_5runs_confirmed (confirmed weld + sim-time gripper wait, 2026-11-04): runs 1-3
+   = 3/3 success (0.20 mm, tilt 0.0, all attach/detach confirmed first try); runs 4-5
+   still to do (see "Next session"). Result files (runs.csv, summary.txt, run JSON) of
+   both evaluations are committed under results/ (force-added; results/ is ignored).
    Video: launch with `video:=true` (hospital_video.sdf: overview camera 2 Hz), then
    `tools/record_video.py OUT.mp4 --caption-log LOG` (H.264, 15 fps = 7.5x real time,
    caption = current mission step from the log, stops after "[mission] done").

@@ -1,0 +1,15 @@
+Evaluation eval_5runs - 5 run(s), each from a fresh headless launch
+success = mission completed AND container on the table AND tilt < 10 deg
+
+success rate          : 3 / 5 (60 %)
+mission completed     : 5 / 5
+container on table    : 3 / 5
+placement error (mm)  : mean 840.33  std 1062.74  min 0.07  max 2034.83  (n=5)
+tilt (deg)            : mean 42.86  std 78.09  min 0.00  max 180.00  (n=5)
+mission sim time (s)  : mean 161.31  std 0.67  min 160.54  max 161.76  (n=3)
+mission wall time (s) : mean 2085.40  std 197.81  min 1877.96  max 2271.92  (n=3)
+run wall time (s)     : mean 2019.11  std 210.49  min 1746.15  max 2296.93  (n=5)  (incl. launch/shutdown)
+
+failures:
+  run 1:   
+  run 3:   

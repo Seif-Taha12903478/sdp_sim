@@ -1,0 +1,79 @@
+{
+  "label": "evaluation run 1",
+  "success": true,
+  "failed_step": null,
+  "error": null,
+  "steps": [
+    {
+      "step": 1,
+      "name": "spawn container + release weld",
+      "sim_t": 1.06
+    },
+    {
+      "step": 2,
+      "name": "arm home",
+      "sim_t": 1.7000000000000002
+    },
+    {
+      "step": 3,
+      "name": "pick",
+      "sim_t": 5.5
+    },
+    {
+      "step": 4,
+      "name": "arm home (carrying)",
+      "sim_t": 26.42
+    },
+    {
+      "step": 5,
+      "name": "follow line to the patient",
+      "sim_t": 30.04
+    },
+    {
+      "step": 6,
+      "name": "place on the bedside table",
+      "sim_t": 69.3
+    },
+    {
+      "step": 7,
+      "name": "arm home",
+      "sim_t": 86.54
+    },
+    {
+      "step": 8,
+      "name": "turn round",
+      "sim_t": 90.14
+    },
+    {
+      "step": 9,
+      "name": "follow line home",
+      "sim_t": 106.48
+    },
+    {
+      "step": 10,
+      "name": "park at the start",
+      "sim_t": 145.04
+    }
+  ],
+  "wall_start": 1793787312.4267077,
+  "sim_start": 1.02,
+  "sim_time": 162.67999999999998,
+  "base_final": [
+    0.0019297681740597888,
+    -3.111166595470383e-05,
+    -0.2603126478719761
+  ],
+  "wall_time": 1989.275476694107,
+  "target": [
+    1.4994701935517405,
+    1.4761433182682104
+  ],
+  "container": [
+    1.495135967579604,
+    1.2762490877733224,
+    0.029999878316149493
+  ],
+  "placement_error_mm": 199.9412136102034,
+  "tilt_deg": 179.99921118430188,
+  "on_table": false
+}
