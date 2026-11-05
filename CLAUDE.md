@@ -377,7 +377,7 @@ Debug image: /tmp/line_follower_debug.jpg (look at it with the Read tool).
      1/1/1, raised in 18.56 s, container z 0.830 on the platform, 178.3 sim s / 58.5 min
      wall. Video world: 0.25 mm, raised in 18.68 s, 178.4 sim s / 49.8 min wall.
    - RTF (tools/measure_rtf.py, results/rtf.csv), interleaved after/before/after/before:
-     8.99 / 10.33 / 8.50 / 8.41 % -> means 8.75 vs 9.37 % (-6.6 %), inside the
+     8.99 / 10.33 / 8.50 / 8.41 % -> means 8.74 vs 9.37 % (-6.7 %), inside the
      run-to-run spread (before runs that afternoon: 6.75-10.33 %). No simplification.
    - Media: media/mission_room.mp4 (25.5 s, 800x500; second caption line "smart table:
      lifting, platform ... m"); media/room_gui.png (Gazebo GUI 3D view: the world loads
