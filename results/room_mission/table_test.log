@@ -1,0 +1,42 @@
+[table-test] PASS  1 lowered at start  state lowered, platform 0.09999999992813334 m
+[table-test] PASS  arm not at home (fresh launch)  arm [0.0, -0.007, -0.001, -0.009, 0.001]
+[table-test] PASS  2 container spawned  z_sim]: Requesting list of world names.[0m
+[0m[INFO] [1793881957.240913105] [ros_gz_sim]: Requested creation of entity.[0m
+[0m[INFO] [1793881957.241193600] [ros_gz_sim]: OK creation of entity.[0m
+[0m[INFO] [1793881957.765770606] [jetarm_pick_place]: DetachableJoint state: attached[0m
+[table-test] PASS  2 welded at spawn (DetachableJoint)  
+[table-test] PASS  stays lowered for 3 sim s (welded, 1 mm above the platform)  state lowered, platform 0.100 m
+[table-test] FAIL  2 no contact while held 1 mm above  contact steady
+[0m[INFO] [1793882029.837904414] [jetarm_pick_place]: DetachableJoint state: detached[0m
+[table-test] PASS  3 detach confirmed  1 attempt(s)
+[table-test] PASS  3 contact steady after the drop  steady -0.88 sim s after the detach
+[table-test] PASS  stays lowered for 4 sim s (arm not at home)  state lowered, platform 0.100 m
+[0m[INFO] [1793882160.684374854] [jetarm_pick_place]: DetachableJoint state: attached[0m
+[table-test] PASS  4 attach confirmed (container resting, arm static)  1 attempt(s)
+[table-test] PASS  stays lowered for 3 sim s (weld attached and arm not at home)  state lowered, platform 0.100 m
+[0m[INFO] [1793882243.875308925] [jetarm_pick_place]: DetachableJoint state: detached[0m
+[table-test] PASS  5 detach confirmed  1 attempt(s)
+[table-test] PASS  stays lowered for 3 sim s (weld released, arm still not at home)  state lowered, platform 0.100 m
+[table-test] PASS  5 container resting on the lowered platform  container [1.4989668946514136, 1.4719252866786343, 0.12980265644625213] tilt 0.1470624347160755
+[table-test] photos: saved results/room/shots/table_lowered_a.png (sim t=16.00); saved results/room/shots/table_lowered_b.png (sim t=16.00); saved results/room/shots/table_lowered_c.png (sim t=16.00)
+[table-test] arm home ...
+       ... still moving, 1.212 rad to go
+       ... still moving, 0.777 rad to go
+       ... still moving, 0.238 rad to go
+[table-test] PASS  6 arm home  
+[table-test] PASS  6 lift starts once the arm is home  state lifting
+[table-test] PASS  6 raised  platform 0.7997 m, lifting -> raised 18.6 sim s
+[table-test] PASS  6 lift speed 3-5 cm/s  cruise 0.0399 m/s
+[table-test] PASS  6 container on the raised platform  container [1.4988904146258322, 1.4719252887823115, 0.8299996430477942] tilt 0.00 deg (expected z 0.830)
+[table-test] PASS  6 container did not slide during the lift  0.08 mm
+[table-test] photos: saved results/room/shots/table_raised_a.png (sim t=40.00); saved results/room/shots/table_raised_b.png (sim t=40.00); saved results/room/shots/table_raised_c.png (sim t=40.00)
+[table-test] PASS  stays raised for 4 sim s (container on it)  state raised, platform 0.800 m
+[table-test] PASS  7 container removed  data: true
+[table-test] PASS  7 lowering starts >= 3 s after the removal  3.04 sim s (removal request returned at sim 43.04)
+[table-test] PASS  7 lowered again  platform 0.1004 m
+[table-test] PASS  8 manual raise accepted  lifting
+[table-test] PASS  8 raised by hand  platform 0.7998 m
+[table-test] PASS  stays raised for 6 sim s (manual raise, no container: no auto-lower)  state raised, platform 0.800 m
+[table-test] PASS  9 manual lower accepted  lowering
+[table-test] PASS  9 lowered by hand  platform 0.1004 m
+[table-test] 28/29 checks passed; report results/room/table_test.json

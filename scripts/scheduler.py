@@ -14,7 +14,9 @@ mission every wait is on simulation feedback. Deliveries that fall due while
 another mission runs are queued and run one after another (one robot). Each
 mission must end parked at the start (mission.py step 10) for the next one.
 Every delivery is appended to the log CSV (default ~/sdp_sim/results/deliveries.csv)
-with its result; the mission's JSON result is kept next to it.
+with its result (scored by tools/scoring.py, incl. the smart table's lift:
+table_raised, lift_time_s, container_on_platform_after_lift); the mission's JSON
+result is kept next to it.
 """
 import argparse
 import csv
@@ -35,9 +37,10 @@ import scoring                      # noqa: E402  (same scoring as the evaluatio
 
 WELD_FIELDS = ['spawn_detach_attempts', 'pick_attach_attempts', 'place_detach_attempts',
                'weld_unconfirmed']
+TABLE_FIELDS = scoring.TABLE_FIELDS      # table_raised, lift_time_s, container_on_platform_after_lift
 LOG_FIELDS = ['due', 'started', 'finished', 'patient', 'medicine', 'bed', 'success',
               'failed_step', 'error', 'placement_error_mm', 'at_target', 'tilt_deg', 'on_table',
-              ] + WELD_FIELDS + ['sim_time_s', 'wall_time_s', 'result_json']
+              ] + WELD_FIELDS + TABLE_FIELDS + ['sim_time_s', 'wall_time_s', 'result_json']
 
 
 def log(msg):
@@ -127,8 +130,9 @@ def run_delivery(entry, due, a):
            'wall_time_s': round(res['wall_time'], 1) if res.get('wall_time') is not None else None,
            'result_json': rj if os.path.exists(rj) else ''}
     # placement / tilt / attach-detach attempts scored like tools/evaluate.py
-    sc = scoring.score(res) if res.get('container') or res.get('weld') is not None else {}
-    for k in ('placement_error_mm', 'at_target', 'tilt_deg', 'on_table') + tuple(WELD_FIELDS):
+    sc = (scoring.score(res) if res.get('container') or res.get('placed') or res.get('weld') is not None
+          else {})
+    for k in ('placement_error_mm', 'at_target', 'tilt_deg', 'on_table') + tuple(WELD_FIELDS + TABLE_FIELDS):
         if sc.get(k) is not None:
             row[k] = round(sc[k], 2) if isinstance(sc[k], float) else sc[k]
     if sc and res.get('success'):

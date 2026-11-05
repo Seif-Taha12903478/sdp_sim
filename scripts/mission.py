@@ -13,11 +13,18 @@ Steps
   3 pick at arm-relative (0, 0.20): open, above, descend, close 0.75, attach, lift
   4 arm home (container stays in the gripper, out of the camera view)
   5 follow the line to the patient marker            (line_follower.py)
-  6 place at arm-relative (0, 0.20): above, descend, detach, open, retreat
+  6 place on the smart bedside table at arm-relative (0, 0.20): the table must be
+    lowered (platform top 0.10 m); above, descend, detach, open, retreat. The
+    placement is recorded the moment the platform's contact sensor confirms the
+    container (steady for 2 sim s, /smart_table/contact_state), on the lowered table
   7 arm home
-  8 turn round: strafe right, rotate 180 deg on /odom, strafe right (base_moves.py)
-  9 follow the line home                             (line_follower.py)
- 10 park at the start for the next mission: strafe LEFT (away from the medicine
+  8 the table lifts the medicine to the patient: scripts/smart_table.py lifts by
+    itself once the contact is steady, the weld released and the arm home; wait for
+    "raised" (--lift-timeout sim s; on timeout the mission goes on and records
+    table_raised false), then check the container still stands on the platform
+  9 turn round: strafe right, rotate 180 deg on /odom, strafe right (base_moves.py)
+ 10 follow the line home                             (line_follower.py)
+ 11 park at the start for the next mission: strafe LEFT (away from the medicine
     station, which is on the robot's right when it faces home), rotate 180 deg,
     strafe left, then go to (0, 0) yaw 0 on /odom
 
@@ -35,6 +42,7 @@ import os
 import re
 import subprocess
 import sys
+import threading
 import time
 
 import rclpy
@@ -44,6 +52,7 @@ sys.path.insert(0, HERE)
 import jetarm_pick_place as jp          # noqa: E402
 from base_moves import BaseMover        # noqa: E402
 from medicine_weld import Weld          # noqa: E402
+import smart_table as tbl               # noqa: E402  (table geometry + TableMonitor)
 
 CONTAINER_SDF = os.path.join(HERE, 'medicine_container.sdf')
 CONTAINER_NAME = 'medicine'              # DetachableJoint child_model
@@ -136,8 +145,8 @@ def confirm(weld, kind, where):
     return ok
 
 
-def check_on_table(target, where):
-    """Container must stand on the table within PLACE_TOL of the target."""
+def check_on_table(target, where, z=TABLE_Z):
+    """Container must stand on the table (centre at height z) within PLACE_TOL of the target."""
     c = gz_model_pose_full(CONTAINER_NAME)
     if c is None:
         raise RuntimeError('%s: container not found in Gazebo' % where)
@@ -145,9 +154,40 @@ def check_on_table(target, where):
     d = math.hypot(cx - target[0], cy - target[1])
     log('%s: container (%.4f, %.4f, %.4f) tilt %.1f deg, %.1f mm from target'
         % (where, cx, cy, cz, tilt_deg(q), 1000 * d))
-    if abs(cz - TABLE_Z) > 0.01 or d > PLACE_TOL or tilt_deg(q) > 10:
+    if abs(cz - z) > 0.01 or d > PLACE_TOL or tilt_deg(q) > 10:
         raise RuntimeError('%s: container is not standing on the table at the target '
-                           '(z %.3f, %.0f mm away, tilt %.0f deg)' % (where, cz, 1000 * d, tilt_deg(q)))
+                           '(z %.3f, expected %.3f, %.0f mm away, tilt %.0f deg)'
+                           % (where, cz, z, 1000 * d, tilt_deg(q)))
+    return c
+
+
+class ContactPose:
+    """Reads the container's Gazebo pose the moment the smart table reports a steady
+    contact (TableMonitor callback). The pose is read in a thread, so the arm/gripper
+    waits keep spinning: the place motion is not changed or delayed."""
+
+    def __init__(self, table):
+        self.result, self.thread, self.armed = None, None, False
+        table.on_contact = self._on_contact
+
+    def arm(self):
+        self.result, self.thread, self.armed = None, None, True
+
+    def _on_contact(self, state, sim_t):
+        if self.armed and state == 'steady':
+            self.armed = False
+            self.thread = threading.Thread(target=self._grab, args=(sim_t,), daemon=True)
+            self.thread.start()
+
+    def _grab(self, sim_t):
+        c = gz_model_pose_full(CONTAINER_NAME)
+        self.result = {'source': 'contact sensor', 'sim_t': sim_t,
+                       'xyz': list(c[0]) if c else None, 'quat_xyzw': list(c[1]) if c else None}
+
+    def get(self, timeout=180.0):
+        if self.thread is not None:
+            self.thread.join(timeout)
+        return self.result
 
 
 def follow_line(extra=()):
@@ -163,12 +203,16 @@ def follow_line(extra=()):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument('--from', dest='first', type=int, default=1, help='first step (1-9)')
-    p.add_argument('--to', dest='last', type=int, default=10, help='last step (1-10)')
+    p.add_argument('--from', dest='first', type=int, default=1, help='first step (1-11)')
+    p.add_argument('--to', dest='last', type=int, default=11, help='last step (1-11)')
     p.add_argument('--result-json', default=None, help='write the results to this JSON file')
     p.add_argument('--label', default='', help='free text for the log, e.g. patient/medicine')
     p.add_argument('--offset', type=float, default=0.12, help='strafe distance for the turn (m)')
     p.add_argument('--duration', type=float, default=3.0, help='sim seconds per arm move')
+    p.add_argument('--lift-timeout', type=float, default=90.0,
+                   help='sim seconds to wait for the smart table to be raised (step 8)')
+    p.add_argument('--table-timeout', type=float, default=120.0,
+                   help='sim seconds to wait for the smart table to be lowered before placing')
     a = p.parse_args()
 
     # pick/place plan from jetarm_pick_place (same defaults as its CLI)
@@ -182,7 +226,14 @@ def main():
     node = jp.PickPlace()
     base = BaseMover(node)
     weld = Weld(node)
+    table = tbl.TableMonitor(node)
+    contact_pose = ContactPose(table)
     result = {}
+
+    def table_top():
+        """Current platform top (m) from /smart_table/height."""
+        table.spin_until(lambda: table.height is not None, 5.0, wall_limit=120.0)
+        return table.height if table.height is not None else tbl.LOWERED_TOP
 
     def check(res, what):
         if res is None:
@@ -208,16 +259,74 @@ def main():
         log('lifted: container z %.3f' % c[2])
 
     def place():
+        # the smart table lowers by itself once a previous container has been taken off
+        if not table.wait_state('lowered', a.table_timeout, wall_limit=7200.0):
+            raise RuntimeError('smart table not lowered (state %s, platform %s m) - not placing'
+                               % (table.state(), table.height))
+        info = result['table'] = {
+            'platform': {'center': list(tbl.PLATFORM_CENTER), 'size': list(tbl.PLATFORM_SIZE),
+                         'top_lowered': tbl.LOWERED_TOP, 'top_raised': tbl.RAISED_TOP},
+            'state_before_place': table.state(), 'height_before_place': table_top()}
         x, y, yaw, _ = base.pose()
         rx, ry = REACH_XY
         result['target'] = (x + math.cos(yaw) * rx - math.sin(yaw) * ry,
                             y + math.sin(yaw) * rx + math.cos(yaw) * ry)
         check(node.arm(plan['place_above'], d), 'move above table')
         check(node.arm(plan['place_descent'], d / 2), 'descend')
+        contact_pose.arm()                      # pose read when the contact sensor confirms
         confirm(weld, 'detach', 'place')
+        info['detach_sim_t'] = weld.sim_t
         check(node.gripper(pa.open, d), 'open gripper')
         check(node.arm(plan['place_retreat'], d / 2), 'retreat')
-        check_on_table(result['target'], 'after retreat')
+        if not table.spin_until(lambda: contact_pose.thread is not None, 10.0, wall_limit=1800.0):
+            log('WARNING: the platform contact sensor did not confirm the container within 10 sim s '
+                '(contact %s)' % table.contact())
+        placed = contact_pose.get()
+        c = check_on_table(result['target'], 'after retreat')
+        if not placed or not placed.get('xyz'):
+            placed = {'source': 'after retreat (no contact confirmation)', 'sim_t': table.sim_t,
+                      'xyz': list(c[0]), 'quat_xyzw': list(c[1])}
+        placed['table_state'], placed['table_height'] = table.state(), table.height
+        result['placed'] = placed
+        px, py, pz = placed['xyz']
+        log('placed (%s, sim t %.2f): container (%.4f, %.4f, %.4f), %.1f mm from target, tilt %.1f deg, '
+            'table %s at %.3f m' % (placed['source'], placed['sim_t'] or -1, px, py, pz,
+                                    1000 * math.hypot(px - result['target'][0], py - result['target'][1]),
+                                    tilt_deg(placed['quat_xyzw']), placed['table_state'], placed['table_height'] or -1))
+
+    def table_lift():
+        info = result.setdefault('table', {})
+        t0 = table.sim_t
+        ok = table.spin_until(lambda: table.state() == 'raised', a.lift_timeout, wall_limit=7200.0,
+                              every=(2.0, lambda: log('table: %s, platform %.3f m'
+                                                      % (table.state(), table.height or 0.0))))
+        log('table: %s, platform %.3f m' % (table.state(), table.height or 0.0))   # last caption line
+        t_place = (result.get('placed') or {}).get('sim_t') or info.get('detach_sim_t') or 0.0
+        starts = [t for t, s in table.states if s == 'lifting' and t is not None and t >= t_place - 1.0]
+        ends = [t for t, s in table.states if s == 'raised' and starts and t is not None and t >= starts[-1]]
+        top = table_top()
+        info.update(raised=bool(ok), lift_start_sim_t=starts[-1] if starts else None,
+                    raised_sim_t=ends[0] if ends else None, height_after_lift=top,
+                    states=[[t, s] for t, s in table.states])
+        info['lift_time_s'] = (ends[0] - starts[-1]) if starts and ends else None
+        info['wait_s'] = (ends[0] - t0) if ends else None
+        c = gz_model_pose_full(CONTAINER_NAME)
+        if c is not None:
+            info['container_after_lift'] = {'xyz': list(c[0]), 'quat_xyzw': list(c[1])}
+            on = tbl.on_platform(c[0], tilt_deg(c[1]), top)
+            info['container_on_platform_after_lift'] = on
+            log('table %s (platform %.3f m, lift %s s): container (%.4f, %.4f, %.4f) tilt %.1f deg - %s'
+                % (table.state(), top, '%.1f' % info['lift_time_s'] if info['lift_time_s'] else '?',
+                   c[0][0], c[0][1], c[0][2], tilt_deg(c[1]),
+                   'on the platform' if on else 'NOT on the platform'))
+        if not ok:
+            log('WARNING: smart table not raised within %.0f sim s (state %s, platform %.3f m) - going on'
+                % (a.lift_timeout, table.state(), top))
+
+    def turn_round():
+        if 'target' in result:      # container must still stand on the platform, at its height now
+            check_on_table(result['target'], 'before moving away', z=table_top() + tbl.CONTAINER_HALF_H)
+        base.turnaround(a.offset)
 
     def park():
         base.turnaround(a.offset, side=+1)
@@ -231,8 +340,8 @@ def main():
         ('follow line to the patient', lambda: follow_line()),
         ('place on the bedside table', place),
         ('arm home', lambda: check(node.arm(jp.INIT_POSE, d), 'arm home')),
-        ('turn round', lambda: (check_on_table(result['target'], 'before moving away')
-                                if 'target' in result else None, base.turnaround(a.offset))),
+        ('table lifts medicine to the patient', table_lift),
+        ('turn round', turn_round),
         ('follow line home', lambda: follow_line()),
         ('park at the start', park),
     ]
@@ -286,6 +395,9 @@ def main():
             out['failed_step'] = '%d %s' % current
         out['wall_time'] = time.monotonic() - t_wall0
         out['weld'] = WELD_LOG
+        for k in ('placed', 'table'):
+            if k in result:
+                out[k] = result[k]
         # container result (Gazebo ground truth) - also after a failure, if it was placed
         if 'target' in result:
             tx, ty = result['target']
@@ -298,12 +410,13 @@ def main():
                 out['container_quat_xyzw'] = list(q)       # raw pose for re-scoring
                 err = 1000 * math.hypot(cx - tx, cy - ty)
                 tilt = tilt_deg(q)
-                on_table = abs(cz - 0.13) < 0.01
+                top = table.height if table.height is not None else tbl.LOWERED_TOP
+                on_table = abs(cz - (top + tbl.CONTAINER_HALF_H)) < 0.01
                 out.update(container=[cx, cy, cz], placement_error_mm=err, tilt_deg=tilt,
-                           on_table=on_table)
-                log('container at (%.4f, %.4f, %.4f); target (%.4f, %.4f); placement error '
-                    '%.1f mm; tilt %.1f deg; standing on the table: %s'
-                    % (cx, cy, cz, tx, ty, err, tilt, 'yes' if on_table else 'NO'))
+                           on_table=on_table, platform_top_final=top)
+                log('container at (%.4f, %.4f, %.4f); target (%.4f, %.4f); %.1f mm from the target; '
+                    'tilt %.1f deg; standing on the platform (top %.3f m): %s'
+                    % (cx, cy, cz, tx, ty, err, tilt, top, 'yes' if on_table else 'NO'))
         if a.result_json:
             with open(a.result_json, 'w') as fh:
                 json.dump(out, fh, indent=2)

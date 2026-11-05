@@ -13,7 +13,10 @@ success, mission result / failed step / error, container final position vs. the
 bedside-table target (Gazebo ground truth), placement error, tilt from upright,
 whether it stands on the table, sim time and wall time of the mission, and the
 wall time including launch and shutdown.
-success = mission completed AND container on the table AND tilt < --max-tilt deg.
+success = mission completed AND container on the table within 30 mm of the target AND
+tilt < --max-tilt deg (tools/scoring.py); with the smart bedside table the placement is
+scored when the platform's contact sensor confirms the container (lowered table), and
+the table must also have been raised with the container still on the platform.
 summary.txt: success rate and mean / std / max of the numbers.
 
 Add runs to an existing results folder (e.g. after stopping an evaluation):
@@ -152,7 +155,9 @@ def failure_reason(r, max_tilt):
     if not _ok(r['mission_ok']):
         return 'mission failed: %s %s %s' % (r['failed_step'] or '', r['error'] or '', r['note'] or '')
     why = []
-    if _ok(r['on_table']) and _ok(r.get('at_target')) and (_f(r['tilt_deg']) or 0) < max_tilt:
+    has_table = r.get('table_raised') not in (None, '')
+    lift_bad = has_table and not (_ok(r.get('table_raised')) and _ok(r.get('container_on_platform_after_lift')))
+    if _ok(r['on_table']) and _ok(r.get('at_target')) and (_f(r['tilt_deg']) or 0) < max_tilt and not lift_bad:
         return 'unknown'
     if not _ok(r['on_table']):
         z = _f(r['container_z'])
@@ -169,6 +174,9 @@ def failure_reason(r, max_tilt):
         at_station = cx is not None and abs(cx) < 0.05 and abs(cy - 0.20) < 0.05
         why.append('placement error %.1f mm%s' % (e, ' (container still at the medicine station: '
                                                   'not picked)' if at_station else (' (not at the target)' if far else '')))
+    if lift_bad:
+        why.append('smart table not raised' if not _ok(r.get('table_raised')) else
+                   'container not on the platform after the lift (z %s)' % r.get('container_after_lift_z'))
     return 'mission completed but ' + '; '.join(why)
 
 
@@ -178,10 +186,19 @@ def write_outputs(out, rows, a):
         w.writeheader()
         w.writerows(rows)
     ok = [r for r in rows if _ok(r['success'])]
+    tr = [r for r in rows if r.get('table_raised') not in (None, '')]      # runs with the smart table
+    table_lines = [
+        'table raised          : %d / %d' % (sum(1 for r in tr if _ok(r.get('table_raised'))), len(tr)),
+        'on platform after lift: %d / %d' % (sum(1 for r in tr if _ok(r.get('container_on_platform_after_lift'))),
+                                            len(tr)),
+        'lift time (s)         : ' + stats([_f(r.get('lift_time_s')) for r in tr]) + '  (lifting -> raised, sim)',
+    ] if tr else []
     lines = [
         'Evaluation %s - %d run(s), each from a fresh headless launch' % (os.path.basename(out), len(rows)),
         'success = mission completed AND container on the table within %.0f mm of the target AND tilt < %.0f deg'
         % (scoring.PLACE_TOL_MM, a.max_tilt),
+    ] + (['          (smart table: placement scored when the platform contact sensor confirmed it; AND table',
+          '          raised AND container still on the platform after the lift)'] if tr else []) + [
         '',
         'success rate          : %d / %d (%.0f %%)' % (len(ok), len(rows), 100.0 * len(ok) / max(1, len(rows))),
         'mission completed     : %d / %d' % (sum(1 for r in rows if _ok(r['mission_ok'])), len(rows)),
@@ -189,6 +206,7 @@ def write_outputs(out, rows, a):
         'container at target   : %d / %d  (<= %.0f mm)' % (sum(1 for r in rows if _ok(r.get('at_target'))), len(rows),
                                                           scoring.PLACE_TOL_MM),
         'placement error (mm)  : ' + stats([_f(r['placement_error_mm']) for r in rows]),
+    ] + table_lines + [
         'tilt (deg)            : ' + stats([_f(r['tilt_deg']) for r in rows]) + '  [%s]' % ', '.join(
             sorted(set(str(r.get('tilt_source')) for r in rows if r.get('tilt_source')))),
         'mission sim time (s)  : ' + stats([_f(r['sim_time_s']) for r in rows if _ok(r['mission_ok'])]) + '  (missions completed)',

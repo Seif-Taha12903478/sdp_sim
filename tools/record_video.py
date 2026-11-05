@@ -6,7 +6,8 @@
 Launch the simulation with video:=true first (overview camera at 2 Hz sim; the normal
 world has it at 0.5 Hz). Every camera frame becomes one video frame, so the video
 plays at fps / 2 times real speed (15 fps -> 7.5x). Each frame shows the sim time
-and, with --caption-log, the latest "[mission] step ..." line of that log file.
+and, with --caption-log, the latest "[mission] step ..." line of that log file and,
+below it, the latest "[mission] table: ..." line of that step (smart table lifting).
 Stops on Ctrl+C / SIGTERM, or after --max-sim seconds of sim time, or when the
 caption log contains "--stop-on" (default "[mission] done"), plus --tail seconds.
 Writes H.264 (avc1) MP4; falls back to mp4v if avc1 is not available.
@@ -39,13 +40,17 @@ def last_step(path):
         with open(path, errors='replace') as fh:
             lines = [l for l in fh if '[mission]' in l]
     except OSError:
-        return '', ''
-    step = ''
+        return '', '', ''
+    step, sub = '', ''
     for l in lines:
         m = re.search(r'\[mission\] (step \d+/\d+ [^(]*)', l)
         if m:
-            step = m.group(1).strip()
-    return step, ''.join(lines)
+            step, sub = m.group(1).strip(), ''
+            continue
+        m = re.search(r'\[mission\] table: (.*)', l)
+        if m:
+            sub = 'smart table: ' + m.group(1).strip()
+    return step, sub, ''.join(lines)
 
 
 def text(img, s, org, scale=0.6):
@@ -86,12 +91,14 @@ def main():
                     if writer.isOpened():
                         print('codec', cc, flush=True)
                         break
-            step, alltext = last_step(a.caption_log) if a.caption_log else ('', '')
+            step, sub, alltext = last_step(a.caption_log) if a.caption_log else ('', '', '')
             text(img, a.title, (12, 26), 0.65)
             text(img, 'sim time %6.1f s   (video %.1fx real time)' % (t - t0, a.fps / 2.0),
                  (12, img.shape[0] - 16), 0.55)
             if step:
                 text(img, step, (12, 54), 0.6)
+            if sub:
+                text(img, sub, (12, 80), 0.55)
             writer.write(img)
             n += 1
             if stop_at is None and a.caption_log and a.stop_on in alltext:
