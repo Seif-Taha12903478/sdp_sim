@@ -14,7 +14,7 @@ Do, in this order:
    `cd ~/sdp_sim && python3 tools/evaluate.py --out results/eval_5runs_confirmed --append --total 5`
    (~50 min per run; check nothing is running first: `pgrep -af "ign gazebo"`).
    Then record the summary in "Stages" item 6 and commit.
-2. Record a new mission video with the confirmed weld (the one in media/ is from
+2. DONE 2026-11-05 (media/mission_confirmed.mp4). Record a new mission video with the confirmed weld (the one in media/ is from
    before it): launch `gui:=false video:=true`, start `tools/record_video.py
    results/video/mission_confirmed.mp4 --caption-log results/video/scheduler.log`, then
    `scripts/scheduler.py --in-minutes 1 --once > results/video/scheduler.log`; copy the
@@ -267,7 +267,10 @@ Debug image: /tmp/line_follower_debug.jpg (look at it with the Read tool).
    Video: launch with `video:=true` (hospital_video.sdf: overview camera 2 Hz), then
    `tools/record_video.py OUT.mp4 --caption-log LOG` (H.264, 15 fps = 7.5x real time,
    caption = current mission step from the log, stops after "[mission] done").
-   media/mission_overview.mp4: the 2026-11-04 scheduled full mission (23 s).
+   media/mission_overview.mp4: the 2026-11-04 scheduled full mission (23 s, BEFORE the
+   confirmed weld). media/mission_confirmed.mp4: 2026-11-05 scheduled full mission with
+   the confirmed weld (23 s, 800x500 H.264; success, container 0.2 mm from the target,
+   all attach/detach confirmed first try) - use this one for the presentation.
 
 ## First test procedure (stages 1-3)
 1. `bash ~/sdp_sim/install.sh`, new terminal.
