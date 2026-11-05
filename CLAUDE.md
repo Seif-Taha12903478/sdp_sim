@@ -4,34 +4,40 @@ Senior design project of a computer-engineering student. The real robot is broke
 so this Gazebo simulation is the final deliverable. Keep explanations short and
 practical; the user reviews everything.
 
-## Next session (written 2026-11-04 evening; ALL 3 ITEMS DONE 2026-11-05)
+## Next session (written 2026-11-05 ~20:05, pushed in a hurry before losing internet)
+1. Patient's-side photos still to do (media/room_*.png). The photo session was stopped
+   before any frame was saved. Procedure: launch `gui:=false photo:=true`, `jetarm_pick_place.py
+   home`, spawn the container at (1.4992, 1.4723, 0.131), `medicine_weld.py detach`, wait
+   for /smart_table/state "raised" (auto-lift), then `tools/sim_screenshot.py
+   results/room/shots/final.png --room` -> copy final_b.png to media/room_patient_side.png
+   (camera b is already at its new pose in the generator + installed photo world).
+   Also copy the existing 5b photos to media/: results/room/shots/table_lowered_c.png ->
+   room_table_lowered.png, table_raised_c.png -> room_table_raised.png, table_raised_a.png
+   -> room_corner_raised.png.
+2. Stage 7 text to finish: it is drafted, but its "Media" line already lists those four
+   room_*.png files - check it after step 1. Then commit and push hospital-room. Do NOT
+   merge into main (the user decides).
+
+## Current state (2026-11-05 evening)
 GitHub backup: private repo https://github.com/Seif-Taha12903478/sdp_sim (remote
-`origin`, branch main). gh 2.103.0 is installed in ~/.local/bin (no sudo), logged in,
+`origin`). gh 2.103.0 is installed in ~/.local/bin (no sudo), logged in,
 `gh auth setup-git` done: `git push` works. Push after each commit.
 
-State: `results/eval_5runs_confirmed/` holds runs 1-3 of the evaluation WITH the
-confirmed weld: 3/3 success, placement error 0.19-0.20 mm, tilt 0.0 deg, 160.2 sim s
-and ~47 min wall per run, every attach/detach confirmed on the first attempt. The evaluation was stopped on purpose after
-run 3 (run 4 was only launching; it is not recorded). Everything is committed.
-Do, in this order:
-1. DONE 2026-11-05 (5/5 success, see Stages 6). Finish the evaluation - 2 more runs appended to the same folder, total 5:
-   `cd ~/sdp_sim && python3 tools/evaluate.py --out results/eval_5runs_confirmed --append --total 5`
-   (~50 min per run; check nothing is running first: `pgrep -af "ign gazebo"`).
-   Then record the summary in "Stages" item 6 and commit.
-2. DONE 2026-11-05 (media/mission_confirmed.mp4). Record a new mission video with the confirmed weld (the one in media/ is from
-   before it): launch `gui:=false video:=true`, start `tools/record_video.py
-   results/video/mission_confirmed.mp4 --caption-log results/video/scheduler.log`, then
-   `scripts/scheduler.py --in-minutes 1 --once > results/video/scheduler.log`; copy the
-   video to media/ and commit (see "Stages" item 6 for the procedure that worked).
-3. DONE 2026-11-05 (live-tested: 1/1/1 attempts, none unconfirmed). Add the attach/detach attempt counts to results/deliveries.csv: in
-   scripts/scheduler.py add spawn/pick/place attempts and unconfirmed commands from the
-   mission JSON's `weld` list to LOG_FIELDS / the row (same keys as tools/scoring.py).
-   Test with `--in-minutes 1 --once`, commit.
+Branch `hospital-room` (pushed, NOT merged into main - the user decides): hospital
+patient room + smart bedside table that lifts the medicine to the patient (see
+"Stages" item 7). main = the state with the beige bedside table (eval_5runs_confirmed,
+5/5). Not done on purpose: a 5-run evaluation with the table - ask the user first
+(`tools/evaluate.py` already scores the lift; ~50-60 min per run).
+Earlier items (finish eval_5runs_confirmed, mission_confirmed.mp4, attach/detach
+counts in deliveries.csv) are all DONE (2026-11-05).
 
 ## Scenario
 At a scheduled time the robot picks a medicine container at the medicine station,
 follows a blue floor line to the patient, stops at a red floor marker, places the
-container on the bedside table, turns round and follows the line home.
+container on the bedside table, turns round and follows the line home. On branch
+hospital-room the bedside table is a smart table: once the container rests on it, the
+weld is released and the arm is home, it lifts the medicine from 0.10 m to 0.80 m
+(bed height) before the robot turns round.
 
 ## Machine
 - Ubuntu 22.04 VMware VM, ROS 2 Humble, Gazebo Fortress 6.16 (`ign gazebo`, not `gz sim`).
@@ -56,7 +62,8 @@ container on the bedside table, turns round and follows the line home.
   `CAMERA_TYPE=GEMINI` must be set (it comes from ~/ros2_ws/.typerc via .bashrc); xacro needs it.
 
 ## Code layout
-- ~/sdp_sim is a git repository (branch main). Commit after every milestone that works.
+- ~/sdp_sim is a git repository (branches main and hospital-room, see "Current state").
+  Commit after every milestone that works.
 - Hiwonder package: ~/ros2_ws/src/simulations/{jetarm_6dof_description,robot_gazebo,robot_moveit_config}.
   Do not edit Hiwonder files without a backup next to them. Our additions:
   - robot_gazebo/urdf/jetarm_mecanum.gazebo.xacro - arm on chassis, wrist camera, plugins
@@ -76,6 +83,17 @@ container on the bedside table, turns round and follows the line home.
 - ~/sdp_sim/scripts/planar_base.py - base driver, STARTED BY hospital.launch.py (see
   "Mobile robot model"). The installed launch file runs it from this path.
 - ~/sdp_sim/scripts/medicine_container.sdf - 3 cm x 6 cm, 30 g cylinder
+- ~/sdp_sim/scripts/smart_table.py - smart bedside table controller, STARTED BY
+  hospital.launch.py; also TableMonitor (used by mission.py) and a CLI
+  (`smart_table.py raise|lower|status`). Its constants (N_STAGES, platform centre/size,
+  heights, speeds) are imported by tools/make_hospital_world.py and mission.py.
+- ~/sdp_sim/tools/test_smart_table.py - stand-alone table test (fresh launch, robot at
+  the start, arm NOT homed yet). ~/sdp_sim/tools/measure_rtf.py - RTF of a fresh
+  headless launch (appends to results/rtf.csv).
+- robot_gazebo/worlds/hospital_video.sdf (video:=true) and hospital_photo.sdf
+  (photo:=true: + room cameras /room_cam/{a,b,c}/image, `sim_screenshot.py OUT --room`)
+  are generated with hospital.sdf; monitor_screen.png (generated monitor texture) is
+  referenced by its absolute path ~/sdp_sim/robot_gazebo/worlds/monitor_screen.png.
 - Earlier patches (already applied): worlds.launch.py uses `--render-engine ogre`;
   robot.gazebo.xacro has a DetachableJoint plugin (backup .bak).
 
@@ -136,6 +154,37 @@ container on the bedside table, turns round and follows the line home.
   once after ~25 min, while the server kept running fine). Starting a second GUI client
   (`ign gazebo -g`) at that moment coincided with the whole launch getting SIGINT and
   shutting down; cause unknown, so do that only when the run is finished.
+  The GUI screenshot service worked on 2026-11-05 (media/room_gui.png); an X-screen
+  grab shows whatever window is in front (the terminal), not Gazebo.
+- DART (gz-physics) and velocity-controlled joints: (1) a joint that sits ON its
+  position limit ignores its velocity (servo) command - smart-table stages that sagged
+  onto the limit before the controllers engaged stayed there (platform at 0.077 m).
+  Keep joint limits a few cm beyond the commanded range. (2) The servo of a 4th
+  prismatic joint in series never acts (that stage falls onto its limit), reproduced in
+  a table-only world independent of joint name, joint/plugin order, inertia, collision
+  and sensor; 3 in series or 4 each jointed to the base work. Hence 3 table stages.
+- JointPositionController `<use_velocity_commands>true`: velocity = -error/dt clamped
+  to cmd_max/cmd_min; holds against gravity exactly. Stream setpoints every step for
+  a smooth profile (smart_table.py does, on /smart_table/joint_states).
+- Contact sensor (Fortress): world plugin ignition-gazebo-contact-system + `<sensor
+  type="contact"><contact><collision>top</collision><topic>/smart_table/contact</topic>`
+  in the link. Publishes ignition.msgs.Contacts ONLY while touching (every physics step,
+  sim stamps), scoped names `smart_table::platform::top` / `medicine::body::collision`;
+  bridged as ros_gz_interfaces/msg/Contacts. "No contact" = no message for GAP_S.
+- A container spawned 1 mm above a surface drops onto it in the first physics step,
+  BEFORE the DetachableJoint weld forms: it is welded while touching (contact "steady").
+- Lighting: scene ambient is 0.8 (keep it - the line follower's HSV ranges were tuned
+  under it). Materials with ambient = diffuse render flat/washed out; furniture uses
+  ambient 0.6 x colour (FURNITURE_AMB in the generator). Textures work with Ogre 1:
+  `<pbr><metal><albedo_map>/abs/path.png</albedo_map>` (monitor screen).
+- RTF varies a lot between runs on this VM: the same world gave 6.7-10.3 % headless on
+  one afternoon, and full missions 5.1 % and 6.0 % wall-for-sim an hour apart. Compare
+  worlds only with interleaved runs of tools/measure_rtf.py and keep the VM idle
+  meanwhile (terminal output redraws cost Xorg/gnome-terminal CPU).
+- Two simulations at once again (2026-11-05): a test world started with `timeout 70 ign
+  gazebo ...` was still alive when the next launch began; both worlds were called
+  robot_world, so topics AND services (spawn!) were shared. Check `ps` for ANY `ign
+  gazebo` before every launch, also after `timeout`-limited test runs.
 
 ## Mobile robot model (jetarm_mecanum.gazebo.xacro)
 - Chassis dimensions are ESTIMATES from Hiwonder's installation photos: ~0.32 x 0.26 m,
@@ -203,6 +252,23 @@ container on the bedside table, turns round and follows the line home.
 - Home stop (offline test): joint1 at ~(0.07, 0) facing -x. Gazebo: (0.044, -0.001).
 - Clearance robot <-> tables is only ~4-5 cm. Turning in place sweeps a 0.27 m radius
   circle, so strafe away from a table before rotating (mecanum: linear.y).
+- Branch hospital-room - patient room on the robot's left at the patient stop (all
+  furniture static, visual-only except box collisions on the bed and the table; 111
+  visuals; the generator asserts colours and clearances):
+  - Smart bedside table: platform 25 x 25 cm centred (1.405, 1.472), top 0.10 m lowered
+    / 0.80 m raised. Its ROBOT-side edge is x 1.53 = the old table's edge (4 cm to the
+    wheels, 0.29 m from the turnaround centre); the place target (1.499, 1.472) is 3 cm
+    inside that edge. A platform centred on the target would reach x 1.62, into the
+    robot's body (collision box from x 1.61) - the user's spec asked for centred.
+    Base 0.32 x 0.30 x 0.05 m (x 1.21-1.53, partly under the bed edge); 3 nested tubes
+    lift1..3 (0.2333 m each, limits -0.03..+0.03 beyond), JointPositionControllers
+    (velocity mode, cmd_max 0.02 m/s per stage), JointStatePublisher
+    /smart_table/joint_states, contact sensor on the platform collision `top`.
+  - Bed: mattress x 0.34-1.24, y 0.66-2.66 (head toward -y), top 0.58 m, back section
+    raised 35 deg, table-side rail head-only and 0.74 m high; IV pole (0.10, 1.45),
+    monitor stand (-0.02, 0.85), chair (-0.12, 2.30); walls x = -0.72 and y = 3.15.
+  - medicine_station colour is neutral grey now (was pale lavender, hue 120).
+  - Overview camera (3.6, -1.2, 2.3) -> (0.5, 1.3, 0.5), hfov 1.1: whole route + room.
 
 ## Line follower status
 Offline test: a synthetic camera built from the same geometry + kinematic robot
@@ -231,7 +297,9 @@ Debug image: /tmp/line_follower_debug.jpg (look at it with the Read tool).
 2. DONE, tested 2026-11-04: 3 controllers active, arm home OK, camera OK (after near-clip
    fix), drive OK at the commanded speed with the planar base (height locked).
 3. DONE, tested in Gazebo 2026-11-04: line follower reaches the patient marker (one run).
-4. DONE, tested 2026-11-04: `scripts/mission.py` (10 steps, `--from/--to N`,
+4. DONE, tested 2026-11-04: `scripts/mission.py` (10 steps on main; 11 on hospital-room,
+   where a new step 8 "table lifts medicine to the patient" comes after "arm home" and
+   the later steps move up by one - see item 7; `--from/--to N`,
    `--result-json FILE`, `--label TEXT`): 1 spawn container (removes an old one) +
    detach, 2 arm home, 3 pick at arm-relative (0, 0.20) (open, above, descend, close
    0.75 + check > 0.35, attach, lift), 4 arm home (container held, out of the wrist view),
@@ -278,6 +346,49 @@ Debug image: /tmp/line_follower_debug.jpg (look at it with the Read tool).
    confirmed weld). media/mission_confirmed.mp4: 2026-11-05 scheduled full mission with
    the confirmed weld (23 s, 800x500 H.264; success, container 0.2 mm from the target,
    all attach/detach confirmed first try) - use this one for the presentation.
+7. DONE 2026-11-05, branch hospital-room (pushed, NOT merged): hospital patient room +
+   smart bedside table (user spec of 2026-11-05; layout in "World").
+   - World: tools/make_hospital_world.py, primitives only (+ one generated texture),
+     111 visuals, furniture static; the generator asserts colours (no blue/red hue)
+     and clearances (>= 0.165 m from the line, outside both turning circles).
+   - scripts/smart_table.py: LIFT when the container contact is steady >= 2 sim s
+     (contact that began while lowered) AND /medicine/attached last said "detached" AND
+     the arm is home (all joints within 0.06 rad); LOWER when a raised table lost its
+     container for >= 3 s; trapezoidal 40 mm/s, 40 mm/s^2 on sim time (0.70 m in 18.6 s);
+     manual raise/lower services refused while the gripper is near the table; after a
+     manual lower with the container still on, no new lift until a new contact starts.
+   - Mission (11 steps): 6 place waits for "lowered" first; the placement pose is read
+     the moment contact_state turns "steady" (thread, place motion unchanged); new 8
+     "table lifts medicine to the patient" waits for "raised" (--lift-timeout 90 sim s;
+     on timeout it goes on with table_raised false); 9 checks the container at the
+     platform's current height before turning. JSON 'placed' + 'table'. Scoring: placement
+     from 'placed' (else the final pose - both old evaluations re-score identically);
+     table runs also need table_raised AND container_on_platform_after_lift (centre over
+     the platform, z = top + 0.03 +- 1 cm, tilt < 10 deg). Columns table_raised,
+     lift_time_s, container_on_platform_after_lift in runs.csv and deliveries.csv.
+   - Table test (tools/test_smart_table.py; results/room_mission/table_test.*): 28/29
+     checks - the failed one was a wrong test assumption (container touches while
+     welded), fixed afterwards, test not rerun. No lift while welded or with the arm away;
+     lift 0.10 -> 0.7997 m in 18.6 sim s, cruise 39.9 mm/s; container on the raised
+     platform z 0.830, tilt 0.0 deg, slid 0.08 mm; auto-lower 3.04 s after removal;
+     manual raise/lower OK, stays raised without a container.
+   - Line follower in the new world: arrived, stop (1.6992, 1.4723, 89.99 deg) = same as
+     before; the wrist frame at the stop shows only marker and line.
+   - Scheduled missions (results/room_mission/, deliveries.csv): 2/2 success. Normal
+     world: placement 0.27 mm at contact confirmation, tilt 0.13 deg, attach/detach
+     1/1/1, raised in 18.56 s, container z 0.830 on the platform, 178.3 sim s / 58.5 min
+     wall. Video world: 0.25 mm, raised in 18.68 s, 178.4 sim s / 49.8 min wall.
+   - RTF (tools/measure_rtf.py, results/rtf.csv), interleaved after/before/after/before:
+     8.99 / 10.33 / 8.50 / 8.41 % -> means 8.75 vs 9.37 % (-6.6 %), inside the
+     run-to-run spread (before runs that afternoon: 6.75-10.33 %). No simplification.
+   - Media: media/mission_room.mp4 (25.5 s, 800x500; second caption line "smart table:
+     lifting, platform ... m"); media/room_gui.png (Gazebo GUI 3D view: the world loads
+     in the GUI), room_corner.png and room_overview.png (robot at the start, table
+     lowered), room_table_lowered.png / room_table_raised.png (close-up with the
+     container), room_corner_raised.png, room_patient_side.png (raised, seen from the
+     far side of the bed). Report photos: launch photo:=true, `sim_screenshot.py OUT
+     --room`. The lowered table is hidden behind the mattress from the far side.
+   - Not done on purpose: a 5-run evaluation with the table (ask the user first).
 
 ## First test procedure (stages 1-3)
 1. `bash ~/sdp_sim/install.sh`, new terminal.

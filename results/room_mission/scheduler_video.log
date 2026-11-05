@@ -1,0 +1,85 @@
+[scheduler 18:34:52] entry 1: Paracetamol 500 mg for Patient A (bed 1) -> next 2026-11-05 18:35:52
+[scheduler 18:35:52] START delivery 1: Paracetamol 500 mg to Patient A (bed 1), due 2026-11-05 18:35
+[mission] delivery 1: Paracetamol 500 mg to Patient A (bed 1), due 2026-11-05 18:35
+[mission] step 1/11 spawn container + release weld  (sim t 7.6, base 0.000 0.000 0.0 deg)
+[0m[INFO] [1793889358.781102404] [jetarm_pick_place]: DetachableJoint state: attached[0m
+[0m[INFO] [1793889358.995840530] [jetarm_pick_place]: DetachableJoint state: detached[0m
+[mission] detach (spawn) confirmed by /medicine/attached after 1 attempt(s)
+[mission] container at (9.828916750466218e-05, 0.2000000072340246, 0.12707962181146748)
+[mission] step 2/11 arm home  (sim t 7.8, base 0.000 0.000 0.0 deg)
+       ... still moving, 1.244 rad to go
+       ... still moving, 0.854 rad to go
+       ... still moving, 0.110 rad to go
+[mission] step 3/11 pick  (sim t 11.4, base 0.000 0.000 0.0 deg)
+       ... still moving, 0.832 rad to go
+       ... still moving, 0.175 rad to go
+       ... still moving, 1.194 rad to go
+       ... still moving, 0.604 rad to go
+       ... still moving, 0.511 rad to go
+       ... still moving, 0.259 rad to go
+       ... still moving, 0.427 rad to go
+       ... still moving, 0.142 rad to go
+[mission] gripper at 0.780 rad
+[0m[INFO] [1793889783.042396961] [jetarm_pick_place]: DetachableJoint state: attached[0m
+[mission] attach (pick) confirmed by /medicine/attached after 1 attempt(s)
+       ... still moving, 0.504 rad to go
+       ... still moving, 0.285 rad to go
+       ... still moving, 0.038 rad to go
+[mission] lifted: container z 0.227
+[mission] step 4/11 arm home (carrying)  (sim t 31.4, base 0.000 0.000 0.0 deg)
+       ... still moving, 0.948 rad to go
+       ... still moving, 0.227 rad to go
+[mission] step 5/11 follow line to the patient  (sim t 35.0, base 0.000 0.000 0.0 deg)
+[mission] running line_follower.py
+[mission]   line_follower: [INFO] [1793890411.712051299] [line_follower]: sim t=38.5  angle=-0.000 red=0.15 
+[mission]   line_follower: [INFO] [1793890414.533264964] [line_follower]: Red stop marker reached.
+[mission]   line_follower: [INFO] [1793890414.540831468] [line_follower]: sim t=38.7  angle=-0.000 red=0.21 arrived
+[mission] step 6/11 place on the bedside table  (sim t 74.0, base 1.699 1.472 90.0 deg)
+       ... still moving, 1.174 rad to go
+       ... still moving, 0.541 rad to go
+       ... still moving, 0.495 rad to go
+       ... still moving, 0.299 rad to go
+       ... still moving, 0.089 rad to go
+[0m[INFO] [1793890600.606903862] [jetarm_pick_place]: DetachableJoint state: detached[0m
+[mission] detach (place) confirmed by /medicine/attached after 1 attempt(s)
+       ... still moving, 0.448 rad to go
+       ... still moving, 0.068 rad to go
+       ... still moving, 0.496 rad to go
+       ... still moving, 0.260 rad to go
+       ... still moving, 0.039 rad to go
+[mission] after retreat: container (1.4990, 1.4719, 0.1300) tilt 0.1 deg, 0.2 mm from target
+[mission] placed (contact sensor, sim t 84.36): container (1.4990, 1.4719, 0.1293), 0.2 mm from target, tilt 0.1 deg, table lowered at 0.100 m
+[mission]   container after step 6: (1.4990, 1.4719, 0.1300) tilt 0.1 deg
+[mission] step 7/11 arm home  (sim t 90.5, base 1.699 1.472 90.0 deg)
+       ... still moving, 1.103 rad to go
+       ... still moving, 0.384 rad to go
+[mission]   container after step 7: (1.4991, 1.4719, 0.1306) tilt 0.0 deg
+[mission] step 8/11 table lifts medicine to the patient  (sim t 94.1, base 1.699 1.472 90.0 deg)
+[mission] table: lifting, platform 0.100 m
+[mission] table: lifting, platform 0.166 m
+[mission] table: lifting, platform 0.250 m
+[mission] table: lifting, platform 0.326 m
+[mission] table: lifting, platform 0.406 m
+[mission] table: lifting, platform 0.486 m
+[mission] table: lifting, platform 0.570 m
+[mission] table: lifting, platform 0.646 m
+[mission] table: lifting, platform 0.730 m
+[mission] table: lifting, platform 0.797 m
+[mission] table: raised, platform 0.800 m
+[mission] table raised (platform 0.800 m, lift 18.7 s): container (1.4991, 1.4719, 0.8300) tilt 0.0 deg - on the platform
+[mission]   container after step 8: (1.4991, 1.4719, 0.8300) tilt 0.0 deg
+[mission] step 9/11 turn round  (sim t 112.5, base 1.699 1.472 90.0 deg)
+[mission] before moving away: container (1.4991, 1.4719, 0.8300) tilt 0.0 deg, 0.2 mm from target
+[mission]   container after step 9: (1.4991, 1.4719, 0.8300) tilt 0.0 deg
+[mission] step 10/11 follow line home  (sim t 128.9, base 1.699 1.473 -90.3 deg)
+[mission] running line_follower.py
+[mission]   line_follower: [INFO] [1793891965.899344574] [line_follower]: sim t=38.0  angle=-0.000 red=0.21 
+[mission]   line_follower: [INFO] [1793891969.089884905] [line_follower]: Red stop marker reached.
+[mission]   line_follower: [INFO] [1793891969.094470563] [line_follower]: sim t=38.3  angle=none red=0.31 arrived
+[mission]   container after step 10: (1.4991, 1.4719, 0.8300) tilt 0.0 deg
+[mission] step 11/11 park at the start  (sim t 167.4, base 0.042 -0.001 -180.0 deg)
+[mission]   container after step 11: (1.4991, 1.4719, 0.8300) tilt 0.0 deg
+[mission] done: base at 0.0019 -0.0000 yaw -0.26 deg; cycle time 178.4 sim s
+[mission] container at (1.4991, 1.4719, 0.8300); target (1.4992, 1.4720); 0.2 mm from the target; tilt 0.0 deg; standing on the platform (top 0.800 m): yes
+[scheduler 19:25:44] DONE  delivery 1: Paracetamol 500 mg to Patient A (bed 1), due 2026-11-05 18:35
+[scheduler 19:25:44] logged to /home/ubuntu/sdp_sim/results/deliveries.csv

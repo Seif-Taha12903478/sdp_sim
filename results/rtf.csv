@@ -1,0 +1,8 @@
+started,label,git_commit,launch_args,rtf,wall_s,sim_s,win_mean,win_std,win_min,win_max,launch_log
+20261105_153728,before: main world (b60e882),b60e882,,0.08235,179.7,14.8,0.08601,0.00443,0.07866,0.08955,/home/ubuntu/sdp_sim/results/rtf_20261105_153728_launch.log
+20261105_154705,before: main world (b60e882) #2,b60e882,,0.06947,179.1,12.44,0.07176,0.00932,0.05769,0.0835,/home/ubuntu/sdp_sim/results/rtf_20261105_154705_launch.log
+20261105_155225,before: main world (b60e882) #3 quiet,b60e882,,0.06749,179.6,12.12,0.06639,0.00541,0.05894,0.0732,/home/ubuntu/sdp_sim/results/rtf_20261105_155225_launch.log
+20261105_192811,"after: hospital room + smart table, interleaved",0b117fe,,0.08988,179.8,16.16,0.0899,0.00403,0.08377,0.09485,/home/ubuntu/sdp_sim/results/rtf_20261105_192811_launch.log
+20261105_193258,"before: original world+launch (b60e882), interleaved",0b117fe,,0.10332,179.8,18.58,0.10284,0.0063,0.09275,0.10761,/home/ubuntu/sdp_sim/results/rtf_20261105_193258_launch.log
+20261105_193719,"after: hospital room + smart table, interleaved",0b117fe,,0.085,179.8,15.28,0.08333,0.00785,0.07127,0.0915,/home/ubuntu/sdp_sim/results/rtf_20261105_193719_launch.log
+20261105_194147,"before: original world+launch (b60e882), interleaved",0b117fe,,0.08414,179.7,15.12,0.08943,0.01502,0.06928,0.10327,/home/ubuntu/sdp_sim/results/rtf_20261105_194147_launch.log
