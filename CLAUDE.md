@@ -5,29 +5,30 @@ so this Gazebo simulation is the final deliverable. Keep explanations short and
 practical; the user reviews everything.
 
 ## Next session
-Nothing open on hospital-room: the patient's-side photo, the table photos in media/ and
-Stage 7 were finished 2026-11-05 ~23:30. Decisions left to the user: merge hospital-room
-into main (do NOT merge without being asked), and whether to run a 5-run evaluation with
-the smart table.
+Nothing open. hospital-room was merged into main (fast-forward, on the user's request)
+on 2026-11-05; the hospital-room branch is kept. Report bundle for the write-up:
+~/Desktop/sdp_report_bundle.zip (media, 10 video stills, result tables, key code,
+REPORT_NOTES.md with every number that changed since the 5-run evaluation). Open
+decision for the user: a 5-run evaluation with the smart table (ask first).
 
 ## Current state (2026-11-05 evening)
 GitHub backup: private repo https://github.com/Seif-Taha12903478/sdp_sim (remote
 `origin`). gh 2.103.0 is installed in ~/.local/bin (no sudo), logged in,
 `gh auth setup-git` done: `git push` works. Push after each commit.
 
-Branch `hospital-room` (pushed, NOT merged into main - the user decides): hospital
-patient room + smart bedside table that lifts the medicine to the patient (see
-"Stages" item 7). main = the state with the beige bedside table (eval_5runs_confirmed,
-5/5). Not done on purpose: a 5-run evaluation with the table - ask the user first
-(`tools/evaluate.py` already scores the lift; ~50-60 min per run).
+main (= hospital-room since the fast-forward merge on 2026-11-05): hospital patient
+room + smart bedside table that lifts the medicine to the patient (see "Stages" item
+7). The beige-table state of the 5-run evaluation (eval_5runs_confirmed, 5/5) is
+commit b60e882. Not done on purpose: a 5-run evaluation with the table - ask the user
+first (`tools/evaluate.py` already scores the lift; ~50-60 min per run).
 Earlier items (finish eval_5runs_confirmed, mission_confirmed.mp4, attach/detach
 counts in deliveries.csv) are all DONE (2026-11-05).
 
 ## Scenario
 At a scheduled time the robot picks a medicine container at the medicine station,
 follows a blue floor line to the patient, stops at a red floor marker, places the
-container on the bedside table, turns round and follows the line home. On branch
-hospital-room the bedside table is a smart table: once the container rests on it, the
+container on the bedside table, turns round and follows the line home. Since the
+hospital-room merge (2026-11-05) the bedside table is a smart table: once the container rests on it, the
 weld is released and the arm is home, it lifts the medicine from 0.10 m to 0.80 m
 (bed height) before the robot turns round.
 
@@ -249,7 +250,7 @@ weld is released and the arm is home, it lifts the medicine from 0.10 m to 0.80 
 - Home stop (offline test): joint1 at ~(0.07, 0) facing -x. Gazebo: (0.044, -0.001).
 - Clearance robot <-> tables is only ~4-5 cm. Turning in place sweeps a 0.27 m radius
   circle, so strafe away from a table before rotating (mecanum: linear.y).
-- Branch hospital-room - patient room on the robot's left at the patient stop (all
+- Patient room (hospital-room, merged into main 2026-11-05) on the robot's left at the patient stop (all
   furniture static, visual-only except box collisions on the bed and the table; 111
   visuals; the generator asserts colours and clearances):
   - Smart bedside table: platform 25 x 25 cm centred (1.405, 1.472), top 0.10 m lowered
@@ -294,9 +295,9 @@ Debug image: /tmp/line_follower_debug.jpg (look at it with the Read tool).
 2. DONE, tested 2026-11-04: 3 controllers active, arm home OK, camera OK (after near-clip
    fix), drive OK at the commanded speed with the planar base (height locked).
 3. DONE, tested in Gazebo 2026-11-04: line follower reaches the patient marker (one run).
-4. DONE, tested 2026-11-04: `scripts/mission.py` (10 steps on main; 11 on hospital-room,
-   where a new step 8 "table lifts medicine to the patient" comes after "arm home" and
-   the later steps move up by one - see item 7; `--from/--to N`,
+4. DONE, tested 2026-11-04: `scripts/mission.py` (11 steps since the hospital-room merge,
+   10 before (eval_5runs_confirmed): a new step 8 "table lifts medicine to the patient"
+   comes after "arm home" and the later steps move up by one - see item 7; `--from/--to N`,
    `--result-json FILE`, `--label TEXT`): 1 spawn container (removes an old one) +
    detach, 2 arm home, 3 pick at arm-relative (0, 0.20) (open, above, descend, close
    0.75 + check > 0.35, attach, lift), 4 arm home (container held, out of the wrist view),
@@ -343,7 +344,7 @@ Debug image: /tmp/line_follower_debug.jpg (look at it with the Read tool).
    confirmed weld). media/mission_confirmed.mp4: 2026-11-05 scheduled full mission with
    the confirmed weld (23 s, 800x500 H.264; success, container 0.2 mm from the target,
    all attach/detach confirmed first try) - use this one for the presentation.
-7. DONE 2026-11-05, branch hospital-room (pushed, NOT merged): hospital patient room +
+7. DONE 2026-11-05, branch hospital-room, merged into main (fast-forward) the same day: hospital patient room +
    smart bedside table (user spec of 2026-11-05; layout in "World").
    - World: tools/make_hospital_world.py, primitives only (+ one generated texture),
      111 visuals, furniture static; the generator asserts colours (no blue/red hue)
