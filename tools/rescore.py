@@ -12,6 +12,10 @@ time.monotonic() (immune to clock and time-zone changes); the mission JSON's own
 wall_time is only a fallback and a cross-check (flagged if they differ by > 5 s).
 started_utc is rebuilt from the first ROS log stamp (UTC epoch seconds) in
 runNN_launch.log when runs.csv has none (older evaluate.py wrote local time only).
+wall_time_valid: false when the wall clock and the monotonic clock disagree by > 60 s
+over the mission (wall_start_unix + result-file time vs. monotonic wall_time), i.e. the
+VM was paused; or set by hand with --invalid-wall RUN[:reason] (kept in
+wall_time_invalid.json in the folder). Invalid wall times are left out of the stats.
 """
 import argparse
 import csv
@@ -45,7 +49,17 @@ def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument('dir')
     p.add_argument('--max-tilt', type=float, default=10.0)
+    p.add_argument('--invalid-wall', action='append', default=[], metavar='RUN[:reason]',
+                   help='mark a run\'s wall time invalid (repeatable)')
     a = p.parse_args()
+    inv_path = os.path.join(a.dir, 'wall_time_invalid.json')
+    invalid = json.load(open(inv_path)) if os.path.exists(inv_path) else {}
+    for spec in a.invalid_wall:
+        run_s, _, why = spec.partition(':')
+        invalid[str(int(run_s))] = why or 'marked invalid by hand'
+    if a.invalid_wall:
+        with open(inv_path, 'w') as fh:
+            json.dump(invalid, fh, indent=2)
     old = {}
     path = os.path.join(a.dir, 'runs.csv')
     if os.path.exists(path):
@@ -70,9 +84,20 @@ def main():
                 notes.append('mission wall time: evaluate %.0f s vs mission JSON %.0f s' % (mission_wall, jw))
         else:
             mission_wall = round(jw, 2) if jw is not None else None
+        valid = True
+        if res.get('wall_start_unix') and res.get('wall_time') is not None:
+            jump = (os.path.getmtime(rj) - res['wall_start_unix']) - float(res['wall_time'])
+            if abs(jump) > 60:
+                valid = False
+                notes.append('wall time invalid: clock jumped %+.0f s during the mission (VM paused?)' % jump)
+        if o.get('wall_time_valid') in ('False', False):
+            valid = False
+        if str(run) in invalid:
+            valid = False
+            notes.append('wall time invalid: %s' % invalid[str(run)])
         row.update(run=run, started=o.get('started'), started_utc=o.get('started_utc') or launch_start_utc(a.dir, run),
                    mission_wall_s=mission_wall, total_wall_s=o.get('total_wall_s'),
-                   note='; '.join(notes) or None)
+                   wall_time_valid=valid, note='; '.join(dict.fromkeys(n for n in notes if n)) or None)
         for k in ('placement_error_mm', 'tilt_deg', 'sim_time_s'):
             if isinstance(row[k], float):
                 row[k] = round(row[k], 2)

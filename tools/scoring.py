@@ -27,7 +27,7 @@ FIELDS = ['run', 'started', 'started_utc', 'success', 'mission_ok', 'failed_step
           'placement_error_mm', 'at_target', 'tilt_deg', 'tilt_source', 'on_table',
           'spawn_detach_attempts', 'pick_attach_attempts', 'place_detach_attempts',
           'weld_unconfirmed',
-          'sim_time_s', 'mission_wall_s', 'total_wall_s',
+          'sim_time_s', 'mission_wall_s', 'total_wall_s', 'wall_time_valid',
           'base_final_x', 'base_final_y', 'base_final_yaw_deg', 'note']
 
 

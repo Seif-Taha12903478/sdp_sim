@@ -136,6 +136,11 @@ def _ok(v):
     return v is True or str(v) == 'True'
 
 
+def _wall_ok(r):
+    v = r.get('wall_time_valid')
+    return v is None or v == '' or _ok(v)
+
+
 def _f(v):
     try:
         return float(v)
@@ -187,8 +192,12 @@ def write_outputs(out, rows, a):
         'tilt (deg)            : ' + stats([_f(r['tilt_deg']) for r in rows]) + '  [%s]' % ', '.join(
             sorted(set(str(r.get('tilt_source')) for r in rows if r.get('tilt_source')))),
         'mission sim time (s)  : ' + stats([_f(r['sim_time_s']) for r in rows if _ok(r['mission_ok'])]) + '  (missions completed)',
-        'mission wall time (s) : ' + stats([_f(r['mission_wall_s']) for r in rows if _ok(r['mission_ok'])]),
-        'run wall time (s)     : ' + stats([_f(r['total_wall_s']) for r in rows]) + '  (incl. launch/shutdown)',
+        'mission wall time (s) : ' + stats([_f(r['mission_wall_s']) for r in rows
+                                            if _ok(r['mission_ok']) and _wall_ok(r)]),
+        'run wall time (s)     : ' + stats([_f(r['total_wall_s']) for r in rows if _wall_ok(r)])
+        + '  (incl. launch/shutdown)',
+        'wall times left out   : ' + (', '.join('run %d (%s)' % (r['run'], r.get('note') or 'invalid')
+                                                for r in rows if not _wall_ok(r)) or 'none'),
         '',
         'attach/detach attempts until confirmed by /medicine/attached (1 = first try, 0 = not needed):',
     ] + ['  %-14s: %s' % (label, stats([_f(r.get(k)) for r in rows]))
@@ -249,6 +258,7 @@ def main():
             log('removing leftover %s' % os.path.basename(f))
             os.remove(f)
         t_run = time.monotonic()
+        t_run_unix = time.time()          # only to detect clock jumps / VM pauses
         row = dict.fromkeys(FIELDS)
         # local time WITH its UTC offset, plus UTC: unambiguous across time-zone changes.
         # Durations below use time.monotonic().
@@ -302,6 +312,13 @@ def main():
                 % (run, run, ' (leftover processes %s)' % left if left else ''))
             break
         row['total_wall_s'] = time.monotonic() - t_run
+        # A paused VM (laptop asleep) freezes the monotonic clock while the wall clock is
+        # stepped forward on resume: the run's wall time is then not a clean sample.
+        jump = (time.time() - t_run_unix) - row['total_wall_s']
+        row['wall_time_valid'] = abs(jump) <= 60
+        if not row['wall_time_valid']:
+            row['note'] = ((row['note'] or '') + ' wall time invalid: clock jumped %+.0f s during the run '
+                           '(VM paused?)' % jump).strip()
         for k in ('placement_error_mm', 'tilt_deg', 'sim_time_s', 'mission_wall_s', 'total_wall_s'):
             if isinstance(row[k], float):
                 row[k] = round(row[k], 2)

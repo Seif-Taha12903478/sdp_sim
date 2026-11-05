@@ -10,7 +10,7 @@ confirmed weld: 3/3 success, placement error 0.19-0.20 mm, tilt 0.0 deg, 160.2 s
 and ~47 min wall per run, every attach/detach confirmed on the first attempt. The evaluation was stopped on purpose after
 run 3 (run 4 was only launching; it is not recorded). Everything is committed.
 Do, in this order:
-1. Finish the evaluation - 2 more runs appended to the same folder, total 5:
+1. DONE 2026-11-05 (5/5 success, see Stages 6). Finish the evaluation - 2 more runs appended to the same folder, total 5:
    `cd ~/sdp_sim && python3 tools/evaluate.py --out results/eval_5runs_confirmed --append --total 5`
    (~50 min per run; check nothing is running first: `pgrep -af "ign gazebo"`).
    Then record the summary in "Stages" item 6 and commit.
@@ -254,9 +254,15 @@ Debug image: /tmp/line_follower_debug.jpg (look at it with the Read tool).
    start. Durations are monotonic. eval_5runs (old weld code, re-scored): 2/5 success;
    its `started` column is Hong Kong time (UTC+8; the VM moved to Asia/Dubai mid-run),
    use started_utc.
-   eval_5runs_confirmed (confirmed weld + sim-time gripper wait, 2026-11-04): runs 1-3
-   = 3/3 success (0.20 mm, tilt 0.0, all attach/detach confirmed first try); runs 4-5
-   still to do (see "Next session"). Result files (runs.csv, summary.txt, run JSON) of
+   eval_5runs_confirmed (confirmed weld + sim-time gripper wait; runs 1-3 2026-11-04,
+   runs 4-5 appended 2026-11-05 with --append --total 5): 5/5 SUCCESS, placement error
+   0.19 mm mean (max 0.20), tilt 0.0 deg, 160.2 sim s per mission, ~48 min wall
+   (mission, n=4), every attach/detach confirmed on the first attempt.
+   Run 4's wall time is INVALID: the laptop slept ~58 min during it (VM paused). The
+   monotonic clock stops in a paused VM and the wall clock is stepped on resume, so the
+   two disagree; evaluate.py (wall clock vs monotonic per run) and rescore.py (JSON
+   start stamp + result-file time vs monotonic) now set wall_time_valid=false when they
+   differ by > 60 s, and the stats leave such runs out. Manual: rescore.py --invalid-wall N. Result files (runs.csv, summary.txt, run JSON) of
    both evaluations are committed under results/ (force-added; results/ is ignored).
    Video: launch with `video:=true` (hospital_video.sdf: overview camera 2 Hz), then
    `tools/record_video.py OUT.mp4 --caption-log LOG` (H.264, 15 fps = 7.5x real time,
