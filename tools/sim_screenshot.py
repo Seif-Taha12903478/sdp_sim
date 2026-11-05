@@ -7,9 +7,14 @@ first frame rendered AFTER this script started (sim time from /joint_states), so
 the picture is never stale. At ~5 % real-time factor that takes up to ~40 s.
 
     python3 ~/sdp_sim/tools/sim_screenshot.py [out.png] [--wrist] [--timeout S]
+    python3 ~/sdp_sim/tools/sim_screenshot.py out.png --topic /room_cam/a/image
+    python3 ~/sdp_sim/tools/sim_screenshot.py ~/sdp_sim/media/room.png --room
 
 --wrist also saves the next wrist-camera frame (/depth_cam/depth_cam) next to it
-as <out>_wrist.png.
+as <out>_wrist.png. --topic uses another camera. --room (world launched with
+photo:=true, hospital_photo.sdf) saves the three 1280x800 room cameras
+/room_cam/{a,b,c}/image as <out>_a.png, <out>_b.png, <out>_c.png (0.25 Hz sim:
+up to ~45 s wall at 9 % RTF).
 """
 import argparse
 import sys
@@ -36,11 +41,19 @@ def main():
     p.add_argument('out', nargs='?', default='/tmp/sim_shot.png')
     p.add_argument('--wrist', action='store_true', help='also save the next wrist-camera frame')
     p.add_argument('--timeout', type=float, default=180.0, help='wall-clock seconds to wait')
+    p.add_argument('--topic', default='/overview_cam/image', help='camera image topic for OUT')
+    p.add_argument('--room', action='store_true', help='save the three room cameras (photo world)')
     a = p.parse_args()
+    base = a.out.rsplit('.', 1)[0]
+    shots = ({'/room_cam/%s/image' % k: '%s_%s.png' % (base, k) for k in 'abc'} if a.room
+             else {a.topic: a.out})
+    if a.wrist:
+        shots['/depth_cam/depth_cam'] = base + '_wrist.png'
 
     rclpy.init()
     node = rclpy.create_node('sim_screenshot')
-    state = {'t0': None, 'shot': None, 'wrist': None}
+    state = {'t0': None}
+    state.update({t: None for t in shots})
 
     def on_js(m):
         if state['t0'] is None:
@@ -53,29 +66,22 @@ def main():
         return cb
 
     node.create_subscription(JointState, '/joint_states', on_js, 10)
-    node.create_subscription(Image, '/overview_cam/image', on_img('shot'), 2)
-    if a.wrist:
-        node.create_subscription(Image, '/depth_cam/depth_cam', on_img('wrist'), 2)
+    for t in shots:
+        node.create_subscription(Image, t, on_img(t), 2)
 
     end = time.monotonic() + a.timeout
-    while time.monotonic() < end and (state['shot'] is None or (a.wrist and state['wrist'] is None)):
+    while time.monotonic() < end and any(state[t] is None for t in shots):
         rclpy.spin_once(node, timeout_sec=0.5)
 
     ok = True
-    if state['shot'] is None:
-        print('no overview frame within %.0f s (is the simulation running?)' % a.timeout)
-        ok = False
-    else:
-        cv2.imwrite(a.out, to_bgr(state['shot']))
-        print('saved %s (sim t=%.2f)' % (a.out, stamp(state['shot'])))
-    if a.wrist:
-        if state['wrist'] is None:
-            print('no wrist-camera frame')
+    for t, path in shots.items():
+        if state[t] is None:
+            print('no frame on %s within %.0f s (is the simulation running%s?)'
+                  % (t, a.timeout, ' with photo:=true' if a.room else ''))
             ok = False
         else:
-            w = a.out.rsplit('.', 1)[0] + '_wrist.png'
-            cv2.imwrite(w, to_bgr(state['wrist']))
-            print('saved %s (sim t=%.2f)' % (w, stamp(state['wrist'])))
+            cv2.imwrite(path, to_bgr(state[t]))
+            print('saved %s (sim t=%.2f)' % (path, stamp(state[t])))
     node.destroy_node()
     rclpy.shutdown()
     sys.exit(0 if ok else 1)
