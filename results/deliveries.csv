@@ -1,0 +1,3 @@
+due,started,finished,patient,medicine,bed,success,failed_step,error,placement_error_mm,at_target,tilt_deg,on_table,spawn_detach_attempts,pick_attach_attempts,place_detach_attempts,weld_unconfirmed,sim_time_s,wall_time_s,result_json
+2026-11-04 17:35,2026-11-04 17:35:40,2026-11-04 18:07:09,Patient A,Paracetamol 500 mg,1,True,,,0.08,,0.0,True,,,,,161.48,1884.9,/home/ubuntu/sdp_sim/results/mission_20261104_173540.json
+2026-11-05 12:56,2026-11-05 12:56:55,2026-11-05 13:44:00,Patient A,Paracetamol 500 mg,1,True,,,0.19,True,0.0,True,1,1,1,none,160.2,2822.6,/home/ubuntu/sdp_sim/results/mission_20261105_125655.json

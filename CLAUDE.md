@@ -4,7 +4,11 @@ Senior design project of a computer-engineering student. The real robot is broke
 so this Gazebo simulation is the final deliverable. Keep explanations short and
 practical; the user reviews everything.
 
-## Next session (written 2026-11-04 evening; the VM was shut down at 20:25)
+## Next session (written 2026-11-04 evening; ALL 3 ITEMS DONE 2026-11-05)
+GitHub backup: private repo https://github.com/Seif-Taha12903478/sdp_sim (remote
+`origin`, branch main). gh 2.103.0 is installed in ~/.local/bin (no sudo), logged in,
+`gh auth setup-git` done: `git push` works. Push after each commit.
+
 State: `results/eval_5runs_confirmed/` holds runs 1-3 of the evaluation WITH the
 confirmed weld: 3/3 success, placement error 0.19-0.20 mm, tilt 0.0 deg, 160.2 sim s
 and ~47 min wall per run, every attach/detach confirmed on the first attempt. The evaluation was stopped on purpose after
@@ -19,7 +23,7 @@ Do, in this order:
    results/video/mission_confirmed.mp4 --caption-log results/video/scheduler.log`, then
    `scripts/scheduler.py --in-minutes 1 --once > results/video/scheduler.log`; copy the
    video to media/ and commit (see "Stages" item 6 for the procedure that worked).
-3. Add the attach/detach attempt counts to results/deliveries.csv: in
+3. DONE 2026-11-05 (live-tested: 1/1/1 attempts, none unconfirmed). Add the attach/detach attempt counts to results/deliveries.csv: in
    scripts/scheduler.py add spawn/pick/place attempts and unconfirmed commands from the
    mission JSON's `weld` list to LOG_FIELDS / the row (same keys as tools/scoring.py).
    Test with `--in-minutes 1 --once`, commit.
@@ -244,7 +248,10 @@ Debug image: /tmp/line_follower_debug.jpg (look at it with the Read tool).
 5. DONE, tested 2026-11-04: `scripts/scheduler.py` + `~/sdp_sim/schedule.yaml`
    (deliveries: patient, medicine, time "HH:MM" daily or "YYYY-MM-DD HH:MM" once, bed).
    Wall-clock times; due deliveries are queued and run one after another; each is
-   appended to results/deliveries.csv (+ the mission JSON). Test: `--in-minutes 1
+   appended to results/deliveries.csv (+ the mission JSON), scored with tools/scoring.py
+   (at_target, success = completed AND delivered at the target) and since 2026-11-05 with
+   spawn/pick/place attach-detach attempts + unconfirmed commands; an older header is
+   upgraded once (old rows kept, new columns empty). Test: `--in-minutes 1
    [--entry N] --once`; `--list` shows the next due times. Only bed 1 exists.
 6. Evaluation: `tools/evaluate.py --runs N` (fresh headless launch per run, results in
    results/eval_DATE/: runs.csv, summary.txt, per-run launch/mission logs and JSON).

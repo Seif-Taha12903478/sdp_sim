@@ -30,9 +30,14 @@ import yaml
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 MISSION = os.path.join(HERE, 'mission.py')
+sys.path.insert(0, os.path.join(ROOT, 'tools'))
+import scoring                      # noqa: E402  (same scoring as the evaluation)
+
+WELD_FIELDS = ['spawn_detach_attempts', 'pick_attach_attempts', 'place_detach_attempts',
+               'weld_unconfirmed']
 LOG_FIELDS = ['due', 'started', 'finished', 'patient', 'medicine', 'bed', 'success',
-              'failed_step', 'error', 'placement_error_mm', 'tilt_deg', 'on_table',
-              'sim_time_s', 'wall_time_s', 'result_json']
+              'failed_step', 'error', 'placement_error_mm', 'at_target', 'tilt_deg', 'on_table',
+              ] + WELD_FIELDS + ['sim_time_s', 'wall_time_s', 'result_json']
 
 
 def log(msg):
@@ -71,6 +76,27 @@ def next_due(entry, after):
     return due if due > after else due + dt.timedelta(days=1)
 
 
+def write_log_row(path, row):
+    """Append a row; if the file has an older header, rewrite it once with the
+    current columns (old rows keep their values, new columns stay empty)."""
+    if os.path.exists(path):
+        with open(path, newline='') as fh:
+            rd = csv.DictReader(fh)
+            header, old = rd.fieldnames or [], list(rd)
+        if header != LOG_FIELDS:
+            with open(path, 'w', newline='') as fh:
+                w = csv.DictWriter(fh, fieldnames=LOG_FIELDS, extrasaction='ignore')
+                w.writeheader()
+                w.writerows(old)
+            log('%s: upgraded to the current columns (%d old row(s) kept)' % (path, len(old)))
+    new = not os.path.exists(path)
+    with open(path, 'a', newline='') as fh:
+        w = csv.DictWriter(fh, fieldnames=LOG_FIELDS, extrasaction='ignore')
+        if new:
+            w.writeheader()
+        w.writerow(row)
+
+
 def run_delivery(entry, due, a):
     os.makedirs(a.log_dir, exist_ok=True)
     stamp = dt.datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -97,15 +123,18 @@ def run_delivery(entry, due, a):
            'success': res.get('success'), 'failed_step': res.get('failed_step'),
            'error': res.get('error'), 'placement_error_mm': res.get('placement_error_mm'),
            'tilt_deg': res.get('tilt_deg'), 'on_table': res.get('on_table'),
-           'sim_time_s': res.get('sim_time'), 'wall_time_s': res.get('wall_time'),
+           'sim_time_s': round(res['sim_time'], 2) if res.get('sim_time') is not None else None,
+           'wall_time_s': round(res['wall_time'], 1) if res.get('wall_time') is not None else None,
            'result_json': rj if os.path.exists(rj) else ''}
+    # placement / tilt / attach-detach attempts scored like tools/evaluate.py
+    sc = scoring.score(res) if res.get('container') or res.get('weld') is not None else {}
+    for k in ('placement_error_mm', 'at_target', 'tilt_deg', 'on_table') + tuple(WELD_FIELDS):
+        if sc.get(k) is not None:
+            row[k] = round(sc[k], 2) if isinstance(sc[k], float) else sc[k]
+    if sc and res.get('success'):
+        row['success'] = sc['success']      # completed AND delivered at the target
     path = os.path.join(a.log_dir, 'deliveries.csv')
-    new = not os.path.exists(path)
-    with open(path, 'a', newline='') as fh:
-        w = csv.DictWriter(fh, fieldnames=LOG_FIELDS)
-        if new:
-            w.writeheader()
-        w.writerow(row)
+    write_log_row(path, row)
     log('logged to %s' % path)
     return bool(res.get('success'))
 
