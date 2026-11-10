@@ -5,6 +5,7 @@
     python3 hospital_scheduler.py --demo          # demo: 4 doses on a HOSPITAL CLOCK, then exit
     python3 hospital_scheduler.py --list          # the doses of today and their queue order
     python3 hospital_scheduler.py --once          # run what is due now (real time), then exit
+    python3 hospital_scheduler.py --now 3         # test: one dose for room 3 due now (real time), then exit
 
 Needs a running hospital_system.launch.py (headless is fine). At start it sets up the
 pharmacy (scripts/pharmacy.py setup: containers spawned, welds released) unless every
@@ -32,7 +33,6 @@ import argparse
 import csv
 import datetime as dt
 import json
-import math
 import os
 import subprocess
 import sys
@@ -304,6 +304,8 @@ def main():
     p.add_argument('--demo-start', default='08:00', help='hospital clock at the start of the demo (HH:MM)')
     p.add_argument('--once', action='store_true', help='real time: run the doses due now, then exit')
     p.add_argument('--list', action='store_true')
+    p.add_argument('--now', type=int, default=None, metavar='ROOM',
+                   help='test: one dose for this room (demo patient / medicine) due now, real time, then exit')
     p.add_argument('--log-dir', default=LOG_DIR, help='deliveries.csv here, results JSON in <log-dir>/system/')
     p.add_argument('--fast-speed', type=float, default=0.0, help='delivery.py --fast-speed (0 = off)')
     p.add_argument('--cap-check', action='store_true')
@@ -346,6 +348,12 @@ def main():
         doses = demo_doses(clock.start)
         log('DEMO on the hospital clock (sim time from %s): %s' % (clock.start.strftime('%H:%M'), ', '.join(
             '%s %s room %d due %s' % (d.medicine, d.dose, d.room, d.due.strftime('%H:%M')) for d in doses)), clock)
+    elif a.now is not None:
+        clock = RealClock(tz_name)
+        k, r, pat, med, ds = [e for e in DEMO if e[1] == a.now][0]
+        doses = [Dose(1, pat, r, med, ds, clock.now())]
+        a.once = True
+        log('test dose due now: %s, Room %d, %s %s' % (pat, r, med, ds), clock)
     else:
         clock = RealClock(tz_name)
         start = clock.now()

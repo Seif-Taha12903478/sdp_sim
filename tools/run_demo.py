@@ -36,6 +36,11 @@ import evaluate as ev           # noqa: E402
 PY = sys.executable
 
 
+def gazebo_server_alive():
+    out = subprocess.run(['ps', '-eo', 'args='], capture_output=True, text=True).stdout
+    return any(l.startswith('ign gazebo') or (l.startswith('ruby') and 'ign gazebo' in l) for l in out.splitlines())
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument('--out', default=None)
@@ -101,8 +106,9 @@ def main():
                 ev.log('STOP file found - stopping the scheduler')
                 os.killpg(sch.pid, signal.SIGINT)
                 break
-            if proc.poll() is not None:
-                ev.log('the simulation exited (code %s) - stopping the scheduler' % proc.returncode)
+            if proc.poll() is not None or not gazebo_server_alive():
+                ev.log('the simulation is gone (launch exit %s) - stopping the scheduler' % proc.poll())
+                summary['error'] = 'simulation died during the demo'
                 os.killpg(sch.pid, signal.SIGINT)
                 break
             time.sleep(20)

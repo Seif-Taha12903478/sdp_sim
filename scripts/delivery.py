@@ -249,7 +249,7 @@ def main():
     def start_check():
         x, y, yaw, _ = base.pose()
         hx, hy, hyaw = net.m['home_pose']
-        if math.hypot(x - hx, y - hy) > HOME_TOL[0] or abs(math.degrees(tbl.math.atan2(
+        if math.hypot(x - hx, y - hy) > HOME_TOL[0] or abs(math.degrees(math.atan2(
                 math.sin(yaw - hyaw), math.cos(yaw - hyaw)))) > HOME_TOL[1]:
             raise RuntimeError('robot not parked at home: (%.3f, %.3f, %.1f deg)' % (x, y, math.degrees(yaw)))
         poses = ph.gz_all_poses('med_')

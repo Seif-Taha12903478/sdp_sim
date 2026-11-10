@@ -247,7 +247,7 @@ class RouteLogic:
         x, y, yaw, t = self.base.pose()
         dxw, dyw = ev['x'] - x, ev['y'] - y
         c, s = math.cos(yaw), math.sin(yaw)
-        self.base.translate(c * dxw + s * dyw, -s * dxw + c * dyw, 0.05)
+        self.base.translate(c * dxw + s * dyw, -s * dxw + c * dyw, 0.08)
         x, y, yaw, t = self.base.pose()
         dyaw = wrap(math.radians(ev['out_heading']) - yaw)
         self.base.rotate(dyaw)

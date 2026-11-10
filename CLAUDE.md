@@ -5,17 +5,80 @@ so this Gazebo simulation is the final deliverable. Keep explanations short and
 practical; the user reviews everything.
 
 ## Next session
-Branch hospital-system (from main bedafd6, 2026-11-10): NEW PHASE "hospital system"
-(corridor, pharmacy, 4 rooms, line network with junctions, smart scheduler; the user's
-spec of 2026-11-10). PHASE 0 = plan only: results/system/PLAN.md + layout.png
-(results/system/plan_layout.py draws it and prints the route/time table; force-added).
-WAITING FOR THE USER'S OK - nothing is built yet. Never change main (the user's
-single-room fallback). After the OK: build and test in the order of PLAN.md section 6
-(a offline -> b world + RTF -> c pick test -> d Room 3 -> e demo video), stop and report
-on any failure, commit + push in small steps, keep this note current.
-Earlier, on main: report bundle ~/Desktop/sdp_report_bundle.zip (media, video stills,
-result tables, key code, REPORT_NOTES.md); open decision: a 5-run evaluation with the
-smart table (ask first).
+Branch hospital-system (from main bedafd6, 2026-11-10): "hospital system" (corridor,
+pharmacy, 4 rooms, line network with junctions, smart scheduler). The user OK'd the
+phase-0 plan (results/system/PLAN.md, layout.png) with 4 additions: (1) pharmacy turn
+round strafes away from the counter first, swept circle shown in the layout check;
+(2) --demo runs on a HOSPITAL CLOCK (sim time mapped to 08:00), lateness + captions use
+it, normal mode = real Asia/Dubai time; (3) test e = ONE self-contained detached script
+(tools/run_demo.sh) - TELL THE USER BEFORE STARTING IT, they start it in the morning;
+(4) optional --fast-speed 0.12 on long straights, adopt only if the Gazebo line test passes.
+Test order a -> d, stop on failure, commit + push in small steps. Progress: see
+"Hospital system" below. Never change main (the user's single-room fallback).
+Earlier, on main: report bundle ~/Desktop/sdp_report_bundle.zip; open decision: a 5-run
+evaluation with the smart table (ask first).
+
+## Hospital system (branch hospital-system, 2026-11-10)
+- Layout = tools/system_layout.py (the numbers; `python3 tools/system_layout.py` prints the
+  clearance checks + route table and draws results/system/layout.png). Corridor 1.2 m,
+  x -4.25..1.55, main line y = 0. J1 x -0.75 (4-way: Room 1 north, Room 2 south), J2 x
+  -3.65 (T: Room 3 north, Room 4 south): green 15 cm markers. Red markers: pharmacy P x
+  0.55 (line end), HOME x -0.08 (under the parked robot), R1..R4 at (Jx, +-1.90). Robot
+  home = spawn (0, 0) facing +x (odom = world), right next to the pharmacy counter.
+- Every room = the tested single room (make_hospital_world.py *_parts() furniture, room
+  coordinates) as ONE static model; south rooms rotated 180 deg about the junction, so
+  stop (0.2777 m before the marker), place target (0.20 m left), platform edge (0.17 m
+  left) and turn-round circle are identical. Room 2.80 x 2.60 m inside (far wall 12 cm
+  closer than in the single room). Junction -> room stop 1.622 m, -> marker 1.900 m.
+- Pharmacy: pick counter top 0.10 m, front edge y 0.17 (like the old station), 6 slots
+  S1..S6 x 0.022..0.522 (0.10 m apart) at y 0.20; cabinet visual. Turn round there =
+  strafe right (south, away from the counter) 0.12, rotate, strafe right: the 0.27 m
+  circle is 0.290 m from the counter edge at every slot (need > 0.285).
+- Generator tools/make_system_world.py (never edit outputs): hospital_system{,_video,
+  _photo}.sdf (459 visuals vs 111), robot_gazebo/worlds/system/ (textures, med_S*.sdf -
+  spawned by absolute path), urdf/jetarm_mecanum_system.gazebo.xacro (the robot + one
+  DetachableJoint per container: /med_S<k>/attach|detach|attached), config/hospital_map.yaml
+  (graph). Colour check: no blue/red, and no green with S >= 0.40 in hue 40-90 (junction
+  green) - status/power LEDs are amber in this world. make_hospital_world.py still writes
+  hospital*.sdf byte-identical (checked).
+- Launch: `ros2 launch robot_gazebo hospital_system.launch.py gui:=false [video|photo:=true]`
+  (bridges built from the map; ONE smart_table.py --map for /smart_table_1..4). install.sh
+  installs the system files under NEW names only.
+- Containers: `scripts/pharmacy.py setup` spawns them one by one AFTER the robot (weld forms
+  at first appearance) and releases each weld confirmed; never re-spawned. Inventory
+  config/inventory.yaml: qty 1 per slot (0 = empty); Paracetamol in S1 and S6.
+- Navigation: scripts/route_planner.py (Dijkstra -> actions pass/straight/left/right/stop,
+  turn round at dead ends); scripts/route_follower.py = the tested follower (analyse/steer
+  unchanged; steer() is the old PD block moved into a method) + look-ahead band (image rows
+  50-95 %, 0.19-0.35 m): a marker must match colour, order and its odometry window (centre
+  0.15-0.62 m ahead when seen; red stop 0.15-0.45), else stop with an error. straight /
+  pass = BLIND on /odom (edge heading held, sideways correction) until the marker centre is
+  0.05 m ahead; left/right = stop, translate onto the junction centre, rotate to the edge
+  heading on /odom. --fast-speed V on straights (>= 0.8 m before / 0.3 m after a marker).
+- Rendered colours (Gazebo): junction green HSV (68, 203, 255) (detector 45-85, S >= 120),
+  line (111, 252, 255) as in the single room; nothing else in the green range.
+- Mission scripts/delivery.py (15 steps: start check, arm home, line to P, line up with the
+  slot on /odom (goto), [cap check], pick (own weld), arm home, turn round, line to room,
+  place (room's table), arm home, lift, turn round, line home, park). Scheduler
+  scripts/hospital_scheduler.py (--demo: hospital clock 08:00, Rooms 1+3 due 08:00 -> Room
+  1 first, Room 4 08:02, Room 2 08:04; --now ROOM; --list; real time Asia/Dubai). Scoring
+  tools/scoring.score_delivery (right container on the right raised platform, others where
+  they were). Video: record_video.py captions (hospital clock, room, patient, medicine,
+  step) + --wrist-inset. Demo: tools/run_demo.sh -> run_demo.py (launch video world,
+  recorder, scheduler --demo, shutdown, summary; STOP file).
+- Tests: tools/offline_route_sim.py (synthetic camera, rewritten - the 2026-11-04 one was
+  not in the repo: the TESTED follower on the old route stops at (1.6993, 1.4752) in
+  38.8-39.0 s, Gazebo (1.6992, 1.4723) in 38.6-39.0 s; 51/51 delivery legs incl. +-12 mm /
+  +-1 deg start offsets, stops within 16 mm; 51/51 at 0.12 m/s; 3/3 fault cases stop),
+  tools/test_system_offline.py (19 unit tests), tools/system_photos.py (world loads, 4
+  tables lowered, 6 containers in their slots, media/system_*.png), test_route_gazebo.py,
+  test_pharmacy_pick.py, run_in_sim.py (test d: `-- python3 scripts/hospital_scheduler.py --now 3`).
+- evaluate.gazebo_pids now matches the programs (a shell whose command line contained
+  "ruby" and "ign gazebo" counted as a running simulation and blocked a launch).
+- RTF (tools/measure_rtf.py, interleaved, results/rtf.csv, 2026-11-10): system world + 6
+  containers 7.46 / 9.23 % (mean 8.35 %), single room 10.67 / 10.70 % (mean 10.68 %):
+  -22 %, above the 7 % budget, no simplification.
+- Status (2026-11-10 16:00): a DONE, b DONE (world, photos, RTF). Next: route test (Gazebo).
 
 ## Current state (2026-11-05 evening)
 GitHub backup: private repo https://github.com/Seif-Taha12903478/sdp_sim (remote
