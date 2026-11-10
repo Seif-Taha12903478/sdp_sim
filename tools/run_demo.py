@@ -44,7 +44,7 @@ def gazebo_server_alive():
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument('--out', default=None)
-    p.add_argument('--fast-speed', type=float, default=0.0, help='scheduler --fast-speed (0 = off)')
+    p.add_argument('--fast-speed', type=float, default=0.0, help='scheduler --fast-speed (0 = not passed: the scheduler default 0.12 applies)')
     p.add_argument('--cap-check', action='store_true')
     p.add_argument('--max-hours', type=float, default=14.0, help='wall-clock limit for the scheduler')
     p.add_argument('--video', default=os.path.join(ROOT, 'media', 'system_demo.mp4'))

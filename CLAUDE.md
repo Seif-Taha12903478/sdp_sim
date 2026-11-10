@@ -5,16 +5,18 @@ so this Gazebo simulation is the final deliverable. Keep explanations short and
 practical; the user reviews everything.
 
 ## Next session
-Branch hospital-system (from main bedafd6, 2026-11-10): "hospital system" (corridor,
-pharmacy, 4 rooms, line network with junctions, smart scheduler). The user OK'd the
-phase-0 plan (results/system/PLAN.md, layout.png) with 4 additions: (1) pharmacy turn
-round strafes away from the counter first, swept circle shown in the layout check;
-(2) --demo runs on a HOSPITAL CLOCK (sim time mapped to 08:00), lateness + captions use
-it, normal mode = real Asia/Dubai time; (3) test e = ONE self-contained detached script
-(tools/run_demo.sh) - TELL THE USER BEFORE STARTING IT, they start it in the morning;
-(4) optional --fast-speed 0.12 on long straights, adopt only if the Gazebo line test passes.
-Test order a -> d, stop on failure, commit + push in small steps. Progress: see
-"Hospital system" below. Never change main (the user's single-room fallback).
+Branch hospital-system (from main bedafd6). Tests a, b, route, c, d all PASSED on 2026-11-10
+(details in "Hospital system"). NEXT = test e, the demo, which THE USER starts in the morning:
+    bash ~/sdp_sim/tools/run_demo.sh
+(detached; launch video world, scheduler --demo on the hospital clock 08:00: Rooms 1 + 3 due
+08:00 -> Room 1 first, Room 4 08:02, Room 2 08:04; video media/system_demo.mp4; summary in
+results/system/demo_<date>/summary.txt; touch <dir>/STOP to end after the current delivery;
+expect ~5 h wall: 4 x ~72 min). Check `pgrep -af "ign gazebo"` is empty first. Line speed
+0.12 on straights (scheduler default; run_demo.py forwards --fast-speed only if non-zero).
+Open items: amber cap renders like yellow (cap check off); placement 2.8 mm / tilt 0.6 deg in
+Room 3 vs 0.2 mm in the single room. Then the final summary to the user (added features, RTF
+8.35 vs 10.68 %, every test result, video + screenshot paths media/system_*.png). Original
+phase-0 rules: results/system/PLAN.md. Never change main (the user's single-room fallback).
 Earlier, on main: report bundle ~/Desktop/sdp_report_bundle.zip; open decision: a 5-run
 evaluation with the smart table (ask first).
 
@@ -86,7 +88,13 @@ evaluation with the smart table (ask first).
   tilt <= 0.1 deg, neighbours moved 0.00 mm; parked (0.002, 0, 0). Cap look (calibration only):
   white/grey/black/white OK, yellow (30,200,255) OK, AMBER seen as yellow (30,221,255) - amber
   renders like yellow; optional --cap-check stays off until the amber cap is darkened + rechecked.
-- Status (2026-11-10 19:00): a, b, route tests, c DONE. Running: d (Room 3 delivery, --deadline 23:30).
+- Test d (run_in_sim.py --deadline 23:30 -- hospital_scheduler.py --now 3, 2026-11-10 18:58-20:10,
+  72 min wall, 232.3 sim s): SUCCESS. Patient C, Ibuprofen S3: attach/detach confirmed 1st try,
+  junction events as in the route test, R3 stop (-3.6508, 1.6273, 89.97), placed 2.8 mm from the
+  target, tilt 0.6 deg (single room: 0.2 mm / 0.0 deg - not investigated), lift 18.6 s, container on
+  the raised platform z 0.830, the 5 other containers in their slots, parked (-0.002, 0, 0.03 deg).
+  Row in results/deliveries.csv; logs results/system/delivery_room3_20261110_185826/.
+- Status (2026-11-10 20:15): a, b, route tests, c, d DONE. NOT started: e (the user starts it).
 
 ## Current state (2026-11-05 evening)
 GitHub backup: private repo https://github.com/Seif-Taha12903478/sdp_sim (remote

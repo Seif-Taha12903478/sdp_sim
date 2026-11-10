@@ -1,0 +1,129 @@
+[scheduler 18:59:30] pharmacy setup (spawn the containers, release their welds)
+[0m[INFO] [1794322773.758506117] [pharmacy_setup]: DetachableJoint /med_S1: attached[0m
+[pharmacy] med_S1 spawned in slot S1 (0.022, 0.200): welded at first appearance - releasing
+[0m[INFO] [1794322773.880624286] [pharmacy_setup]: DetachableJoint /med_S1: detached[0m
+[pharmacy] detach med_S1 (spawn) confirmed after 1 attempt(s)
+[0m[INFO] [1794322775.841945110] [pharmacy_setup]: DetachableJoint /med_S2: attached[0m
+[pharmacy] med_S2 spawned in slot S2 (0.122, 0.200): welded at first appearance - releasing
+[0m[INFO] [1794322776.047598682] [pharmacy_setup]: DetachableJoint /med_S2: detached[0m
+[pharmacy] detach med_S2 (spawn) confirmed after 1 attempt(s)
+[0m[INFO] [1794322777.377465920] [pharmacy_setup]: DetachableJoint /med_S3: attached[0m
+[pharmacy] med_S3 spawned in slot S3 (0.222, 0.200): welded at first appearance - releasing
+[0m[INFO] [1794322777.628995796] [pharmacy_setup]: DetachableJoint /med_S3: detached[0m
+[pharmacy] detach med_S3 (spawn) confirmed after 1 attempt(s)
+[0m[INFO] [1794322779.867221259] [pharmacy_setup]: DetachableJoint /med_S4: attached[0m
+[pharmacy] med_S4 spawned in slot S4 (0.322, 0.200): welded at first appearance - releasing
+[0m[INFO] [1794322780.599705400] [pharmacy_setup]: DetachableJoint /med_S4: detached[0m
+[pharmacy] detach med_S4 (spawn) confirmed after 1 attempt(s)
+[0m[INFO] [1794322782.532468481] [pharmacy_setup]: DetachableJoint /med_S5: attached[0m
+[pharmacy] med_S5 spawned in slot S5 (0.422, 0.200): welded at first appearance - releasing
+[0m[INFO] [1794322783.135735226] [pharmacy_setup]: DetachableJoint /med_S5: detached[0m
+[pharmacy] detach med_S5 (spawn) confirmed after 1 attempt(s)
+[0m[INFO] [1794322784.672928986] [pharmacy_setup]: DetachableJoint /med_S6: attached[0m
+[pharmacy] med_S6 spawned in slot S6 (0.522, 0.200): welded at first appearance - releasing
+[0m[INFO] [1794322785.225005400] [pharmacy_setup]: DetachableJoint /med_S6: detached[0m
+[pharmacy] detach med_S6 (spawn) confirmed after 1 attempt(s)
+[pharmacy] S1 Paracetamol  500 mg  white  qty 1  med_S1: (0.0214, 0.2000, 0.1272) tilt 0.2 deg, 0.9 mm from the slot - IN SLOT
+[pharmacy] S2 Amoxicillin  250 mg  yellow qty 1  med_S2: (0.1215, 0.2000, 0.1268) tilt 0.2 deg, 0.8 mm from the slot - IN SLOT
+[pharmacy] S3 Ibuprofen    400 mg  amber  qty 1  med_S3: (0.2210, 0.2000, 0.1259) tilt 0.3 deg, 1.3 mm from the slot - IN SLOT
+[pharmacy] S4 Metformin    500 mg  grey   qty 1  med_S4: (0.3215, 0.2001, 0.1298) tilt 0.2 deg, 0.9 mm from the slot - IN SLOT
+[pharmacy] S5 Omeprazole   20 mg   black  qty 1  med_S5: (0.4216, 0.2001, 0.1295) tilt 0.2 deg, 0.7 mm from the slot - IN SLOT
+[pharmacy] S6 Paracetamol  500 mg  white  qty 1  med_S6: (0.5219, 0.2001, 0.1299) tilt 0.1 deg, 0.4 mm from the slot - IN SLOT
+[pharmacy] setup done
+[scheduler 18:59:46] test dose due now: Patient C, Room 3, Ibuprofen 400 mg
+[scheduler 18:59:46] due now: Ibuprofen room 3 (due 18:59)
+[scheduler 18:59:46] START Patient C, Room 3, Ibuprofen 400 mg (slot S3), due 18:59 - lateness 0.0 min
+[delivery] Room 3 | Patient C | Ibuprofen 400 mg | slot S3 (med_S3)
+[delivery] Patient C, Room 3, Ibuprofen 400 mg (slot S3), due 18:59
+[delivery] step 1/15 start check  (sim t 5.4, base 0.000 0.000 0.0 deg)
+[delivery] start: robot at home, med_S3 in slot S3; 6 containers in the world
+[delivery] step 2/15 arm home  (sim t 5.5, base 0.000 0.000 0.0 deg)
+[delivery] step 3/15 follow the line to the pharmacy  (sim t 5.6, base 0.000 0.000 0.0 deg)
+[delivery] route home -> pharmacy: stop pharmacy
+[delivery]   route_follower: Result: arrived
+[delivery]   route_follower: Final: [0.278, 0.0006, 0.09]
+[delivery]   route_follower: stop pharmacy (red stop (strips)): marker 0.272 m ahead, robot (0.278, 0.001, 0.1 deg)
+[delivery] step 4/15 line up with slot S3  (sim t 9.3, base 0.280 0.001 0.1 deg)
+[delivery] pharmacy stop at (0.2796, 0.0006, 0.09 deg); slot S3 at x 0.222 -> move -0.057 m along the line
+[delivery] at slot S3: robot (0.2242, 0.0000, 0.09 deg)
+[delivery] step 5/15 cap colour check  (sim t 11.9, base 0.224 0.000 0.1 deg)
+[delivery] cap check off
+[delivery] step 6/15 pick Ibuprofen from slot S3  (sim t 12.0, base 0.224 0.000 0.1 deg)
+       ... still moving, 1.053 rad to go
+       ... still moving, 0.495 rad to go
+       ... still moving, 1.164 rad to go
+       ... still moving, 0.436 rad to go
+       ... still moving, 0.564 rad to go
+       ... still moving, 0.423 rad to go
+       ... still moving, 0.230 rad to go
+       ... still moving, 0.066 rad to go
+       ... still moving, 0.511 rad to go
+       ... still moving, 0.250 rad to go
+       ... still moving, 0.041 rad to go
+[delivery] gripper at 0.780 rad
+[0m[INFO] [1794323320.578195100] [jetarm_pick_place]: DetachableJoint /med_S3: attached[0m
+[delivery] attach (pick) confirmed by /med_S3/attached after 1 attempt(s)
+       ... still moving, 0.560 rad to go
+       ... still moving, 0.403 rad to go
+       ... still moving, 0.178 rad to go
+[delivery] lifted: med_S3 z 0.223
+[delivery] step 7/15 arm home (carrying)  (sim t 31.9, base 0.224 0.000 0.1 deg)
+       ... still moving, 1.134 rad to go
+       ... still moving, 0.499 rad to go
+[delivery] step 8/15 turn round at the pharmacy  (sim t 35.5, base 0.224 0.000 0.1 deg)
+[delivery] step 9/15 follow the line to Room 3  (sim t 51.8, base 0.225 0.000 179.8 deg)
+[delivery] route pharmacy -> R3: pass home, straight J1, right J2, stop R3
+[delivery]   route_follower: Result: arrived
+[delivery]   route_follower: Final: [-3.6508, 1.6258, 89.98]
+[delivery]   route_follower: pass home (seen, blind pass): marker 0.286 m ahead, robot (0.206, 0.000, 180.0 deg)
+[delivery]   route_follower: straight J1 (seen, blind pass): marker 0.377 m ahead, robot (-0.373, -0.001, -179.9 deg)
+[delivery]   route_follower: right J2 (seen, turn right): marker 0.368 m ahead, robot (-3.282, -0.001, -180.0 deg)
+[delivery]   route_follower: at J2: on the junction centre (-3.648, -0.000), turned right to 90.3 deg
+[delivery]   route_follower: stop R3 (red stop (strips)): marker 0.274 m ahead, robot (-3.651, 1.626, 90.0 deg)
+[delivery] step 10/15 place on the bedside table  (sim t 116.8, base -3.651 1.627 90.0 deg)
+       ... still moving, 1.194 rad to go
+       ... still moving, 0.646 rad to go
+       ... still moving, 0.081 rad to go
+       ... still moving, 0.525 rad to go
+       ... still moving, 0.403 rad to go
+       ... still moving, 0.238 rad to go
+       ... still moving, 0.035 rad to go
+[0m[INFO] [1794325039.538811203] [jetarm_pick_place]: DetachableJoint /med_S3: detached[0m
+[delivery] detach (place) confirmed by /med_S3/attached after 1 attempt(s)
+       ... still moving, 0.531 rad to go
+       ... still moving, 0.233 rad to go
+       ... still moving, 0.519 rad to go
+       ... still moving, 0.332 rad to go
+       ... still moving, 0.164 rad to go
+[delivery] after retreat: med_S3 (-3.8512, 1.6247, 0.1299) tilt 0.6 deg, 2.8 mm from target
+[delivery] placed (contact sensor, sim t 127.12): med_S3 (-3.8512, 1.6247, 0.1266), 2.8 mm from target, tilt 0.6 deg, table lowered at 0.100 m
+[delivery] step 11/15 arm home  (sim t 133.2, base -3.651 1.627 90.0 deg)
+       ... still moving, 1.123 rad to go
+       ... still moving, 0.478 rad to go
+[delivery] step 12/15 table lifts medicine to the patient  (sim t 136.8, base -3.651 1.627 90.0 deg)
+[delivery] table: lifting, platform 0.100 m
+[delivery] table: lifting, platform 0.161 m
+[delivery] table: lifting, platform 0.245 m
+[delivery] table: lifting, platform 0.330 m
+[delivery] table: lifting, platform 0.410 m
+[delivery] table: lifting, platform 0.490 m
+[delivery] table: lifting, platform 0.578 m
+[delivery] table: lifting, platform 0.658 m
+[delivery] table: lifting, platform 0.738 m
+[delivery] table: raised, platform 0.800 m
+[delivery] table raised (platform 0.800 m, lift 18.6 s): med_S3 (-3.8512, 1.6244, 0.8300) tilt 0.0 deg - on the platform
+[delivery] step 13/15 turn round  (sim t 155.1, base -3.651 1.627 90.0 deg)
+[delivery] before moving away: med_S3 (-3.8512, 1.6244, 0.8300) tilt 0.0 deg, 3.1 mm from target
+[delivery] step 14/15 follow the line home  (sim t 171.5, base -3.651 1.628 -90.3 deg)
+[delivery] route R3 -> home: left J2, straight J1, stop home
+[delivery]   route_follower: Result: arrived
+[delivery]   route_follower: Final: [-0.3523, 0.0007, 0.03]
+[delivery]   route_follower: left J2 (seen, turn left): marker 0.374 m ahead, robot (-3.649, 0.374, -90.0 deg)
+[delivery]   route_follower: at J2: on the junction centre (-3.650, 0.002), turned left to -0.3 deg
+[delivery]   route_follower: straight J1 (seen, blind pass): marker 0.382 m ahead, robot (-1.132, 0.001, 0.0 deg)
+[delivery]   route_follower: stop home (red stop (strips)): marker 0.272 m ahead, robot (-0.352, 0.001, 0.0 deg)
+[delivery] step 15/15 park at home  (sim t 229.3, base -0.351 0.001 0.0 deg)
+[delivery] done: base at -0.0019 0.0000 yaw 0.03 deg; cycle time 232.3 sim s
+[scheduler 20:10:42] END Patient C, Room 3, Ibuprofen 400 mg (slot S3), due 18:59: SUCCESS; placement 2.8 mm, table raised True, right container True, others in place True
+[scheduler 20:10:42] scheduler done: Ibuprofen room 3 done
+[scheduler] finished {"Patient C|3|Ibuprofen 400 mg|2026-11-10T18:59:46+04:00": "done"}

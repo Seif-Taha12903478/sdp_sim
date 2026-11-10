@@ -1,0 +1,4 @@
+[evaluate 18:58:47] controllers active after 21 s; arm home
+[evaluate 18:59:29] running: python3 /home/ubuntu/sdp_sim/scripts/hospital_scheduler.py --now 3
+[evaluate 20:10:43] command exited with 0
+[evaluate 20:10:45] done in 4339 s wall; logs in /home/ubuntu/sdp_sim/results/system/delivery_room3_20261110_185826

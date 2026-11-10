@@ -1,0 +1,12 @@
+{
+  "command": [
+    "python3",
+    "/home/ubuntu/sdp_sim/scripts/hospital_scheduler.py",
+    "--now",
+    "3"
+  ],
+  "deadline": "2026-11-10T23:30",
+  "leftover_processes": [],
+  "exit_code": 0,
+  "wall_s": 4339.2
+}
