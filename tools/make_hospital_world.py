@@ -112,20 +112,34 @@ def sph_g(r):
     return '<sphere><radius>%.4f</radius></sphere>' % r
 
 
-class Parts:
-    """Visuals (and collisions) of one link; records colours for the HSV check."""
+def _compose(frame, pose):
+    """pose (x, y, z, roll, pitch, yaw) given in a frame (fx, fy, fyaw) -> parent pose."""
+    p = tuple(pose) + (0.0,) * (6 - len(pose))
+    fx, fy, fyaw = frame
+    c, s = math.cos(fyaw), math.sin(fyaw)
+    return (fx + c * p[0] - s * p[1], fy + s * p[0] + c * p[1], p[2], p[3], p[4], p[5] + fyaw)
 
-    def __init__(self, model):
+
+class Parts:
+    """Visuals (and collisions) of one link; records colours for the HSV check.
+    prefix: prepended to every visual / collision name (several pieces of furniture
+    in one link); frame: (x, y, yaw) of the poses given to this object in the link."""
+
+    def __init__(self, model, prefix='', frame=None):
         self.model, self.xml = model, []
+        self.prefix, self.frame = prefix, frame
+
+    def _p(self, pose):
+        return _compose(self.frame, pose) if self.frame else pose
 
     def visual(self, name, pose, geom, rgb, emissive=None, spec=0.1, transparency=None, texture=None,
                amb=FURNITURE_AMB):
-        COLOURS.append((self.model, name, rgb))
+        COLOURS.append((self.model, self.prefix + name, rgb))
         if emissive and max(emissive) > 0:
-            COLOURS.append((self.model, name + ' (emissive)', emissive))
+            COLOURS.append((self.model, self.prefix + name + ' (emissive)', emissive))
         t = '<transparency>%.2f</transparency>' % transparency if transparency else ''
         self.xml.append('\n        <visual name="%s">%s<geometry>%s</geometry>%s%s</visual>'
-                        % (name, _pose(pose), geom, _material(rgb, emissive, spec, texture, amb), t))
+                        % (self.prefix + name, _pose(self._p(pose)), geom, _material(rgb, emissive, spec, texture, amb), t))
 
     def box(self, name, pose, size, rgb, **kw):
         self.visual(name, pose, box_g(*size), rgb, **kw)
@@ -147,7 +161,7 @@ class Parts:
     def collision(self, name, pose, size, mu=1.0):
         self.xml.append('\n        <collision name="%s">%s<geometry>%s</geometry><surface><friction><ode>'
                         '<mu>%s</mu><mu2>%s</mu2></ode></friction></surface></collision>'
-                        % (name, _pose(pose), box_g(*size), mu, mu))
+                        % (self.prefix + name, _pose(self._p(pose)), box_g(*size), mu, mu))
 
     def __str__(self):
         return ''.join(self.xml)
@@ -239,7 +253,10 @@ def five_leg_base(p, name, cx, cy, leg, z=0.07, caster_r=0.022):
 
 # ---------------------------------------------------------------- bed
 def bed_model():
-    p = Parts('hospital_bed')
+    return static_model('hospital_bed', bed_parts(Parts('hospital_bed')))
+
+
+def bed_parts(p):
     cx, w = BED_CX, BED_W
     # wheeled base frame + two telescopic lift columns (height-adjustable look)
     base_y0, base_y1 = BED_Y0 + 0.12, BED_Y1 - 0.12
@@ -288,12 +305,15 @@ def bed_model():
     # one collision box: deck + mattress (nothing else can touch the bed)
     p.collision('bed', (cx, (BED_Y0 + BED_Y1) / 2, (DECK_Z0 + MATT_TOP) / 2),
                 (w + 0.01, BED_L + 0.02, MATT_TOP - DECK_Z0))
-    return static_model('hospital_bed', p)
+    return p
 
 
 # ---------------------------------------------------------------- IV pole, monitor, chair
 def iv_pole_model():
-    p = Parts('iv_pole')
+    return static_model('iv_pole', iv_pole_parts(Parts('iv_pole')))
+
+
+def iv_pole_parts(p):
     x, y = IV_XY
     five_leg_base(p, 'base', x, y, 0.25)
     p.cyl('pole', (x, y, 0.07 + 1.83 / 2), 0.012, 1.83, STEEL, spec=0.5)
@@ -306,11 +326,17 @@ def iv_pole_model():
     p.cyl('drip_chamber', (bx, y, 1.55), 0.012, 0.06, (0.90, 0.93, 0.92), transparency=0.3)
     p.cyl_between('drip_line', (bx, y, 1.52), (BED_X0 + 0.12, y + 0.13, MATT_TOP + 0.03), 0.0035,
                   (0.92, 0.93, 0.90))
-    return static_model('iv_pole', p)
+    return p
 
 
-def monitor_model():
-    p = Parts('patient_monitor')
+def monitor_model(texture=None):
+    return static_model('patient_monitor', monitor_parts(Parts('patient_monitor'), texture))
+
+
+def monitor_parts(p, texture=None, led=None):
+    """texture: screen image (default monitor_screen.png); led: power LED colour."""
+    texture = texture or SCREEN_TEX
+    led = led or LED_GREEN
     x, y = MONITOR_XY
     five_leg_base(p, 'base', x, y, 0.24)
     p.cyl('pole', (x, y, 0.07 + 1.16 / 2), 0.02, 1.16, STEEL)
@@ -319,15 +345,20 @@ def monitor_model():
     # yellow SpO2, white respiration/blood pressure (no red or blue)
     p.box('housing', (x + 0.07, y, 1.37), (0.08, 0.38, 0.30), (0.13, 0.13, 0.14))
     p.box('screen', (x + 0.1125, y, 1.375), (0.005, 0.33, 0.25), (1.0, 1.0, 1.0), spec=0.3,
-          texture=SCREEN_TEX, amb=1.0)
+          texture=texture, amb=1.0)
     p.box('handle', (x + 0.07, y, 1.535), (0.03, 0.22, 0.02), STEEL_DARK)
-    p.box('power_led', (x + 0.1125, y + 0.17, 1.24), (0.004, 0.012, 0.008), LED_GREEN, emissive=LED_GREEN)
-    return static_model('patient_monitor', p)
+    p.box('power_led', (x + 0.1125, y + 0.17, 1.24), (0.004, 0.012, 0.008), led, emissive=led)
+    return p
 
 
 def chair_model():
     """Visitor chair with armrests; local +x = the way the seated visitor faces."""
-    p = Parts('visitor_chair')
+    p = chair_parts(Parts('visitor_chair'))
+    return static_model('visitor_chair', p, (CHAIR_XY[0], CHAIR_XY[1], 0, 0, 0, CHAIR_YAW))
+
+
+def chair_parts(p):
+    """Chair visuals in the chair's own frame (give p a frame to place it)."""
     p.box('seat', (0, 0, 0.44), (0.48, 0.48, 0.08), UPHOLSTERY)
     p.box('backrest', (-0.25, 0, 0.75, 0, -0.10, 0), (0.06, 0.48, 0.52), UPHOLSTERY)
     for i, (lx, ly) in enumerate(((0.20, 0.20), (0.20, -0.20), (-0.22, 0.20), (-0.22, -0.20))):
@@ -335,7 +366,7 @@ def chair_model():
     for i, sy in enumerate((0.27, -0.27)):
         p.box('arm%d' % i, (-0.02, sy, 0.66), (0.44, 0.06, 0.035), CHAIR_WOOD)
         p.box('arm_post%d' % i, (0.16, sy, 0.555), (0.035, 0.035, 0.18), CHAIR_WOOD)
-    return static_model('visitor_chair', p, (CHAIR_XY[0], CHAIR_XY[1], 0, 0, 0, CHAIR_YAW))
+    return p
 
 
 def room_model():
@@ -369,8 +400,10 @@ def _inertial(m, ixx, iyy, izz, z=0.0):
             '<izz>%.3g</izz><ixy>0</ixy><ixz>0</ixz><iyz>0</iyz></inertia></inertial>' % (z, m, ixx, iyy, izz))
 
 
-def smart_table_model():
-    """Base fixed to the world, N nested tubes on prismatic joints in series (lift1..liftN),
+def smart_table_model(name='smart_table', prefix='/smart_table', pose=None, led=None):
+    """name / prefix: model name and topic prefix (/smart_table/...); pose: (x, y, yaw) of
+    the platform centre (default tbl.PLATFORM_CENTER, yaw 0); led: status LED colour.
+    Base fixed to the world, N nested tubes on prismatic joints in series (lift1..liftN),
     the platform on the innermost tube. Model origin: on the floor under the column axis
     (= platform centre). Lowered: every tube's top just under the platform, the rest
     hangs below the floor (visual only, no collision), so only a short stepped neck
@@ -385,21 +418,22 @@ def smart_table_model():
     # sits at a position limit, so stages that sag onto a limit at start-up stayed there
     # (seen: 4 / 8 / 12 mm below 0, platform at 0.077 m). The controller keeps 0..stroke.
     shades = [STEEL, STEEL_DARK]
+    led = led or LED_GREEN
     bx = tbl.PLATFORM_ROBOT_EDGE_X - TABLE_BASE[0] / 2 - tbl.PLATFORM_CENTER[0]
     links, joints = [], []
-    base = Parts('smart_table')
+    base = Parts(name)
     base.box('base', (bx, 0, TABLE_BASE[2] / 2), TABLE_BASE, MATTE_WHITE, spec=0.03)
     base.box('status_led', (bx + TABLE_BASE[0] / 2 - 0.012, 0, TABLE_BASE[2] + 0.0005), (0.01, 0.08, 0.002),
-             LED_GREEN, emissive=LED_GREEN)          # on top, not sticking out towards the robot
+             led, emissive=led)          # on top, not sticking out towards the robot
     base.collision('base_collision', (bx, 0, TABLE_BASE[2] / 2 + 0.0005), (TABLE_BASE[0], TABLE_BASE[1], TABLE_BASE[2] - 0.001))
     links.append('\n      <link name="base">%s%s\n      </link>'
                  % (_inertial(5.0, 0.04, 0.045, 0.08, 0.025), base))
     joints.append('\n      <joint name="world_fix" type="fixed"><parent>world</parent><child>base</child></joint>')
     parent = 'base'
     for i in range(n):
-        name = 'platform' if i == n - 1 else 'stage%d' % (i + 1)
+        lname = 'platform' if i == n - 1 else 'stage%d' % (i + 1)
         top = plate_z0 - 0.005 * (n - 1 - i)               # lowered: tops stepped 5 mm
-        p = Parts('smart_table')
+        p = Parts(name)
         r = radii[i]
         p.cyl('tube', (0, 0, top - tube_len / 2), r, tube_len, shades[i % 2], spec=0.4)
         if i == n - 1:
@@ -410,39 +444,43 @@ def smart_table_model():
             p.collision('top', (0, 0, plate_z0 + plate_t / 2), tbl.PLATFORM_SIZE + (plate_t,), mu=1.0)
             sensor = """
         <sensor name="platform_contact" type="contact">
-          <contact><collision>top</collision><topic>/smart_table/contact</topic></contact>
-          <topic>/smart_table/contact</topic>
+          <contact><collision>top</collision><topic>%s/contact</topic></contact>
+          <topic>%s/contact</topic>
           <always_on>1</always_on>
           <update_rate>50</update_rate>
-        </sensor>"""
+        </sensor>""" % (prefix, prefix)
         else:
             inert = _inertial(0.3, 1.1e-3, 1.1e-3, 2e-4, top - tube_len / 2)
             sensor = ''
-        links.append('\n      <link name="%s">%s%s%s\n      </link>' % (name, inert, p, sensor))
+        links.append('\n      <link name="%s">%s%s%s\n      </link>' % (lname, inert, p, sensor))
         joints.append("""
       <joint name="lift%d" type="prismatic">
         <parent>%s</parent><child>%s</child>
         <axis><xyz>0 0 1</xyz><limit><lower>%.4f</lower><upper>%.4f</upper><effort>500</effort><velocity>1</velocity></limit>
           <dynamics><damping>0</damping><friction>0</friction></dynamics></axis>
-      </joint>""" % (i + 1, parent, name, -LIMIT_MARGIN, stroke + LIMIT_MARGIN))
-        parent = name
+      </joint>""" % (i + 1, parent, lname, -LIMIT_MARGIN, stroke + LIMIT_MARGIN))
+        parent = lname
     ctrl = ''.join("""
       <plugin filename="ignition-gazebo-joint-position-controller-system" name="ignition::gazebo::systems::JointPositionController">
         <joint_name>lift%d</joint_name>
-        <topic>/smart_table/lift%d/cmd_pos</topic>
+        <topic>%s/lift%d/cmd_pos</topic>
         <use_velocity_commands>true</use_velocity_commands>
         <cmd_max>%s</cmd_max>
         <cmd_min>-%s</cmd_min>
         <initial_position>0</initial_position>
-      </plugin>""" % (i + 1, i + 1, tbl.STAGE_CMD_MAX, tbl.STAGE_CMD_MAX) for i in range(n))
+      </plugin>""" % (i + 1, prefix, i + 1, tbl.STAGE_CMD_MAX, tbl.STAGE_CMD_MAX) for i in range(n))
+    if pose is None:
+        mpose = _pose((tbl.PLATFORM_CENTER[0], tbl.PLATFORM_CENTER[1], 0))
+    else:
+        mpose = _pose((pose[0], pose[1], 0, 0, 0, pose[2]))
     return """
     <!-- smart bedside table: controller scripts/smart_table.py (started by hospital.launch.py) -->
-    <model name="smart_table">
+    <model name="%s">
       %s%s%s%s
       <plugin filename="ignition-gazebo-joint-state-publisher-system" name="ignition::gazebo::systems::JointStatePublisher">
-        <topic>/smart_table/joint_states</topic>
+        <topic>%s/joint_states</topic>
       </plugin>
-    </model>""" % (_pose((tbl.PLATFORM_CENTER[0], tbl.PLATFORM_CENTER[1], 0)), ''.join(links), ''.join(joints), ctrl)
+    </model>""" % (name, mpose, ''.join(links), ''.join(joints), ctrl, prefix)
 
 
 # ---------------------------------------------------------------- cameras
@@ -578,7 +616,7 @@ def check_clearances():
 
 
 # ---------------------------------------------------------------- monitor screen texture
-def make_screen_texture(path, w=640, h=480):
+def make_screen_texture(path, w=640, h=480, title='BED 1   PATIENT A', clock='14:00'):
     """Patient-monitor screen: green ECG + HR, yellow SpO2 pleth, white respiration and
     blood pressure (only green / yellow / white, no red or blue)."""
     import cv2
@@ -595,7 +633,7 @@ def make_screen_texture(path, w=640, h=480):
     def trace(y0, amp, fn, colour, period):
         pts = [(x, int(y0 - amp * fn((x % period) / period))) for x in range(10, 430)]
         cv2.polylines(img, [np.array(pts, np.int32)], False, colour, 2, cv2.LINE_AA)
-    cv2.putText(img, 'BED 1   PATIENT A', (12, 28), font, 0.7, white, 1, cv2.LINE_AA)
+    cv2.putText(img, title, (12, 28), font, 0.7, white, 1, cv2.LINE_AA)
     cv2.line(img, (0, 40), (w, 40), dim, 1)
     cv2.putText(img, 'II', (12, 70), font, 0.55, green, 1, cv2.LINE_AA)
     trace(160, 95, ecg, green, 140)
@@ -609,7 +647,7 @@ def make_screen_texture(path, w=640, h=480):
         cv2.putText(img, label, (452, y + 20), font, 0.6, colour, 1, cv2.LINE_AA)
         cv2.putText(img, value, (470, y + 105), font, 3.0, colour, 6, cv2.LINE_AA)
     cv2.line(img, (0, 440), (w, 440), dim, 1)
-    cv2.putText(img, 'NIBP 120/80 (93)   14:00', (12, 470), font, 0.75, white, 2, cv2.LINE_AA)
+    cv2.putText(img, 'NIBP 120/80 (93)   ' + clock, (12, 470), font, 0.75, white, 2, cv2.LINE_AA)
     cv2.imwrite(path, img)
 
 

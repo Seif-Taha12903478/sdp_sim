@@ -96,6 +96,17 @@ class LineFollower(Node):
         cv2.line(bgr, (int(centre), 0), (int(centre), h - 1), (255, 0, 255), 1)
         return -math.atan((centre - w / 2.0) / (h / 2.0)), red_frac
 
+    def steer(self, angle, t, speed=None):
+        """PD steering on the deflection angle at sim time t -> (vx, wz). speed: forward
+        speed on a straight line (default --speed); slower when the line is at an angle.
+        (Moved out of on_image unchanged so route_follower.py can reuse it.)"""
+        dt = (t - self.prev_t) if self.prev_t is not None else 0.0
+        d = (angle - self.prev_err) / dt if dt > 1e-6 else 0.0
+        self.prev_t, self.prev_err = t, angle
+        wz = max(-self.a.max_turn, min(self.a.max_turn, self.a.kp * angle + self.a.kd * d))
+        vx = (self.a.speed if speed is None else speed) * max(0.4, 1.0 - abs(angle) / 0.6)
+        return vx, wz
+
     def send(self, vx=0.0, wz=0.0):
         t = Twist()
         t.linear.x = float(vx)
@@ -132,12 +143,7 @@ class LineFollower(Node):
                 self.get_logger().warn('Line lost for %.1f s - stopping.' % self.a.lost_timeout)
         else:
             self.lost_since = None
-            dt = (t - self.prev_t) if self.prev_t is not None else 0.0
-            d = (angle - self.prev_err) / dt if dt > 1e-6 else 0.0
-            self.prev_t, self.prev_err = t, angle
-            wz = max(-self.a.max_turn, min(self.a.max_turn, self.a.kp * angle + self.a.kd * d))
-            vx = self.a.speed * max(0.4, 1.0 - abs(angle) / 0.6)
-            self.send(vx, wz)
+            self.send(*self.steer(angle, t))
 
         now = time.monotonic()
         if now - self.last_debug > 1.0:

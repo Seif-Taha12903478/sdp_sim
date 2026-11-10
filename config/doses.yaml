@@ -1,0 +1,12 @@
+# Medication schedule of the hospital system (scripts/hospital_scheduler.py).
+#
+# Each entry: patient, room (1-4), medicine + dose (must match config/inventory.yaml),
+# times: list of daily due times "HH:MM" (24 h) in the hospital's time zone.
+# Normal mode uses the real local time (time_zone below). --demo ignores this file and
+# makes its own 4-dose schedule on a hospital clock (simulated time from 08:00).
+time_zone: Asia/Dubai
+doses:
+  - {patient: Patient A, room: 1, medicine: Paracetamol, dose: 500 mg, times: ["08:00", "20:00"]}
+  - {patient: Patient B, room: 2, medicine: Amoxicillin, dose: 250 mg, times: ["08:00", "16:00"]}
+  - {patient: Patient C, room: 3, medicine: Ibuprofen,   dose: 400 mg, times: ["12:00"]}
+  - {patient: Patient D, room: 4, medicine: Metformin,   dose: 500 mg, times: ["08:00", "18:00"]}
