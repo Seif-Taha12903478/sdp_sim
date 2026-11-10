@@ -5,11 +5,17 @@ so this Gazebo simulation is the final deliverable. Keep explanations short and
 practical; the user reviews everything.
 
 ## Next session
-Nothing open. hospital-room was merged into main (fast-forward, on the user's request)
-on 2026-11-05; the hospital-room branch is kept. Report bundle for the write-up:
-~/Desktop/sdp_report_bundle.zip (media, 10 video stills, result tables, key code,
-REPORT_NOTES.md with every number that changed since the 5-run evaluation). Open
-decision for the user: a 5-run evaluation with the smart table (ask first).
+Branch hospital-system (from main bedafd6, 2026-11-10): NEW PHASE "hospital system"
+(corridor, pharmacy, 4 rooms, line network with junctions, smart scheduler; the user's
+spec of 2026-11-10). PHASE 0 = plan only: results/system/PLAN.md + layout.png
+(results/system/plan_layout.py draws it and prints the route/time table; force-added).
+WAITING FOR THE USER'S OK - nothing is built yet. Never change main (the user's
+single-room fallback). After the OK: build and test in the order of PLAN.md section 6
+(a offline -> b world + RTF -> c pick test -> d Room 3 -> e demo video), stop and report
+on any failure, commit + push in small steps, keep this note current.
+Earlier, on main: report bundle ~/Desktop/sdp_report_bundle.zip (media, video stills,
+result tables, key code, REPORT_NOTES.md); open decision: a 5-run evaluation with the
+smart table (ask first).
 
 ## Current state (2026-11-05 evening)
 GitHub backup: private repo https://github.com/Seif-Taha12903478/sdp_sim (remote
