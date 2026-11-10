@@ -63,6 +63,9 @@ def main():
     p.add_argument('--label', default='')
     p.add_argument('--out', default=os.path.join(ROOT, 'results', 'rtf.csv'))
     p.add_argument('--launch-arg', action='append', default=[], help='extra launch argument, e.g. video:=true')
+    p.add_argument('--launch', default='hospital.launch.py', help='launch file (hospital_system.launch.py)')
+    p.add_argument('--pre', default=None, help='command to run after arm home, before measuring '
+                                                '(e.g. "python3 ~/sdp_sim/scripts/pharmacy.py setup")')
     a = p.parse_args()
     if 'CAMERA_TYPE' not in os.environ:
         sys.exit('CAMERA_TYPE is not set (source ~/.bashrc or export CAMERA_TYPE=GEMINI)')
@@ -72,7 +75,7 @@ def main():
     stamp = dt.datetime.now().strftime('%Y%m%d_%H%M%S')
     launch_log = os.path.join(os.path.dirname(a.out), 'rtf_%s_launch.log' % stamp)
     fh = open(launch_log, 'w')
-    proc = subprocess.Popen(['ros2', 'launch', 'robot_gazebo', 'hospital.launch.py', 'gui:=false'] + a.launch_arg,
+    proc = subprocess.Popen(['ros2', 'launch', 'robot_gazebo', a.launch, 'gui:=false'] + a.launch_arg,
                             stdout=fh, stderr=subprocess.STDOUT, start_new_session=True)
     rtf, wins, pts = None, [], []
     try:
@@ -83,6 +86,12 @@ def main():
         r = subprocess.run([sys.executable, os.path.join(ROOT, 'scripts', 'jetarm_pick_place.py'), 'home'],
                            capture_output=True, text=True, timeout=1800)
         ev.log('arm home: %s' % (r.stdout.strip().splitlines()[-1:] or r.stderr.strip()[-200:]))
+        if a.pre:
+            ev.log('pre: %s' % a.pre)
+            r = subprocess.run(os.path.expanduser(a.pre), shell=True, capture_output=True, text=True, timeout=3600)
+            ev.log('pre exit %d: %s' % (r.returncode, (r.stdout.strip().splitlines() or [''])[-1]))
+            if r.returncode != 0:
+                sys.exit('pre command failed:\n' + r.stdout[-2000:] + r.stderr[-2000:])
         time.sleep(a.settle)
         ev.log('measuring for %.0f wall s' % a.seconds)
         rtf, wins, pts = measure(a.seconds)
@@ -104,7 +113,7 @@ def main():
                         'win_mean', 'win_std', 'win_min', 'win_max', 'launch_log'])
         commit = subprocess.run(['git', '-C', ROOT, 'rev-parse', '--short', 'HEAD'],
                                 capture_output=True, text=True).stdout.strip()
-        w.writerow([stamp, a.label, commit, ' '.join(a.launch_arg), round(rtf, 5),
+        w.writerow([stamp, a.label, commit, ' '.join([a.launch] + a.launch_arg), round(rtf, 5),
                     round(pts[-1][0] - pts[0][0], 1), round(pts[-1][1] - pts[0][1], 2),
                     round(st.mean(wins), 5) if wins else '', round(sd, 5), round(min(wins), 5) if wins else '',
                     round(max(wins), 5) if wins else '', launch_log])

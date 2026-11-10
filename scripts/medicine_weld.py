@@ -26,18 +26,22 @@ from std_msgs.msg import Empty, String
 
 
 class Weld:
-    def __init__(self, node):
-        self.node = node
-        self.pub = {'attach': node.create_publisher(Empty, '/medicine/attach', 10),
-                    'detach': node.create_publisher(Empty, '/medicine/detach', 10)}
+    """prefix: topic prefix of one container's DetachableJoint (default /medicine; the
+    hospital system has one per container: /med_S1 ... /med_S6)."""
+
+    def __init__(self, node, prefix='/medicine'):
+        self.node, self.prefix = node, prefix
+        self.pub = {'attach': node.create_publisher(Empty, prefix + '/attach', 10),
+                    'detach': node.create_publisher(Empty, prefix + '/detach', 10)}
         self.states = []            # (sim_t, 'attached'|'detached') as received
         self.sim_t = None
-        node.create_subscription(String, '/medicine/attached', self._on_state, 10)
+        node.create_subscription(String, prefix + '/attached', self._on_state, 10)
         node.create_subscription(JointState, '/joint_states', self._on_js, 1)
 
     def _on_state(self, m):
         self.states.append((self.sim_t, m.data))
-        self.node.get_logger().info('DetachableJoint state: %s' % m.data)
+        self.node.get_logger().info('DetachableJoint state: %s' % m.data if self.prefix == '/medicine'
+                                    else 'DetachableJoint %s: %s' % (self.prefix, m.data))
 
     def _on_js(self, m):
         self.sim_t = m.header.stamp.sec + m.header.stamp.nanosec * 1e-9
@@ -61,7 +65,7 @@ class Weld:
         """kind 'attach' | 'detach'. Returns (confirmed, attempts_used)."""
         want = 'attached' if kind == 'attach' else 'detached'
         if not self.wait_connected():
-            raise RuntimeError('/medicine/%s has no subscriber - is the bridge running?' % kind)
+            raise RuntimeError('%s/%s has no subscriber - is the bridge running?' % (self.prefix, kind))
         for i in range(1, attempts + 1):
             n0 = len(self.states)
             self.pub[kind].publish(Empty())
@@ -80,14 +84,20 @@ class Weld:
 
 
 def main():
-    if len(sys.argv) != 2 or sys.argv[1] not in ('attach', 'detach'):
+    args = sys.argv[1:]
+    prefix = '/medicine'
+    if len(args) == 3 and args[1] == '--prefix':
+        prefix = args[2]
+        args = args[:1]
+    if len(args) != 1 or args[0] not in ('attach', 'detach'):
         print(__doc__)
+        print('Hospital system:  python3 medicine_weld.py attach|detach --prefix /med_S3')
         sys.exit(1)
     rclpy.init()
     node = rclpy.create_node('medicine_weld')
-    w = Weld(node)
-    ok, n = w.command(sys.argv[1])
-    print('%s: %s after %d attempt(s); last state %s' % (sys.argv[1], 'CONFIRMED' if ok else 'NOT confirmed',
+    w = Weld(node, prefix)
+    ok, n = w.command(args[0])
+    print('%s: %s after %d attempt(s); last state %s' % (args[0], 'CONFIRMED' if ok else 'NOT confirmed',
                                                         n, w.last_state()))
     node.destroy_node()
     rclpy.shutdown()

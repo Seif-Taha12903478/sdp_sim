@@ -36,6 +36,7 @@ import glob
 import json
 import math
 import os
+import re
 import signal
 import statistics as st
 import subprocess
@@ -53,18 +54,37 @@ def log(msg):
     print('[evaluate %s] %s' % (dt.datetime.now().strftime('%H:%M:%S'), msg), flush=True)
 
 
+def _ancestors():
+    """This process and its parents (a calling shell's command line may name these programs)."""
+    pids, pid = set(), os.getpid()
+    while pid > 1 and pid not in pids:
+        pids.add(pid)
+        try:
+            with open('/proc/%d/stat' % pid) as fh:
+                pid = int(fh.read().rsplit(')', 1)[1].split()[1])
+        except (OSError, ValueError, IndexError):
+            break
+    return pids
+
+
+SIM_SCRIPTS = re.compile(r'^\S*python3?\S*\s+(-\S+\s+)*\S*(planar_base|line_follower|route_follower|smart_table)\.py')
+
+
 def gazebo_pids():
-    """PIDs of Gazebo / sim processes (by exact command, never this script's shell)."""
+    """PIDs of Gazebo / sim processes, matched on the program actually running (never a
+    shell whose command line merely mentions them, never this script or its parents)."""
     out = subprocess.run(['ps', '-eo', 'pid=,args='], capture_output=True, text=True).stdout
+    skip = _ancestors()
     pids = []
     for line in out.splitlines():
         pid, _, args = line.strip().partition(' ')
-        if (args.startswith('ign gazebo') or 'ruby' in args and 'ign gazebo' in args
+        args = args.strip()
+        if (args.startswith('ign gazebo') or args.startswith('ruby') and 'ign gazebo' in args
                 or args.startswith('/opt/ros/humble/lib/ros_gz_bridge/parameter_bridge')
                 or args.startswith('/opt/ros/humble/lib/robot_state_publisher/')
-                or 'planar_base.py' in args or 'line_follower.py' in args):
+                or SIM_SCRIPTS.match(args)):
             pids.append(int(pid))
-    return [p for p in pids if p != os.getpid()]
+    return [p for p in pids if p not in skip]
 
 
 def wait_gone(pids, seconds):
@@ -77,9 +97,9 @@ def wait_gone(pids, seconds):
     return pids
 
 
-def start_sim(logpath):
+def start_sim(logpath, launch='hospital.launch.py', extra=()):
     fh = open(logpath, 'w')
-    proc = subprocess.Popen(['ros2', 'launch', 'robot_gazebo', 'hospital.launch.py', 'gui:=false'],
+    proc = subprocess.Popen(['ros2', 'launch', 'robot_gazebo', launch, 'gui:=false'] + list(extra),
                             stdout=fh, stderr=subprocess.STDOUT, start_new_session=True)
     return proc, fh
 

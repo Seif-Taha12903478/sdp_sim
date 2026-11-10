@@ -6,7 +6,10 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 PKG="$HOME/ros2_ws/src/simulations/robot_gazebo"
 [ -d "$PKG" ] || { echo "robot_gazebo not found at $PKG"; exit 1; }
 
-for f in urdf/jetarm_mecanum.gazebo.xacro worlds/hospital.sdf worlds/hospital_video.sdf worlds/hospital_photo.sdf launch/hospital.launch.py; do
+# hospital system (branch hospital-system): new file names only, main's files are not affected
+for f in urdf/jetarm_mecanum.gazebo.xacro worlds/hospital.sdf worlds/hospital_video.sdf worlds/hospital_photo.sdf launch/hospital.launch.py \
+         urdf/jetarm_mecanum_system.gazebo.xacro worlds/hospital_system.sdf worlds/hospital_system_video.sdf \
+         worlds/hospital_system_photo.sdf launch/hospital_system.launch.py; do
   if [ -f "$PKG/$f" ] && ! cmp -s "$HERE/robot_gazebo/$f" "$PKG/$f"; then
     cp "$PKG/$f" "$PKG/$f.bak.$(date +%Y%m%d%H%M%S)"
   fi
@@ -25,3 +28,4 @@ echo "--- building robot_gazebo"
 cd "$HOME/ros2_ws" && colcon build --packages-select robot_gazebo
 echo
 echo "Done. Open a NEW terminal, then:  ros2 launch robot_gazebo hospital.launch.py"
+echo "Hospital system:                   ros2 launch robot_gazebo hospital_system.launch.py gui:=false"

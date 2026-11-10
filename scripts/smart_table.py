@@ -30,9 +30,14 @@ Controller node (started by hospital.launch.py; sim time only, from message stam
     (std_srvs/Trigger); refused while the gripper is above or near the table.
 
 CLI (needs a running simulation):
-    python3 smart_table.py               run the controller node
-    python3 smart_table.py raise|lower   manual command; waits for raised / lowered
-    python3 smart_table.py status        print state, height and contact once
+    python3 smart_table.py               run the controller node (single-room table)
+    python3 smart_table.py --map ~/sdp_sim/config/hospital_map.yaml
+                                         hospital system: one node for all tables
+                                         (/smart_table_N/..., containers med_<slot>,
+                                         weld state /med_<slot>/attached of the container
+                                         that touches the platform)
+    python3 smart_table.py raise|lower [--prefix /smart_table_N]   manual command; waits
+    python3 smart_table.py status [--prefix ...]                   state, height, contact
 """
 import math
 import os
@@ -118,49 +123,57 @@ def profile(h0, h1, tau, v=SPEED, a=ACCEL):
     return h0 + math.copysign(s, h1 - h0), T
 
 
-def platform_distance(x, y):
+def platform_distance(x, y, center=None):
     """Horizontal distance from (x, y) to the platform outline (0 inside)."""
-    cx, cy = PLATFORM_CENTER
+    cx, cy = center or PLATFORM_CENTER
     dx = max(abs(x - cx) - PLATFORM_SIZE[0] / 2, 0.0)
     dy = max(abs(y - cy) - PLATFORM_SIZE[1] / 2, 0.0)
     return math.hypot(dx, dy)
 
 
-def on_platform(xyz, tilt, top, z_tol=0.01, max_tilt=10.0):
+def on_platform(xyz, tilt, top, z_tol=0.01, max_tilt=10.0, center=None):
     """Container centre over the platform, standing on its top (z = top + 0.03), upright."""
     x, y, z = xyz
-    inside = platform_distance(x, y) == 0.0
+    inside = platform_distance(x, y, center) == 0.0
     return bool(inside and abs(z - (top + CONTAINER_HALF_H)) < z_tol and tilt < max_tilt)
 
 
-class SmartTable(Node):
-    def __init__(self):
-        super().__init__('smart_table')
-        import jetarm_pick_place as jp
-        self.jp = jp
-        self.cmd_pubs = [self.create_publisher(Float64, '/smart_table/lift%d/cmd_pos' % (i + 1), 10)
-                         for i in range(N_STAGES)]
-        self.state_pub = self.create_publisher(String, '/smart_table/state', latched_qos())
-        self.contact_pub = self.create_publisher(String, '/smart_table/contact_state', latched_qos())
-        self.height_pub = self.create_publisher(Float64, '/smart_table/height', 10)
+def container_of(scoped, containers):
+    """Container model name in a scoped collision name ('med_S3::body::collision'), or None."""
+    model = scoped.split('::')[0]
+    if model in containers:
+        return model
+    for c in containers:            # single room: substring match, as before
+        if c in scoped:
+            return c
+    return None
+
+
+class Table:
+    """One smart table: state machine, its topics and services (inside SmartTableNode).
+    prefix: topic prefix (/smart_table); center: platform centre (world x, y)."""
+
+    def __init__(self, node, name='smart_table', prefix='/smart_table', center=None):
         from ros_gz_interfaces.msg import Contacts
-        self.create_subscription(JointState, '/smart_table/joint_states', self.on_table_js, 10)
-        self.create_subscription(Contacts, '/smart_table/contact', self.on_contacts, 50)
-        self.create_subscription(String, '/medicine/attached', self.on_weld, 10)
-        self.create_subscription(JointState, '/joint_states', self.on_robot_js, 10)
-        self.create_subscription(Odometry, '/odom', self.on_odom, 1)
-        self.create_service(Trigger, '/smart_table/raise', self.srv_raise)
-        self.create_service(Trigger, '/smart_table/lower', self.srv_lower)
+        self.node, self.name, self.prefix = node, name, prefix
+        self.center = tuple(center or PLATFORM_CENTER)
+        self.cmd_pubs = [node.create_publisher(Float64, prefix + '/lift%d/cmd_pos' % (i + 1), 10)
+                         for i in range(N_STAGES)]
+        self.state_pub = node.create_publisher(String, prefix + '/state', latched_qos())
+        self.contact_pub = node.create_publisher(String, prefix + '/contact_state', latched_qos())
+        self.height_pub = node.create_publisher(Float64, prefix + '/height', 10)
+        node.create_subscription(JointState, prefix + '/joint_states', self.on_table_js, 10)
+        node.create_subscription(Contacts, prefix + '/contact', self.on_contacts, 50)
+        node.create_service(Trigger, prefix + '/raise', self.srv_raise)
+        node.create_service(Trigger, prefix + '/lower', self.srv_lower)
         self.now = None             # sim time of the newest table joint state
         self.height = None          # measured platform top
         self.state = None
         self.hold = None            # commanded platform top while not moving
         self.motion = None          # (t0, h0, h1, T)
-        self.weld = None            # last /medicine/attached: 'attached' | 'detached'
-        self.arm = {}
-        self.odom = None
         self.streak_start = None    # sim time the current container contact began
         self.last_contact = None    # sim time of the newest container contact
+        self.contact_container = None   # model name of the container in contact
         self.lowered_since = None
         self.raised_had_contact = False
         self.contact_state = None
@@ -168,8 +181,15 @@ class SmartTable(Node):
         self.t_pub_height = -1e9
         self.t_pub_hold = -1e9
         self.wait_reason = None
-        self.get_logger().info('smart table controller: %d stages, platform top %.2f -> %.2f m, %.0f mm/s'
-                               % (N_STAGES, LOWERED_TOP, RAISED_TOP, SPEED * 1000))
+
+    def info(self, msg):
+        self.node.get_logger().info(msg if self.name == 'smart_table' else '[%s] %s' % (self.name, msg))
+
+    def warn(self, msg):
+        self.node.get_logger().warn(msg if self.name == 'smart_table' else '[%s] %s' % (self.name, msg))
+
+    def error(self, msg):
+        self.node.get_logger().error(msg if self.name == 'smart_table' else '[%s] %s' % (self.name, msg))
 
     # ---------------------------------------------------------- inputs
     def on_table_js(self, m):
@@ -180,7 +200,7 @@ class SmartTable(Node):
             return
         t = stamp_s(m.header)
         if self.now is not None and t < self.now - 1.0:
-            self.get_logger().warn('sim time jumped back (%.1f -> %.1f): reset' % (self.now, t))
+            self.warn('sim time jumped back (%.1f -> %.1f): reset' % (self.now, t))
             self.state, self.motion, self.streak_start, self.last_contact = None, None, None, None
         self.now = t
         self.height = LOWERED_TOP + sum(q)
@@ -189,7 +209,13 @@ class SmartTable(Node):
         self.update()
 
     def on_contacts(self, m):
-        if not any(CONTAINER in c.collision1.name or CONTAINER in c.collision2.name for c in m.contacts):
+        found = None
+        for c in m.contacts:
+            found = container_of(c.collision1.name, self.node.containers) or \
+                container_of(c.collision2.name, self.node.containers)
+            if found:
+                break
+        if not found:
             return
         t = stamp_s(m.header)
         if t <= 0.0 and self.now is not None:
@@ -197,38 +223,28 @@ class SmartTable(Node):
         if self.last_contact is None or t - self.last_contact > GAP_S:
             self.streak_start = t
         self.last_contact = max(t, self.last_contact or t)
-
-    def on_weld(self, m):
-        if m.data != self.weld:
-            self.get_logger().info('weld state: %s' % m.data)
-        self.weld = m.data
-
-    def on_robot_js(self, m):
-        for n, p in zip(m.name, m.position):
-            if n in self.jp.ARM_JOINTS:
-                self.arm[n] = p
-
-    def on_odom(self, m):
-        self.odom = m
+        self.contact_container = found
 
     # ---------------------------------------------------------- conditions
     def arm_home(self):
-        if not all(j in self.arm for j in self.jp.ARM_JOINTS):
-            return False
-        return all(abs(self.arm[j] - q) < HOME_TOL for j, q in zip(self.jp.ARM_JOINTS, self.jp.INIT_POSE))
+        return self.node.arm_home()
+
+    def weld_released(self):
+        return self.node.weld.get(self.contact_container) == 'detached'
 
     def gripper_clear(self):
         """True if the arm is at home, or the tool point is CLEAR_MARGIN away from the platform."""
         if self.arm_home():
             return True
-        if self.odom is None or not all(j in self.arm for j in self.jp.ARM_JOINTS):
+        node = self.node
+        if node.odom is None or not all(j in node.arm for j in node.jp.ARM_JOINTS):
             return False
-        (tx, ty, _), _ = self.jp.fk([self.arm[j] for j in self.jp.ARM_JOINTS])
-        p, o = self.odom.pose.pose.position, self.odom.pose.pose.orientation
+        (tx, ty, _), _ = node.jp.fk([node.arm[j] for j in node.jp.ARM_JOINTS])
+        p, o = node.odom.pose.pose.position, node.odom.pose.pose.orientation
         yaw = math.atan2(2.0 * (o.w * o.z + o.x * o.y), 1.0 - 2.0 * (o.y * o.y + o.z * o.z))
         x = p.x + math.cos(yaw) * tx - math.sin(yaw) * ty
         y = p.y + math.sin(yaw) * tx + math.cos(yaw) * ty
-        return platform_distance(x, y) > CLEAR_MARGIN
+        return platform_distance(x, y, self.center) > CLEAR_MARGIN
 
     def contact(self):
         """(touching now, steady for >= CONFIRM_S, sim s since the last contact)."""
@@ -254,7 +270,7 @@ class SmartTable(Node):
     def set_state(self, s, reason):
         if s != self.state:
             self.state = s
-            self.get_logger().info('[sim %.2f] state -> %s (%s)' % (self.now, s, reason))
+            self.info('[sim %.2f] state -> %s (%s)' % (self.now, s, reason))
             self.publish_state()
 
     def setpoint(self):
@@ -273,12 +289,13 @@ class SmartTable(Node):
         cs = 'steady' if steady else ('touching' if touching else 'none')
         if cs != self.contact_state:
             self.contact_state = cs
-            self.get_logger().info('[sim %.2f] container contact: %s' % (self.now, cs))
+            self.info('[sim %.2f] container contact: %s%s' % (
+                self.now, cs, '' if cs == 'none' or self.name == 'smart_table' else ' (%s)' % self.contact_container))
             self.publish_contact()
         if self.state == 'lowered':
             fresh = steady and self.streak_start >= (self.lowered_since or 0.0) - 1e-6
             if fresh:
-                missing = [w for w, ok in (('weld released', self.weld == 'detached'),
+                missing = [w for w, ok in (('weld released', self.weld_released()),
                                            ('arm at home', self.arm_home())) if not ok]
                 if not missing:
                     self.wait_reason = None
@@ -286,8 +303,8 @@ class SmartTable(Node):
                                            'arm at home' % (self.now - self.streak_start))
                 elif missing != self.wait_reason:
                     self.wait_reason = missing
-                    self.get_logger().info('[sim %.2f] container on the platform; waiting for: %s'
-                                           % (self.now, ', '.join(missing)))
+                    self.info('[sim %.2f] container on the platform; waiting for: %s'
+                              % (self.now, ', '.join(missing)))
         elif self.state == 'raised':
             if touching:
                 self.raised_had_contact = True
@@ -296,7 +313,7 @@ class SmartTable(Node):
                     self.start(LOWERED_TOP, 'container removed: no contact for %.1f s' % since)
                 elif self.wait_reason != ['gripper clear']:
                     self.wait_reason = ['gripper clear']
-                    self.get_logger().warn('container removed, but the gripper is near the table: not lowering')
+                    self.warn('container removed, but the gripper is near the table: not lowering')
         elif self.motion is not None:
             t0, h0, h1, T = self.motion
             if self.now - t0 >= T and abs(self.height - h1) < 0.003:
@@ -309,8 +326,8 @@ class SmartTable(Node):
                     self.set_state('lowered', 'platform at %.3f m after %.1f s' % (self.height, self.now - t0))
             elif self.now - t0 > T + 10.0 and self.wait_reason != ['stuck']:
                 self.wait_reason = ['stuck']
-                self.get_logger().error('platform at %.3f m, %.0f s after the move should have ended (target %.3f)'
-                                        % (self.height, self.now - t0 - T, h1))
+                self.error('platform at %.3f m, %.0f s after the move should have ended (target %.3f)'
+                           % (self.height, self.now - t0 - T, h1))
         # commands: every table joint state while moving, every 0.5 sim s while holding
         if self.motion is not None or self.now - self.t_pub_hold >= 0.5:
             self.t_pub_hold = self.now
@@ -343,7 +360,7 @@ class SmartTable(Node):
         else:
             self.start(h1, 'manual command')
             resp.success, resp.message = True, self.state
-        self.get_logger().info('manual %s: %s' % ('raise' if h1 > LOWERED_TOP else 'lower', resp.message))
+        self.info('manual %s: %s' % ('raise' if h1 > LOWERED_TOP else 'lower', resp.message))
         return resp
 
     def srv_raise(self, _req, resp):
@@ -353,20 +370,74 @@ class SmartTable(Node):
         return self._manual(LOWERED_TOP, resp)
 
 
+def system_tables(map_path):
+    """Tables and containers of the hospital system (config/hospital_map.yaml)."""
+    import yaml
+    with open(map_path) as fh:
+        m = yaml.safe_load(fh)
+    tables = [(name, t['prefix'], tuple(t['platform_center'])) for name, t in sorted(m['tables'].items())]
+    containers = {c: '/%s/attached' % c for c in m['pharmacy']['containers'].values()}
+    return tables, containers
+
+
+class SmartTableNode(Node):
+    """Controller for one or more smart tables. Default: the single-room table
+    (/smart_table, container 'medicine', weld state /medicine/attached)."""
+
+    def __init__(self, tables=None, containers=None):
+        super().__init__('smart_table')
+        import jetarm_pick_place as jp
+        self.jp = jp
+        self.containers = dict(containers or {CONTAINER: '/medicine/attached'})   # model -> weld state topic
+        self.weld = {c: None for c in self.containers}     # last weld state per container
+        for c, topic in self.containers.items():
+            self.create_subscription(String, topic, lambda m, c=c: self.on_weld(c, m), 10)
+        self.create_subscription(JointState, '/joint_states', self.on_robot_js, 10)
+        self.create_subscription(Odometry, '/odom', self.on_odom, 1)
+        self.arm = {}
+        self.odom = None
+        self.tables = [Table(self, *t) for t in (tables or [('smart_table', '/smart_table', PLATFORM_CENTER)])]
+        self.get_logger().info('smart table controller: %d table(s) (%s), %d stages, platform top %.2f -> %.2f m, '
+                               '%.0f mm/s' % (len(self.tables), ', '.join(t.prefix for t in self.tables), N_STAGES,
+                                              LOWERED_TOP, RAISED_TOP, SPEED * 1000))
+
+    def on_weld(self, container, m):
+        if m.data != self.weld.get(container):
+            self.get_logger().info('weld state: %s' % m.data if container == CONTAINER
+                                   else 'weld state %s: %s' % (container, m.data))
+        self.weld[container] = m.data
+
+    def on_robot_js(self, m):
+        for n, p in zip(m.name, m.position):
+            if n in self.jp.ARM_JOINTS:
+                self.arm[n] = p
+
+    def on_odom(self, m):
+        self.odom = m
+
+    def arm_home(self):
+        if not all(j in self.arm for j in self.jp.ARM_JOINTS):
+            return False
+        return all(abs(self.arm[j] - q) < HOME_TOL for j, q in zip(self.jp.ARM_JOINTS, self.jp.INIT_POSE))
+
+
+SmartTable = SmartTableNode         # old name
+
+
 class TableMonitor:
     """Follows the table node's topics inside another node (mission.py, CLI, tests).
     sim_t comes from /joint_states stamps, like medicine_weld.Weld."""
 
-    def __init__(self, node):
-        self.node = node
+    def __init__(self, node, prefix='/smart_table'):
+        self.node, self.prefix = node, prefix
         self.states = []            # (sim_t, state) on every change
         self.contacts = []          # (sim_t, contact_state) on every change
         self.height = None
         self.sim_t = None
         self.on_contact = None      # optional callback(contact_state, sim_t)
-        node.create_subscription(String, '/smart_table/state', self._on_state, latched_qos())
-        node.create_subscription(String, '/smart_table/contact_state', self._on_contact, latched_qos())
-        node.create_subscription(Float64, '/smart_table/height', self._on_height, 10)
+        node.create_subscription(String, prefix + '/state', self._on_state, latched_qos())
+        node.create_subscription(String, prefix + '/contact_state', self._on_contact, latched_qos())
+        node.create_subscription(Float64, prefix + '/height', self._on_height, 10)
         node.create_subscription(JointState, '/joint_states', self._on_js, 1)
 
     def _on_js(self, m):
@@ -416,17 +487,17 @@ class TableMonitor:
         return self.spin_until(lambda: self.state() == want, sim_seconds, **kw)
 
 
-def cli(cmd):
+def cli(cmd, prefix='/smart_table'):
     rclpy.init()
     node = rclpy.create_node('smart_table_cli')
-    mon = TableMonitor(node)
+    mon = TableMonitor(node, prefix)
     code = 0
     try:
         mon.spin_until(lambda: mon.state() is not None and mon.height is not None, 10.0, wall_limit=60.0)
         if cmd in ('raise', 'lower'):
-            cl = node.create_client(Trigger, '/smart_table/' + cmd)
+            cl = node.create_client(Trigger, prefix + '/' + cmd)
             if not cl.wait_for_service(timeout_sec=60.0):
-                sys.exit('/smart_table/%s not available - is the table node running?' % cmd)
+                sys.exit('%s/%s not available - is the table node running?' % (prefix, cmd))
             fut = cl.call_async(Trigger.Request())
             rclpy.spin_until_future_complete(node, fut, timeout_sec=120.0)
             r = fut.result()
@@ -448,13 +519,17 @@ def cli(cmd):
 
 
 def main():
-    if len(sys.argv) > 1:
-        if sys.argv[1] not in ('raise', 'lower', 'status'):
-            print(__doc__)
-            sys.exit(1)
-        cli(sys.argv[1])
+    import argparse
+    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument('cmd', nargs='?', choices=['raise', 'lower', 'status'], help='manual command (CLI)')
+    p.add_argument('--prefix', default='/smart_table', help='CLI: table topic prefix, e.g. /smart_table_3')
+    p.add_argument('--map', default=None, help='hospital system: run the controller for every table in '
+                                               'this map (config/hospital_map.yaml)')
+    a = p.parse_args()
+    if a.cmd:
+        cli(a.cmd, a.prefix)
     rclpy.init()
-    node = SmartTable()
+    node = SmartTableNode(*system_tables(a.map)) if a.map else SmartTableNode()
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:

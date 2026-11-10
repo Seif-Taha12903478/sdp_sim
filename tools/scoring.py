@@ -127,3 +127,80 @@ def score(res, max_tilt=10.0, mission_exit_ok=True, place_tol_mm=PLACE_TOL_MM):
     row['success'] = bool(row['mission_ok'] and row['on_table'] and row['at_target'] and
                           row['tilt_deg'] is not None and row['tilt_deg'] < max_tilt and lift_ok)
     return row
+
+
+# ------------------------------------------------------------------ hospital system
+OTHERS_TOL_MM = 10.0
+
+
+def _pose(p):
+    return (tuple(p['xyz']), tuple(p.get('quat_xyzw') or (0, 0, 0, 1))) if p and p.get('xyz') else None
+
+
+def score_delivery(res, max_tilt=10.0, mission_exit_ok=True, place_tol_mm=PLACE_TOL_MM, others_tol_mm=OTHERS_TOL_MM):
+    """Hospital system (scripts/delivery.py JSON). success = delivery completed AND the
+    RIGHT container (by model name) was placed on the RIGHT room's lowered table within
+    place_tol_mm of the target, upright, the table raised and that container standing on
+    its raised platform at the end, no other container on that platform, AND every other
+    container where it was at the start (in its slot, or on a table of an earlier
+    delivery) within others_tol_mm."""
+    row = {}
+    dv = res.get('delivery') or {}
+    name = dv.get('container')
+    row['mission_ok'] = bool(mission_exit_ok and res.get('success'))
+    row['failed_step'] = res.get('failed_step')
+    row['error'] = res.get('error')
+    target = tuple(res['target']) if res.get('target') else None
+    placed = res.get('placed') or {}
+    c, q = placed.get('xyz'), placed.get('quat_xyzw')
+    row['on_table'] = row['at_target'] = None
+    if c:
+        row['on_table'] = abs(c[2] - TABLE_CENTRE_Z) < 0.01
+        if target:
+            row['placement_error_mm'] = 1000.0 * math.hypot(c[0] - target[0], c[1] - target[1])
+            row['at_target'] = row['placement_error_mm'] <= place_tol_mm
+    row['tilt_deg'] = tilt_from_quat(q) if q else None
+    t = res.get('table') or {}
+    row['table_raised'] = bool(t.get('raised'))
+    row['lift_time_s'] = t.get('lift_time_s')
+    platform = t.get('platform') or ({'center': dv.get('platform_center'), 'size': [0.25, 0.25]}
+                                     if dv.get('platform_center') else None)
+    top = t.get('height_after_lift')
+    cal = t.get('container_after_lift') or {}
+    row['container_on_platform_after_lift'] = bool(
+        cal.get('xyz') and platform and top is not None and
+        on_platform(cal['xyz'], cal.get('quat_xyzw') or (0, 0, 0, 1), top, platform, max_tilt))
+    start, final = res.get('containers_start') or {}, res.get('containers_final') or {}
+    # right container: the planned one stands on this platform at the end, no other one does
+    on_this = []
+    if platform and top is not None:
+        for n, p in final.items():
+            if on_platform(p['xyz'], p.get('quat_xyzw') or (0, 0, 0, 1), top, platform, max_tilt):
+                on_this.append(n)
+    row['containers_on_platform'] = ','.join(sorted(on_this))
+    row['right_container'] = bool(name) and on_this == [name]
+    # every other container where it was at the start
+    moved = []
+    for n, p0 in start.items():
+        if n == name:
+            continue
+        p1 = final.get(n)
+        if not p1 or 1000.0 * math.hypot(p1['xyz'][0] - p0['xyz'][0], p1['xyz'][1] - p0['xyz'][1]) > others_tol_mm \
+                or abs(p1['xyz'][2] - p0['xyz'][2]) > others_tol_mm / 1000.0 \
+                or tilt_from_quat(p1.get('quat_xyzw') or (0, 0, 0, 1)) > max_tilt:
+            moved.append(n)
+    row['others_moved'] = ','.join(moved)
+    row['others_in_place'] = bool(start) and not moved
+    unconf = [('%s %s' % (w.get('where'), w.get('kind'))) for w in res.get('weld') or [] if not w.get('confirmed')]
+    for w in res.get('weld') or []:
+        key = {'pick': 'pick_attach_attempts', 'place': 'place_detach_attempts'}.get(w.get('where'))
+        if key:
+            row[key] = w.get('attempts')
+    row['weld_unconfirmed'] = ', '.join(unconf) or 'none'
+    row['route_errors'] = '; '.join('%s: %s' % (k, v.get('error')) for k, v in (res.get('legs') or {}).items()
+                                    if v.get('error')) or 'none'
+    row['sim_time_s'] = res.get('sim_time')
+    row['success'] = bool(row['mission_ok'] and row['on_table'] and row['at_target'] and row['tilt_deg'] is not None
+                          and row['tilt_deg'] < max_tilt and row['table_raised'] and
+                          row['container_on_platform_after_lift'] and row['right_container'] and row['others_in_place'])
+    return row
