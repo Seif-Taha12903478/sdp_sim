@@ -38,13 +38,14 @@ PY = sys.executable
 
 def gazebo_server_alive():
     out = subprocess.run(['ps', '-eo', 'args='], capture_output=True, text=True).stdout
-    return any(l.startswith('ign gazebo') or (l.startswith('ruby') and 'ign gazebo' in l) for l in out.splitlines())
+    return any(ln.startswith('ign gazebo') or (ln.startswith('ruby') and 'ign gazebo' in ln) for ln in out.splitlines())
 
 
 def main():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument('--out', default=None)
-    p.add_argument('--fast-speed', type=float, default=0.0, help='scheduler --fast-speed (0 = not passed: the scheduler default 0.12 applies)')
+    p.add_argument('--fast-speed', type=float, default=0.0,
+                   help='scheduler --fast-speed (0 = not passed: the scheduler default 0.12 applies)')
     p.add_argument('--cap-check', action='store_true')
     p.add_argument('--max-hours', type=float, default=14.0, help='wall-clock limit for the scheduler')
     p.add_argument('--video', default=os.path.join(ROOT, 'media', 'system_demo.mp4'))
@@ -143,10 +144,10 @@ def main():
         if os.path.exists(csv_path):
             with open(csv_path, newline='') as fc:
                 rows = list(csv.DictReader(fc))[n_rows_before:]
-        summary['deliveries'] = [{k: r.get(k) for k in ('room', 'patient', 'medicine', 'dose', 'slot', 'due', 'started',
-                                                       'lateness_min', 'success', 'failed_step', 'placement_error_mm',
-                                                       'table_raised', 'right_container', 'others_in_place',
-                                                       'sim_time_s', 'wall_time_s', 'result_json')} for r in rows]
+        keys = ('room', 'patient', 'medicine', 'dose', 'slot', 'due', 'started', 'lateness_min', 'success',
+                'failed_step', 'placement_error_mm', 'table_raised', 'right_container', 'others_in_place',
+                'sim_time_s', 'wall_time_s', 'result_json')
+        summary['deliveries'] = [{k: r.get(k) for k in keys} for r in rows]
         if os.path.exists(video_tmp) and os.path.getsize(video_tmp) > 0:
             os.makedirs(os.path.dirname(a.video), exist_ok=True)
             shutil.copy2(video_tmp, a.video)
