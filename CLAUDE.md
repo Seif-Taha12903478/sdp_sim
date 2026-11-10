@@ -78,7 +78,10 @@ evaluation with the smart table (ask first).
 - RTF (tools/measure_rtf.py, interleaved, results/rtf.csv, 2026-11-10): system world + 6
   containers 7.46 / 9.23 % (mean 8.35 %), single room 10.67 / 10.70 % (mean 10.68 %):
   -22 %, above the 7 % budget, no simplification.
-- Status (2026-11-10 16:00): a DONE, b DONE (world, photos, RTF). Next: route test (Gazebo).
+- Gazebo route test Room 3 (tools/test_route_gazebo.py): 0.08 m/s 9/9 (stops 7 / 16 / 7 mm, legs
+  76.9 + 69.1 sim s, 39 min wall); --fast-speed 0.12 9/9 (stops 7 / 5 / 5 mm, legs 65.6 + 57.9 s,
+  33 min wall) -> 0.12 ADOPTED (scheduler default; 0.08 near markers and junctions).
+- Status (2026-11-10 17:10): a, b, route tests DONE. Next: c pick test, d Room 3 delivery.
 
 ## Current state (2026-11-05 evening)
 GitHub backup: private repo https://github.com/Seif-Taha12903478/sdp_sim (remote

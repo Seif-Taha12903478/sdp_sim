@@ -1,0 +1,335 @@
+{
+  "started": "20261110_163731",
+  "room": 3,
+  "fast_speed": 0.12,
+  "legs": {
+    "1_home_to_pharmacy": {
+      "result": "arrived",
+      "error": null,
+      "events": [
+        {
+          "node": "pharmacy",
+          "action": "stop",
+          "how": "red stop (strips)",
+          "sim_t": 9.26,
+          "pose": [
+            0.2778,
+            0.0006,
+            0.08
+          ],
+          "marker_ahead": 0.2722
+        }
+      ],
+      "max_xte": 0.0006,
+      "frames": 15,
+      "fast_frames": 0,
+      "plan": {
+        "from": "home",
+        "to": "pharmacy",
+        "actions": [
+          [
+            "pharmacy",
+            "stop"
+          ]
+        ]
+      },
+      "final": [
+        0.2778,
+        0.0006,
+        0.08
+      ],
+      "sim_t_end": 9.26,
+      "sim_t_start": 5.76,
+      "exit_code": 0,
+      "stop": [
+        0.2794204291755415,
+        0.0005606925021686059,
+        0.07785015185787209
+      ],
+      "expected_stop": [
+        0.27230000000000004,
+        0.0
+      ],
+      "stop_error_mm": 7.142470701787305,
+      "sim_s": 3.880000000000001,
+      "actions": [
+        [
+          "pharmacy",
+          "stop"
+        ]
+      ]
+    },
+    "2_pharmacy_to_R3": {
+      "result": "arrived",
+      "error": null,
+      "events": [
+        {
+          "node": "home",
+          "action": "pass",
+          "how": "seen, blind pass",
+          "sim_t": 26.26,
+          "pose": [
+            0.2612,
+            0.0006,
+            -179.97
+          ],
+          "marker_ahead": 0.3412
+        },
+        {
+          "node": "J1",
+          "action": "straight",
+          "how": "seen, blind pass",
+          "sim_t": 34.26,
+          "pose": [
+            -0.378,
+            -0.0006,
+            -179.95
+          ],
+          "marker_ahead": 0.372
+        },
+        {
+          "node": "J2",
+          "action": "right",
+          "how": "seen, turn right",
+          "sim_t": 62.76,
+          "pose": [
+            -3.2771,
+            -0.0008,
+            180.0
+          ],
+          "marker_ahead": 0.3729,
+          "after_turn": [
+            -3.6481,
+            -0.0,
+            90.27
+          ]
+        },
+        {
+          "node": "R3",
+          "action": "stop",
+          "how": "red stop (strips)",
+          "sim_t": 91.26,
+          "pose": [
+            -3.6508,
+            1.6257,
+            89.97
+          ],
+          "marker_ahead": 0.2743
+        }
+      ],
+      "max_xte": 0.0019,
+      "frames": 217,
+      "fast_frames": 89,
+      "plan": {
+        "from": "pharmacy",
+        "to": "R3",
+        "actions": [
+          [
+            "home",
+            "pass"
+          ],
+          [
+            "J1",
+            "straight"
+          ],
+          [
+            "J2",
+            "right"
+          ],
+          [
+            "R3",
+            "stop"
+          ]
+        ]
+      },
+      "final": [
+        -3.6508,
+        1.6257,
+        89.97
+      ],
+      "sim_t_end": 91.26,
+      "sim_t_start": 26.0,
+      "exit_code": 0,
+      "stop": [
+        -3.650777065665051,
+        1.627302169299314,
+        89.9707412008108
+      ],
+      "expected_stop": [
+        -3.65,
+        1.6222999999999999
+      ],
+      "stop_error_mm": 5.0621664084462275,
+      "sim_s": 65.62,
+      "actions": [
+        [
+          "home",
+          "pass"
+        ],
+        [
+          "J1",
+          "straight"
+        ],
+        [
+          "J2",
+          "right"
+        ],
+        [
+          "R3",
+          "stop"
+        ]
+      ]
+    },
+    "3_R3_to_home": {
+      "result": "arrived",
+      "error": null,
+      "events": [
+        {
+          "node": "J2",
+          "action": "left",
+          "how": "seen, turn left",
+          "sim_t": 120.26,
+          "pose": [
+            -3.6492,
+            0.3719,
+            -90.0
+          ],
+          "marker_ahead": 0.3719,
+          "after_turn": [
+            -3.65,
+            0.0019,
+            -0.27
+          ]
+        },
+        {
+          "node": "J1",
+          "action": "straight",
+          "how": "seen, blind pass",
+          "sim_t": 156.0,
+          "pose": [
+            -1.1131,
+            0.0007,
+            -0.0
+          ],
+          "marker_ahead": 0.3631
+        },
+        {
+          "node": "home",
+          "action": "stop",
+          "how": "red stop (strips)",
+          "sim_t": 165.5,
+          "pose": [
+            -0.3539,
+            0.0007,
+            0.04
+          ],
+          "marker_ahead": 0.2739
+        }
+      ],
+      "max_xte": 0.0019,
+      "frames": 186,
+      "fast_frames": 88,
+      "plan": {
+        "from": "R3",
+        "to": "home",
+        "actions": [
+          [
+            "J2",
+            "left"
+          ],
+          [
+            "J1",
+            "straight"
+          ],
+          [
+            "home",
+            "stop"
+          ]
+        ]
+      },
+      "final": [
+        -0.3539,
+        0.0007,
+        0.04
+      ],
+      "sim_t_end": 165.5,
+      "sim_t_start": 108.0,
+      "exit_code": 0,
+      "stop": [
+        -0.35230982821842943,
+        0.0006956232397033888,
+        0.03819310787554861
+      ],
+      "expected_stop": [
+        -0.3577,
+        0.0
+      ],
+      "stop_error_mm": 5.4348729080315445,
+      "sim_s": 57.879999999999995,
+      "actions": [
+        [
+          "J2",
+          "left"
+        ],
+        [
+          "J1",
+          "straight"
+        ],
+        [
+          "home",
+          "stop"
+        ]
+      ]
+    }
+  },
+  "checks": [
+    {
+      "check": "arm home",
+      "ok": true,
+      "msg": ""
+    },
+    {
+      "check": "pharmacy setup",
+      "ok": true,
+      "msg": ""
+    },
+    {
+      "check": "1_home_to_pharmacy arrived",
+      "ok": true,
+      "msg": "arrived "
+    },
+    {
+      "check": "1_home_to_pharmacy stop position",
+      "ok": true,
+      "msg": "stop (0.2794, 0.0006, 0.08 deg), expected (0.2723, 0.0000): 7.1 mm; 3.9 sim s; max line offset 0.6 mm"
+    },
+    {
+      "check": "2_pharmacy_to_R3 arrived",
+      "ok": true,
+      "msg": "arrived "
+    },
+    {
+      "check": "2_pharmacy_to_R3 stop position",
+      "ok": true,
+      "msg": "stop (-3.6508, 1.6273, 89.97 deg), expected (-3.6500, 1.6223): 5.1 mm; 65.6 sim s; max line offset 1.9 mm"
+    },
+    {
+      "check": "3_R3_to_home arrived",
+      "ok": true,
+      "msg": "arrived "
+    },
+    {
+      "check": "3_R3_to_home stop position",
+      "ok": true,
+      "msg": "stop (-0.3523, 0.0007, 0.04 deg), expected (-0.3577, 0.0000): 5.4 mm; 57.9 sim s; max line offset 1.9 mm"
+    },
+    {
+      "check": "parked at home",
+      "ok": true,
+      "msg": "(-0.0019, 0.0000, 0.04 deg)"
+    }
+  ],
+  "leftover_processes": [],
+  "wall_s": 1960.0,
+  "passed": "9/9"
+}

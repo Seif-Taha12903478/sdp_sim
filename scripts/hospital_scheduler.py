@@ -307,7 +307,8 @@ def main():
     p.add_argument('--now', type=int, default=None, metavar='ROOM',
                    help='test: one dose for this room (demo patient / medicine) due now, real time, then exit')
     p.add_argument('--log-dir', default=LOG_DIR, help='deliveries.csv here, results JSON in <log-dir>/system/')
-    p.add_argument('--fast-speed', type=float, default=0.0, help='delivery.py --fast-speed (0 = off)')
+    p.add_argument('--fast-speed', type=float, default=0.12, help='delivery.py --fast-speed on long straights '
+                   '(adopted 2026-11-10 after the Gazebo line test passed; 0 = off)')
     p.add_argument('--cap-check', action='store_true')
     p.add_argument('--no-setup', action='store_true', help='do not set up the pharmacy')
     a = p.parse_args()
