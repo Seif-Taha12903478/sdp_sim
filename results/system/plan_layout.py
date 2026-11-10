@@ -93,7 +93,7 @@ def delivery(rid, slot=None):
     legs.append(('home -> pharmacy', P_STOP - HOME_POSE[0], 0,
                  ['follow +x', 'stop at red P (%.2f m)' % (P_STOP - HOME_POSE[0])]))
     ev2 = ['turn round (strafe R 0.12, rotate 180, strafe R 0.12)']
-    if xs - HOME_MARK > STOP_AHEAD + 0.08:
+    if xs - HOME_MARK + MARKER / 2 > 0.19:          # marker reaches the camera strips (0.19-0.27 m ahead)
         ev2.append('pass red HOME (at %.2f m)' % (xs - HOME_MARK - STOP_AHEAD))
     if rid in ('R3', 'R4'):
         ev2.append('J1 straight (%.2f m)' % (xs - J['J1']))

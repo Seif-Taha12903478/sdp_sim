@@ -36,8 +36,8 @@ Wall = sim / RTF: 5.5 % = today's missions (5.1-6.0 %), 4.5 % = expected in the 
 | Room 3 | 0.27 m | 5.54 m: turn round, (pass HOME), J1 straight, J2 right, stop R3 | 4.91 m: J2 left, J1 straight, stop HOME | 262 s | 80 min | 97 min |
 | Room 4 | 0.27 m | 5.54 m: J1 straight, J2 left, stop R4 | 4.91 m: J2 right, J1 straight | 262 s | 80 min | 97 min |
 | demo 1-4 | | | | 897 s | 4.5 h | 5.5 h |
-Optional cap-colour check: +7 s sim per delivery. "pass HOME" happens only from slots
-S4-S6 (from S1-S3 the marker is already under/behind the camera strips).
+Optional cap-colour check: +7 s sim per delivery. "pass HOME" (blind, 0 s extra) is planned
+for slots S2-S6; after picking from S1 the HOME marker is already under the robot.
 
 ## 3. RTF risk
 - Measured (interleaved, 2026-11-05): 1 room + table 8.74 % vs. 9.37 % without (-6.7 %,
