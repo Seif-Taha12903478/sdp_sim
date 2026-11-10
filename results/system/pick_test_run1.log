@@ -1,0 +1,193 @@
+[evaluate 17:11:00] controllers active after 24 s
+[evaluate 17:11:13] PASS pharmacy setup [pharmacy] setup done
+       ... still moving, 1.126 rad to go
+       ... still moving, 0.403 rad to go
+[evaluate 17:12:34] PASS arm home 
+       ... still moving, 0.478 rad to go
+[evaluate 17:13:46] cap look S1 (calibration, not a pass/fail check): expected white, seen white, HSV (0, 0, 255)
+       ... still moving, 0.435 rad to go
+       ... still moving, 0.468 rad to go
+[evaluate 17:15:59] cap look S2 (calibration, not a pass/fail check): expected yellow, seen yellow, HSV (30, 200, 255)
+       ... still moving, 0.434 rad to go
+       ... still moving, 0.447 rad to go
+[evaluate 17:18:12] cap look S3 (calibration, not a pass/fail check): expected amber, seen yellow, HSV (30, 221, 255)
+       ... still moving, 0.434 rad to go
+       ... still moving, 0.436 rad to go
+[evaluate 17:20:24] cap look S4 (calibration, not a pass/fail check): expected grey, seen grey, HSV (111, 19, 174)
+       ... still moving, 0.466 rad to go
+       ... still moving, 0.489 rad to go
+[evaluate 17:22:40] cap look S5 (calibration, not a pass/fail check): expected black, seen black, HSV (0, 0, 55)
+       ... still moving, 0.507 rad to go
+       ... still moving, 0.457 rad to go
+[evaluate 17:24:56] cap look S6 (calibration, not a pass/fail check): expected white, seen white, HSV (0, 0, 255)
+       ... still moving, 0.445 rad to go
+[evaluate 17:29:24] slot S1: robot at (0.0242, -0.0000, 0.00 deg)
+       ... still moving, 1.062 rad to go
+       ... still moving, 0.429 rad to go
+       ... still moving, 1.072 rad to go
+       ... still moving, 0.279 rad to go
+       ... still moving, 0.542 rad to go
+       ... still moving, 0.330 rad to go
+       ... still moving, 0.048 rad to go
+       ... still moving, 0.452 rad to go
+       ... still moving, 0.354 rad to go
+       ... still moving, 0.293 rad to go
+       ... still moving, 0.163 rad to go
+       ... still moving, 0.103 rad to go
+       ... still moving, 0.060 rad to go
+[delivery] gripper at 0.780 rad
+[0m[INFO] [1794317817.611445966] [jetarm_pick_place]: DetachableJoint /med_S1: attached[0m
+[delivery] attach (pick) confirmed by /med_S1/attached after 1 attempt(s)
+       ... still moving, 0.616 rad to go
+       ... still moving, 0.581 rad to go
+       ... still moving, 0.532 rad to go
+       ... still moving, 0.484 rad to go
+       ... still moving, 0.354 rad to go
+       ... still moving, 0.281 rad to go
+       ... still moving, 0.209 rad to go
+       ... still moving, 0.154 rad to go
+       ... still moving, 0.076 rad to go
+[delivery] lifted: med_S1 z 0.227
+       ... still moving, 1.533 rad to go
+       ... still moving, 1.360 rad to go
+       ... still moving, 1.195 rad to go
+       ... still moving, 1.021 rad to go
+       ... still moving, 0.844 rad to go
+       ... still moving, 0.646 rad to go
+       ... still moving, 0.468 rad to go
+       ... still moving, 0.185 rad to go
+       ... still moving, 0.063 rad to go
+       ... still moving, 1.383 rad to go
+       ... still moving, 1.105 rad to go
+       ... still moving, 0.820 rad to go
+       ... still moving, 0.512 rad to go
+       ... still moving, 0.336 rad to go
+       ... still moving, 0.133 rad to go
+       ... still moving, 0.587 rad to go
+       ... still moving, 0.544 rad to go
+       ... still moving, 0.493 rad to go
+       ... still moving, 0.453 rad to go
+       ... still moving, 0.379 rad to go
+       ... still moving, 0.312 rad to go
+       ... still moving, 0.229 rad to go
+       ... still moving, 0.117 rad to go
+       ... still moving, 0.063 rad to go
+[0m[INFO] [1794318903.891763487] [jetarm_pick_place]: DetachableJoint /med_S1: detached[0m
+[delivery] detach (place) confirmed by /med_S1/attached after 1 attempt(s)
+       ... still moving, 0.624 rad to go
+       ... still moving, 0.563 rad to go
+       ... still moving, 0.498 rad to go
+       ... still moving, 0.422 rad to go
+       ... still moving, 0.375 rad to go
+       ... still moving, 0.289 rad to go
+       ... still moving, 0.202 rad to go
+       ... still moving, 0.129 rad to go
+       ... still moving, 0.056 rad to go
+       ... still moving, 0.617 rad to go
+       ... still moving, 0.581 rad to go
+       ... still moving, 0.545 rad to go
+       ... still moving, 0.496 rad to go
+       ... still moving, 0.454 rad to go
+       ... still moving, 0.411 rad to go
+       ... still moving, 0.342 rad to go
+       ... still moving, 0.250 rad to go
+       ... still moving, 0.186 rad to go
+       ... still moving, 0.144 rad to go
+       ... still moving, 0.120 rad to go
+       ... still moving, 0.087 rad to go
+       ... still moving, 0.044 rad to go
+       ... still moving, 1.527 rad to go
+       ... still moving, 1.406 rad to go
+       ... still moving, 1.072 rad to go
+       ... still moving, 0.813 rad to go
+       ... still moving, 0.635 rad to go
+       ... still moving, 0.269 rad to go
+       ... still moving, 0.071 rad to go
+[evaluate 18:10:27] PASS weld S1 confirmed attach 1, detach 1
+[evaluate 18:10:27] PASS med_S1 back in its slot 0.4 mm from the slot, z 0.1300, tilt 0.0 deg
+[evaluate 18:10:27] PASS neighbours of S1 unmoved max 0.00 mm
+[evaluate 18:14:46] slot S3: robot at (0.2204, 0.0000, 0.00 deg)
+       ... still moving, 1.123 rad to go
+       ... still moving, 0.499 rad to go
+       ... still moving, 0.548 rad to go
+       ... still moving, 0.387 rad to go
+       ... still moving, 0.179 rad to go
+       ... still moving, 0.482 rad to go
+       ... still moving, 0.211 rad to go
+       ... still moving, 0.046 rad to go
+[delivery] gripper at 0.780 rad
+[0m[INFO] [1794320389.820338728] [jetarm_pick_place]: DetachableJoint /med_S3: attached[0m
+[delivery] attach (pick) confirmed by /med_S3/attached after 1 attempt(s)
+       ... still moving, 0.559 rad to go
+       ... still moving, 0.416 rad to go
+       ... still moving, 0.222 rad to go
+       ... still moving, 0.033 rad to go
+[delivery] lifted: med_S3 z 0.227
+       ... still moving, 1.154 rad to go
+       ... still moving, 0.562 rad to go
+       ... still moving, 0.067 rad to go
+       ... still moving, 1.195 rad to go
+       ... still moving, 0.645 rad to go
+       ... still moving, 0.110 rad to go
+       ... still moving, 0.504 rad to go
+       ... still moving, 0.302 rad to go
+       ... still moving, 0.091 rad to go
+[0m[INFO] [1794320814.863442044] [jetarm_pick_place]: DetachableJoint /med_S3: detached[0m
+[delivery] detach (place) confirmed by /med_S3/attached after 1 attempt(s)
+       ... still moving, 0.452 rad to go
+       ... still moving, 0.237 rad to go
+       ... still moving, 0.534 rad to go
+       ... still moving, 0.375 rad to go
+       ... still moving, 0.186 rad to go
+       ... still moving, 1.154 rad to go
+       ... still moving, 0.604 rad to go
+       ... still moving, 0.038 rad to go
+[evaluate 18:31:53] PASS weld S3 confirmed attach 1, detach 1
+[evaluate 18:31:53] PASS med_S3 back in its slot 1.3 mm from the slot, z 0.1300, tilt 0.0 deg
+[evaluate 18:31:53] PASS neighbours of S3 unmoved max 0.00 mm
+[evaluate 18:34:52] slot S6: robot at (0.5204, 0.0000, 0.00 deg)
+       ... still moving, 1.072 rad to go
+       ... still moving, 0.489 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.574 rad to go
+       ... still moving, 0.470 rad to go
+       ... still moving, 0.347 rad to go
+       ... still moving, 0.198 rad to go
+       ... still moving, 0.031 rad to go
+       ... still moving, 0.473 rad to go
+       ... still moving, 0.254 rad to go
+       ... still moving, 0.103 rad to go
+[delivery] gripper at 0.780 rad
+[0m[INFO] [1794321633.974389501] [jetarm_pick_place]: DetachableJoint /med_S6: attached[0m
+[delivery] attach (pick) confirmed by /med_S6/attached after 1 attempt(s)
+       ... still moving, 0.548 rad to go
+       ... still moving, 0.399 rad to go
+       ... still moving, 0.209 rad to go
+       ... still moving, 0.052 rad to go
+[delivery] lifted: med_S6 z 0.227
+       ... still moving, 1.103 rad to go
+       ... still moving, 0.510 rad to go
+       ... still moving, 0.043 rad to go
+       ... still moving, 1.095 rad to go
+       ... still moving, 0.573 rad to go
+       ... still moving, 0.051 rad to go
+       ... still moving, 0.534 rad to go
+       ... still moving, 0.344 rad to go
+       ... still moving, 0.149 rad to go
+[0m[INFO] [1794322058.616907606] [jetarm_pick_place]: DetachableJoint /med_S6: detached[0m
+[delivery] detach (place) confirmed by /med_S6/attached after 1 attempt(s)
+       ... still moving, 0.503 rad to go
+       ... still moving, 0.241 rad to go
+       ... still moving, 0.034 rad to go
+       ... still moving, 0.536 rad to go
+       ... still moving, 0.392 rad to go
+       ... still moving, 0.218 rad to go
+       ... still moving, 0.060 rad to go
+       ... still moving, 1.205 rad to go
+       ... still moving, 0.614 rad to go
+       ... still moving, 0.081 rad to go
+[evaluate 18:52:55] PASS weld S6 confirmed attach 1, detach 1
+[evaluate 18:52:55] PASS med_S6 back in its slot 0.7 mm from the slot, z 0.1300, tilt 0.1 deg
+[evaluate 18:52:55] PASS neighbours of S6 unmoved max 0.00 mm
+[evaluate 18:58:00] PASS back home (0.0019, 0.0000, 0.00 deg)
+[evaluate 18:58:02] 12/12 checks passed; results in /home/ubuntu/sdp_sim/results/system/pick_test_20261110_171036

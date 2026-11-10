@@ -81,7 +81,12 @@ evaluation with the smart table (ask first).
 - Gazebo route test Room 3 (tools/test_route_gazebo.py): 0.08 m/s 9/9 (stops 7 / 16 / 7 mm, legs
   76.9 + 69.1 sim s, 39 min wall); --fast-speed 0.12 9/9 (stops 7 / 5 / 5 mm, legs 65.6 + 57.9 s,
   33 min wall) -> 0.12 ADOPTED (scheduler default; 0.08 near markers and junctions).
-- Status (2026-11-10 17:10): a, b, route tests DONE. Next: c pick test, d Room 3 delivery.
+- Pick test c (tools/test_pharmacy_pick.py, 2026-11-10, 107 min wall): 12/12. Pick + replace at
+  S1/S3/S6: every attach/detach confirmed 1st try, back 0.4 / 1.3 / 0.7 mm from the slot, z 0.1300,
+  tilt <= 0.1 deg, neighbours moved 0.00 mm; parked (0.002, 0, 0). Cap look (calibration only):
+  white/grey/black/white OK, yellow (30,200,255) OK, AMBER seen as yellow (30,221,255) - amber
+  renders like yellow; optional --cap-check stays off until the amber cap is darkened + rechecked.
+- Status (2026-11-10 19:00): a, b, route tests, c DONE. Running: d (Room 3 delivery, --deadline 23:30).
 
 ## Current state (2026-11-05 evening)
 GitHub backup: private repo https://github.com/Seif-Taha12903478/sdp_sim (remote
