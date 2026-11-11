@@ -1,0 +1,421 @@
+[scheduler 08:44:30] pharmacy setup (spawn the containers, release their welds)
+[0m[INFO] [1794372276.222634230] [pharmacy_setup]: DetachableJoint /med_S1: attached[0m
+[pharmacy] med_S1 spawned in slot S1 (0.022, 0.200): welded at first appearance - releasing
+[0m[INFO] [1794372276.504077040] [pharmacy_setup]: DetachableJoint /med_S1: detached[0m
+[pharmacy] detach med_S1 (spawn) confirmed after 1 attempt(s)
+[0m[INFO] [1794372277.927044841] [pharmacy_setup]: DetachableJoint /med_S2: attached[0m
+[pharmacy] med_S2 spawned in slot S2 (0.122, 0.200): welded at first appearance - releasing
+[0m[INFO] [1794372278.356259951] [pharmacy_setup]: DetachableJoint /med_S2: detached[0m
+[pharmacy] detach med_S2 (spawn) confirmed after 1 attempt(s)
+[0m[INFO] [1794372279.796469290] [pharmacy_setup]: DetachableJoint /med_S3: attached[0m
+[pharmacy] med_S3 spawned in slot S3 (0.222, 0.200): welded at first appearance - releasing
+[0m[INFO] [1794372280.099107923] [pharmacy_setup]: DetachableJoint /med_S3: detached[0m
+[pharmacy] detach med_S3 (spawn) confirmed after 1 attempt(s)
+[0m[INFO] [1794372282.435359025] [pharmacy_setup]: DetachableJoint /med_S4: attached[0m
+[pharmacy] med_S4 spawned in slot S4 (0.322, 0.200): welded at first appearance - releasing
+[0m[INFO] [1794372282.783033812] [pharmacy_setup]: DetachableJoint /med_S4: detached[0m
+[pharmacy] detach med_S4 (spawn) confirmed after 1 attempt(s)
+[0m[INFO] [1794372285.121841484] [pharmacy_setup]: DetachableJoint /med_S5: attached[0m
+[pharmacy] med_S5 spawned in slot S5 (0.422, 0.200): welded at first appearance - releasing
+[0m[INFO] [1794372285.432329950] [pharmacy_setup]: DetachableJoint /med_S5: detached[0m
+[pharmacy] detach med_S5 (spawn) confirmed after 1 attempt(s)
+[0m[INFO] [1794372286.873190861] [pharmacy_setup]: DetachableJoint /med_S6: attached[0m
+[pharmacy] med_S6 spawned in slot S6 (0.522, 0.200): welded at first appearance - releasing
+[0m[INFO] [1794372287.179192964] [pharmacy_setup]: DetachableJoint /med_S6: detached[0m
+[pharmacy] detach med_S6 (spawn) confirmed after 1 attempt(s)
+[pharmacy] S1 Paracetamol  500 mg  white  qty 1  med_S1: (0.0211, 0.2000, 0.1272) tilt 0.3 deg, 1.2 mm from the slot - IN SLOT
+[pharmacy] S2 Amoxicillin  250 mg  yellow qty 1  med_S2: (0.1213, 0.2000, 0.1267) tilt 0.2 deg, 1.0 mm from the slot - IN SLOT
+[pharmacy] S3 Ibuprofen    400 mg  purple qty 1  med_S3: (0.2213, 0.2000, 0.1300) tilt 0.2 deg, 1.0 mm from the slot - IN SLOT
+[pharmacy] S4 Metformin    500 mg  grey   qty 1  med_S4: (0.3213, 0.2001, 0.1296) tilt 0.2 deg, 1.0 mm from the slot - IN SLOT
+[pharmacy] S5 Omeprazole   20 mg   black  qty 1  med_S5: (0.4215, 0.2001, 0.1294) tilt 0.2 deg, 0.8 mm from the slot - IN SLOT
+[pharmacy] S6 Paracetamol  500 mg  white  qty 1  med_S6: (0.5216, 0.2001, 0.1290) tilt 0.2 deg, 0.7 mm from the slot - IN SLOT
+[pharmacy] setup done
+[clock] hospital 08:00:00 = sim 5.060
+[scheduler 08:00:00] DEMO on the hospital clock (sim time from 08:00): Ibuprofen 400 mg room 3 due 08:00, Paracetamol 500 mg room 1 due 08:00, Metformin 500 mg room 4 due 08:02, Amoxicillin 250 mg room 2 due 08:04
+[scheduler 08:00:00] due now: Paracetamol room 1 (due 08:00), Ibuprofen room 3 (due 08:00)
+[scheduler 08:00:00] START Patient A, Room 1, Paracetamol 500 mg (slot S1), due 08:00 - lateness 0.0 min
+[delivery] Room 1 | Patient A | Paracetamol 500 mg | slot S1 (med_S1)
+[delivery] Patient A, Room 1, Paracetamol 500 mg (slot S1), due 08:00
+[delivery] step 1/15 start check  (sim t 5.2, base 0.000 0.000 0.0 deg)
+[delivery] start: robot at home, med_S1 in slot S1; 6 containers in the world
+[delivery] step 2/15 arm home  (sim t 5.3, base 0.000 0.000 0.0 deg)
+[delivery] step 3/15 follow the line to the pharmacy  (sim t 5.3, base 0.000 0.000 0.0 deg)
+[delivery] route home -> pharmacy: stop pharmacy
+[delivery]   route_follower: Result: arrived
+[delivery]   route_follower: Final: [0.2779, 0.0006, 0.08]
+[delivery]   route_follower: stop pharmacy (red stop (strips)): marker 0.272 m ahead, robot (0.278, 0.001, 0.1 deg)
+[delivery] step 4/15 line up with slot S1  (sim t 9.1, base 0.279 0.001 0.1 deg)
+[delivery] pharmacy stop at (0.2795, 0.0006, 0.08 deg); slot S1 at x 0.022 -> move -0.257 m along the line
+[delivery] at slot S1: robot (0.0228, 0.0000, 0.08 deg)
+[delivery] step 5/15 cap colour check  (sim t 16.7, base 0.023 0.000 0.1 deg)
+       ... still moving, 0.938 rad to go
+       ... still moving, 0.300 rad to go
+[delivery] cap check: expected white, seen white (HSV (0, 0, 255))
+       ... still moving, 1.327 rad to go
+       ... still moving, 1.038 rad to go
+       ... still moving, 0.810 rad to go
+       ... still moving, 0.487 rad to go
+       ... still moving, 0.111 rad to go
+[delivery] step 6/15 pick Paracetamol from slot S1  (sim t 24.4, base 0.023 0.000 0.1 deg)
+       ... still moving, 1.321 rad to go
+       ... still moving, 1.160 rad to go
+       ... still moving, 0.841 rad to go
+       ... still moving, 0.542 rad to go
+       ... still moving, 0.204 rad to go
+       ... still moving, 1.388 rad to go
+       ... still moving, 1.021 rad to go
+       ... still moving, 0.792 rad to go
+       ... still moving, 0.373 rad to go
+       ... still moving, 0.067 rad to go
+       ... still moving, 0.582 rad to go
+       ... still moving, 0.513 rad to go
+       ... still moving, 0.413 rad to go
+       ... still moving, 0.265 rad to go
+       ... still moving, 0.179 rad to go
+       ... still moving, 0.158 rad to go
+       ... still moving, 0.063 rad to go
+       ... still moving, 0.498 rad to go
+       ... still moving, 0.328 rad to go
+       ... still moving, 0.194 rad to go
+       ... still moving, 0.129 rad to go
+       ... still moving, 0.077 rad to go
+[delivery] gripper at 0.780 rad
+[0m[INFO] [1794373558.804340264] [jetarm_pick_place]: DetachableJoint /med_S1: attached[0m
+[delivery] attach (pick) confirmed by /med_S1/attached after 1 attempt(s)
+       ... still moving, 0.629 rad to go
+       ... still moving, 0.591 rad to go
+       ... still moving, 0.496 rad to go
+       ... still moving, 0.361 rad to go
+       ... still moving, 0.188 rad to go
+       ... still moving, 0.073 rad to go
+[delivery] lifted: med_S1 z 0.223
+[delivery] step 7/15 arm home (carrying)  (sim t 44.3, base 0.023 0.000 0.1 deg)
+       ... still moving, 1.303 rad to go
+       ... still moving, 0.813 rad to go
+       ... still moving, 0.311 rad to go
+[delivery] step 8/15 turn round at the pharmacy  (sim t 47.9, base 0.023 0.000 0.1 deg)
+[delivery] step 9/15 follow the line to Room 1  (sim t 64.2, base 0.023 0.000 179.8 deg)
+[delivery] route pharmacy -> R1: pass home, right J1, stop R1
+[delivery]   route_follower: Result: arrived
+[delivery]   route_follower: Final: [-0.7508, 1.6266, 90.0]
+[delivery]   route_follower: pass home (blind from the start (too close to see)): marker 0.103 m ahead, robot (0.023, 0.000, 179.8 deg)
+[delivery]   route_follower: right J1 (seen, turn right): marker 0.376 m ahead, robot (-0.374, -0.001, -179.9 deg)
+[delivery]   route_follower: at J1: on the junction centre (-0.748, -0.000), turned right to 90.3 deg
+[delivery]   route_follower: stop R1 (red stop (strips)): marker 0.273 m ahead, robot (-0.751, 1.627, 90.0 deg)
+[delivery] step 10/15 place on the bedside table  (sim t 98.1, base -0.751 1.628 90.0 deg)
+       ... still moving, 1.010 rad to go
+       ... still moving, 0.468 rad to go
+       ... still moving, 0.035 rad to go
+       ... still moving, 0.525 rad to go
+       ... still moving, 0.321 rad to go
+       ... still moving, 0.138 rad to go
+[0m[INFO] [1794374977.532416245] [jetarm_pick_place]: DetachableJoint /med_S1: detached[0m
+[delivery] detach (place) confirmed by /med_S1/attached after 1 attempt(s)
+       ... still moving, 0.444 rad to go
+       ... still moving, 0.185 rad to go
+       ... still moving, 0.532 rad to go
+       ... still moving, 0.328 rad to go
+       ... still moving, 0.131 rad to go
+[delivery] after retreat: med_S1 (-0.9511, 1.6267, 0.1298) tilt 0.2 deg, 1.6 mm from target
+[delivery] placed (contact sensor, sim t 108.42): med_S1 (-0.9511, 1.6267, 0.1261), 1.6 mm from target, tilt 0.2 deg, table lowered at 0.100 m
+[delivery] step 11/15 arm home  (sim t 114.5, base -0.751 1.628 90.0 deg)
+       ... still moving, 1.174 rad to go
+       ... still moving, 0.405 rad to go
+[delivery] step 12/15 table lifts medicine to the patient  (sim t 118.1, base -0.751 1.628 90.0 deg)
+[delivery] table: lifting, platform 0.101 m
+[delivery] table: lifting, platform 0.172 m
+[delivery] table: lifting, platform 0.247 m
+[delivery] table: lifting, platform 0.327 m
+[delivery] table: lifting, platform 0.412 m
+[delivery] table: lifting, platform 0.497 m
+[delivery] table: lifting, platform 0.577 m
+[delivery] table: lifting, platform 0.657 m
+[delivery] table: lifting, platform 0.742 m
+[delivery] table: raised, platform 0.800 m
+[delivery] table raised (platform 0.800 m, lift 18.5 s): med_S1 (-0.9510, 1.6267, 0.8300) tilt 0.0 deg - on the platform
+[delivery] step 13/15 turn round  (sim t 136.4, base -0.751 1.628 90.0 deg)
+[delivery] before moving away: med_S1 (-0.9510, 1.6267, 0.8300) tilt 0.0 deg, 1.6 mm from target
+[delivery] step 14/15 follow the line home  (sim t 152.7, base -0.751 1.629 -90.3 deg)
+[delivery] route R1 -> home: left J1, stop home
+[delivery]   route_follower: Result: arrived
+[delivery]   route_follower: Final: [-0.3522, 0.0009, -0.04]
+[delivery]   route_follower: left J1 (seen, turn left): marker 0.374 m ahead, robot (-0.749, 0.374, -90.0 deg)
+[delivery]   route_follower: at J1: on the junction centre (-0.750, 0.002), turned left to -0.3 deg
+[delivery]   route_follower: stop home (red stop (strips)): marker 0.272 m ahead, robot (-0.352, 0.001, -0.0 deg)
+[delivery] step 15/15 park at home  (sim t 182.1, base -0.351 0.001 -0.0 deg)
+[delivery] done: base at -0.0019 0.0000 yaw -0.04 deg; cycle time 185.3 sim s
+[scheduler 08:03:05] END Patient A, Room 1, Paracetamol 500 mg (slot S1), due 08:00: SUCCESS; placement 1.6 mm, table raised True, right container True, others in place True
+[scheduler 08:03:05] due now: Ibuprofen room 3 (due 08:00), Metformin room 4 (due 08:02)
+[scheduler 08:03:05] START Patient C, Room 3, Ibuprofen 400 mg (slot S3), due 08:00 - lateness 3.1 min
+[delivery] Room 3 | Patient C | Ibuprofen 400 mg | slot S3 (med_S3)
+[delivery] Patient C, Room 3, Ibuprofen 400 mg (slot S3), due 08:00
+[delivery] step 1/15 start check  (sim t 190.7, base -0.002 0.000 -0.0 deg)
+[delivery] start: robot at home, med_S3 in slot S3; 6 containers in the world
+[delivery] step 2/15 arm home  (sim t 190.8, base -0.002 0.000 -0.0 deg)
+[delivery] step 3/15 follow the line to the pharmacy  (sim t 190.8, base -0.002 0.000 -0.0 deg)
+[delivery] route home -> pharmacy: stop pharmacy
+[delivery]   route_follower: Result: arrived
+[delivery]   route_follower: Final: [0.2758, 0.0005, 0.06]
+[delivery]   route_follower: stop pharmacy (red stop (strips)): marker 0.274 m ahead, robot (0.276, 0.001, 0.1 deg)
+[delivery] step 4/15 line up with slot S3  (sim t 194.8, base 0.277 0.001 0.1 deg)
+[delivery] pharmacy stop at (0.2774, 0.0005, 0.06 deg); slot S3 at x 0.222 -> move -0.055 m along the line
+[delivery] at slot S3: robot (0.2228, 0.0000, 0.06 deg)
+[delivery] step 5/15 cap colour check  (sim t 198.4, base 0.223 0.000 0.1 deg)
+       ... still moving, 1.205 rad to go
+       ... still moving, 0.625 rad to go
+       ... still moving, 0.059 rad to go
+[delivery] cap check: expected purple, seen purple (HSV (150, 186, 169))
+       ... still moving, 1.150 rad to go
+       ... still moving, 0.205 rad to go
+[delivery] step 6/15 pick Ibuprofen from slot S3  (sim t 206.1, base 0.223 0.000 0.1 deg)
+       ... still moving, 1.024 rad to go
+       ... still moving, 0.450 rad to go
+       ... still moving, 0.544 rad to go
+       ... still moving, 0.336 rad to go
+       ... still moving, 0.149 rad to go
+       ... still moving, 0.469 rad to go
+       ... still moving, 0.228 rad to go
+       ... still moving, 0.064 rad to go
+[delivery] gripper at 0.780 rad
+[0m[INFO] [1794377349.946494870] [jetarm_pick_place]: DetachableJoint /med_S3: attached[0m
+[delivery] attach (pick) confirmed by /med_S3/attached after 1 attempt(s)
+       ... still moving, 0.568 rad to go
+       ... still moving, 0.389 rad to go
+       ... still moving, 0.142 rad to go
+[delivery] lifted: med_S3 z 0.227
+[delivery] step 7/15 arm home (carrying)  (sim t 222.5, base 0.223 0.000 0.1 deg)
+       ... still moving, 1.164 rad to go
+       ... still moving, 0.551 rad to go
+       ... still moving, 0.049 rad to go
+[delivery] step 8/15 turn round at the pharmacy  (sim t 226.1, base 0.223 0.000 0.1 deg)
+[delivery] step 9/15 follow the line to Room 3  (sim t 242.4, base 0.223 0.000 179.8 deg)
+[delivery] route pharmacy -> R3: pass home, straight J1, right J2, stop R3
+[delivery]   route_follower: Result: arrived
+[delivery]   route_follower: Final: [-3.6508, 1.6241, 89.98]
+[delivery]   route_follower: pass home (seen, blind pass): marker 0.286 m ahead, robot (0.206, 0.000, 179.9 deg)
+[delivery]   route_follower: straight J1 (seen, blind pass): marker 0.376 m ahead, robot (-0.374, -0.001, -180.0 deg)
+[delivery]   route_follower: right J2 (seen, turn right): marker 0.377 m ahead, robot (-3.273, -0.001, 180.0 deg)
+[delivery]   route_follower: at J2: on the junction centre (-3.648, -0.000), turned right to 90.3 deg
+[delivery]   route_follower: stop R3 (red stop (strips)): marker 0.276 m ahead, robot (-3.651, 1.624, 90.0 deg)
+[delivery] step 10/15 place on the bedside table  (sim t 307.3, base -3.651 1.627 90.0 deg)
+       ... still moving, 1.184 rad to go
+       ... still moving, 0.551 rad to go
+       ... still moving, 0.033 rad to go
+       ... still moving, 0.522 rad to go
+       ... still moving, 0.388 rad to go
+       ... still moving, 0.187 rad to go
+[0m[INFO] [1794379122.370092797] [jetarm_pick_place]: DetachableJoint /med_S3: detached[0m
+[delivery] detach (place) confirmed by /med_S3/attached after 1 attempt(s)
+       ... still moving, 0.473 rad to go
+       ... still moving, 0.211 rad to go
+       ... still moving, 0.519 rad to go
+       ... still moving, 0.348 rad to go
+       ... still moving, 0.155 rad to go
+       ... still moving, 0.058 rad to go
+[delivery] after retreat: med_S3 (-3.8511, 1.6260, 0.1300) tilt 0.1 deg, 1.5 mm from target
+[delivery] placed (contact sensor, sim t 317.70): med_S3 (-3.8511, 1.6260, 0.1293), 1.5 mm from target, tilt 0.1 deg, table lowered at 0.100 m
+[delivery] step 11/15 arm home  (sim t 323.7, base -3.651 1.627 90.0 deg)
+       ... still moving, 1.313 rad to go
+       ... still moving, 0.896 rad to go
+       ... still moving, 0.468 rad to go
+       ... still moving, 0.067 rad to go
+[delivery] step 12/15 table lifts medicine to the patient  (sim t 327.3, base -3.651 1.627 90.0 deg)
+[delivery] table: lifting, platform 0.100 m
+[delivery] table: lifting, platform 0.177 m
+[delivery] table: lifting, platform 0.249 m
+[delivery] table: lifting, platform 0.329 m
+[delivery] table: lifting, platform 0.413 m
+[delivery] table: lifting, platform 0.489 m
+[delivery] table: lifting, platform 0.577 m
+[delivery] table: lifting, platform 0.653 m
+[delivery] table: lifting, platform 0.737 m
+[delivery] table: raised, platform 0.800 m
+[delivery] table raised (platform 0.800 m, lift 18.4 s): med_S3 (-3.8510, 1.6260, 0.8300) tilt 0.0 deg - on the platform
+[delivery] step 13/15 turn round  (sim t 345.6, base -3.651 1.627 90.0 deg)
+[delivery] before moving away: med_S3 (-3.8510, 1.6260, 0.8300) tilt 0.0 deg, 1.5 mm from target
+[delivery] step 14/15 follow the line home  (sim t 362.0, base -3.651 1.628 -90.3 deg)
+[delivery] route R3 -> home: left J2, straight J1, stop home
+[delivery]   route_follower: Result: arrived
+[delivery]   route_follower: Final: [-0.3524, 0.0007, 0.03]
+[delivery]   route_follower: left J2 (seen, turn left): marker 0.376 m ahead, robot (-3.649, 0.376, -90.0 deg)
+[delivery]   route_follower: at J2: on the junction centre (-3.650, 0.002), turned left to -0.3 deg
+[delivery]   route_follower: straight J1 (seen, blind pass): marker 0.382 m ahead, robot (-1.132, 0.001, -0.0 deg)
+[delivery]   route_follower: stop home (red stop (strips)): marker 0.272 m ahead, robot (-0.352, 0.001, 0.0 deg)
+[delivery] step 15/15 park at home  (sim t 419.8, base -0.351 0.001 0.0 deg)
+[delivery] done: base at -0.0019 0.0000 yaw 0.03 deg; cycle time 237.6 sim s
+[scheduler 08:07:03] END Patient C, Room 3, Ibuprofen 400 mg (slot S3), due 08:00: SUCCESS; placement 1.5 mm, table raised True, right container True, others in place True
+[scheduler 08:07:03] due now: Metformin room 4 (due 08:02), Amoxicillin room 2 (due 08:04)
+[scheduler 08:07:03] START Patient D, Room 4, Metformin 500 mg (slot S4), due 08:02 - lateness 5.0 min
+[delivery] Room 4 | Patient D | Metformin 500 mg | slot S4 (med_S4)
+[delivery] Patient D, Room 4, Metformin 500 mg (slot S4), due 08:02
+[delivery] step 1/15 start check  (sim t 428.6, base -0.002 0.000 0.0 deg)
+[delivery] start: robot at home, med_S4 in slot S4; 6 containers in the world
+[delivery] step 2/15 arm home  (sim t 428.7, base -0.002 0.000 0.0 deg)
+[delivery] step 3/15 follow the line to the pharmacy  (sim t 428.7, base -0.002 0.000 0.0 deg)
+[delivery] route home -> pharmacy: stop pharmacy
+[delivery]   route_follower: Result: arrived
+[delivery]   route_follower: Final: [0.276, 0.0005, 0.06]
+[delivery]   route_follower: stop pharmacy (red stop (strips)): marker 0.274 m ahead, robot (0.276, 0.001, 0.1 deg)
+[delivery] step 4/15 line up with slot S4  (sim t 432.8, base 0.278 0.001 0.1 deg)
+[delivery] pharmacy stop at (0.2776, 0.0006, 0.05 deg); slot S4 at x 0.322 -> move +0.045 m along the line
+[delivery] at slot S4: robot (0.3218, 0.0000, 0.05 deg)
+[delivery] step 5/15 cap colour check  (sim t 436.2, base 0.322 0.000 0.1 deg)
+       ... still moving, 1.215 rad to go
+       ... still moving, 0.802 rad to go
+       ... still moving, 0.279 rad to go
+[delivery] cap check: expected grey, seen grey (HSV (111, 19, 174))
+       ... still moving, 1.239 rad to go
+       ... still moving, 0.737 rad to go
+       ... still moving, 0.393 rad to go
+       ... still moving, 0.071 rad to go
+[delivery] step 6/15 pick Metformin from slot S4  (sim t 443.9, base 0.322 0.000 0.1 deg)
+       ... still moving, 1.408 rad to go
+       ... still moving, 1.135 rad to go
+       ... still moving, 0.810 rad to go
+       ... still moving, 0.470 rad to go
+       ... still moving, 0.142 rad to go
+       ... still moving, 0.578 rad to go
+       ... still moving, 0.473 rad to go
+       ... still moving, 0.326 rad to go
+       ... still moving, 0.198 rad to go
+       ... still moving, 0.060 rad to go
+       ... still moving, 0.503 rad to go
+       ... still moving, 0.315 rad to go
+       ... still moving, 0.120 rad to go
+[delivery] gripper at 0.780 rad
+[0m[INFO] [1794382719.872252905] [jetarm_pick_place]: DetachableJoint /med_S4: attached[0m
+[delivery] attach (pick) confirmed by /med_S4/attached after 1 attempt(s)
+       ... still moving, 0.598 rad to go
+       ... still moving, 0.504 rad to go
+       ... still moving, 0.344 rad to go
+       ... still moving, 0.194 rad to go
+       ... still moving, 0.067 rad to go
+[delivery] lifted: med_S4 z 0.227
+[delivery] step 7/15 arm home (carrying)  (sim t 460.2, base 0.322 0.000 0.1 deg)
+       ... still moving, 1.351 rad to go
+       ... still moving, 0.761 rad to go
+       ... still moving, 0.321 rad to go
+       ... still moving, 0.081 rad to go
+       ... still moving, 0.076 rad to go
+       ... still moving, 0.071 rad to go
+       ... still moving, 0.055 rad to go
+       ... still moving, 0.046 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+       ... still moving, 0.040 rad to go
+[33m[WARN] [1794386488.000743414] [jetarm_pick_place]: Timed out waiting for ['joint1', 'joint2', 'joint3', 'joint4', 'joint5'] (error 0.040 rad)[0m
+[delivery] FAILED: arm home failed or timed out
+[scheduler 08:09:36] END Patient D, Room 4, Metformin 500 mg (slot S4), due 08:02: FAILED (7 arm home (carrying): arm home failed or timed out); placement - mm, table raised False, right container False, others in place True
+[scheduler 08:09:36] delivery failed after the robot moved - stopping the scheduler (no further doses)
+[scheduler 08:09:36] demo done: Ibuprofen room 3 done, Paracetamol room 1 done, Metformin room 4 failed, Amoxicillin room 2 not run
+[scheduler] finished {"Patient C|3|Ibuprofen 400 mg|2026-11-11T08:00:00": "done", "Patient A|1|Paracetamol 500 mg|2026-11-11T08:00:00": "done", "Patient D|4|Metformin 500 mg|2026-11-11T08:02:00": "failed", "Patient B|2|Amoxicillin 250 mg|2026-11-11T08:04:00": "not run"}
+terminate called without an active exception
+[scheduler] finished (run_demo)

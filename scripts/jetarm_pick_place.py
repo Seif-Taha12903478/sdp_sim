@@ -168,14 +168,67 @@ class PickPlace(Node):
         self.grip_pub = self.create_publisher(JointTrajectory, GRIPPER_TOPIC, 10)
         self.pos = {}
         self.sim_t = None       # sim time of the newest /joint_states message
-        self.create_subscription(JointState, JOINT_STATES_TOPIC, self._on_js, 10)
+        self.last_js_wall = time.monotonic()    # wall time of the newest /joint_states callback
+        self.cache_recoveries = 0
+        self._js_sub = self.create_subscription(JointState, JOINT_STATES_TOPIC, self._on_js, 10)
 
     def _on_js(self, msg):
+        self.last_js_wall = time.monotonic()
         for n, p in zip(msg.name, msg.position):
             self.pos[n] = p
         t = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
         if self.sim_t is None or t > self.sim_t:
             self.sim_t = t
+
+    def _probe_joint_states(self, timeout=120.0):
+        """One fresh /joint_states message (with all arm + gripper joints) through a separate
+        node and executor, independent of this node's subscription. None if nothing arrives."""
+        from rclpy.executors import SingleThreadedExecutor
+        probe = rclpy.create_node('jetarm_js_probe')
+        ex = SingleThreadedExecutor()
+        ex.add_node(probe)
+        box = []
+        need = set(ARM_JOINTS + GRIP_JOINTS)
+
+        def cb(m):
+            if not box and need <= set(m.name):
+                box.append(m)
+        probe.create_subscription(JointState, JOINT_STATES_TOPIC, cb, 10)
+        end = time.monotonic() + timeout
+        try:
+            while rclpy.ok() and not box and time.monotonic() < end:
+                ex.spin_once(timeout_sec=0.2)
+        finally:
+            ex.remove_node(probe)
+            probe.destroy_node()
+            ex.shutdown()
+        return box[0] if box else None
+
+    def check_cache(self):
+        """No /joint_states callback for STALE_WALL s: read a fresh message on the side. If it is
+        newer than the cache, the cache was frozen (demo attempt 1, 2026-11-11: frozen at 0.040 rad
+        while the arm was home): load it and re-create the subscription."""
+        if time.monotonic() - self.last_js_wall < self.STALE_WALL:
+            return False
+        m = self._probe_joint_states(self.PROBE_TIMEOUT)
+        if m is None:
+            self.get_logger().warn('no /joint_states for %.0f s wall, none on a fresh subscription either'
+                                   % (time.monotonic() - self.last_js_wall))
+            self.last_js_wall = time.monotonic()
+            return False
+        t = m.header.stamp.sec + m.header.stamp.nanosec * 1e-9
+        if self.sim_t is not None and t <= self.sim_t:      # sim time not advancing: nothing frozen
+            self.last_js_wall = time.monotonic()
+            return False
+        self.cache_recoveries += 1
+        print('       joint-state cache FROZEN: last callback %.0f s wall ago at sim t %s, fresh message at '
+              'sim t %.2f - loaded it and re-created the subscription (recovery %d)'
+              % (time.monotonic() - self.last_js_wall, '%.2f' % self.sim_t if self.sim_t is not None else '-',
+                 t, self.cache_recoveries), flush=True)
+        self.destroy_subscription(self._js_sub)
+        self._on_js(m)
+        self._js_sub = self.create_subscription(JointState, JOINT_STATES_TOPIC, self._on_js, 10)
+        return True
 
     def get(self, names):
         return [self.pos[n] for n in names]
@@ -207,15 +260,20 @@ class PickPlace(Node):
             msg.points.append(pt)
         return msg
 
-    def _wait(self, names, target, tol, timeout, settle, min_sim=0.0):
-        """Wait until within tol of target ('reached') or, with settle=True, until the
-        joints stop moving ('settled', e.g. fingers stopped by the container).
-        Settling is judged on SIM time from /joint_states stamps: only after min_sim
-        sim seconds (the trajectory duration), and when the joints moved < 0.003 rad
-        over the last 0.5 sim s. (It used to be judged on wall-clock time, which at a
-        low real-time factor is a tiny sim interval: at ~4 %% RTF the start of the
-        closing spline looked 'settled' and the gripper was still open.)
-        timeout is a wall-clock safety limit only."""
+    STALE_WALL = 15.0           # s wall without a /joint_states callback -> check_cache()
+    PROBE_TIMEOUT = 120.0       # s wall to wait for the fresh message
+
+    def _wait(self, names, target, tol, timeout, settle, min_sim=0.0, sim_timeout=None, settle_tol=None):
+        """Wait until within tol of target ('reached') or, with settle=True, until the joints
+        stop moving ('settled', e.g. fingers stopped by the container; with settle_tol only
+        when also within settle_tol of the target).
+        Judged on SIM time from /joint_states stamps: settling only after min_sim sim seconds
+        (the trajectory duration) and when the joints moved < 0.003 rad over the last 0.5 sim s;
+        failure (None) after sim_timeout sim seconds. (Settling used to be judged on wall-clock
+        time, which at a low real-time factor is a tiny sim interval: at ~4 %% RTF the start of
+        the closing spline looked 'settled' and the gripper was still open.) A frozen
+        joint-state cache is detected and recovered (check_cache). timeout is a wall-clock
+        backstop only, for a simulation that stopped altogether."""
         start = time.monotonic()
         while self.sim_t is None and time.monotonic() - start < timeout:
             rclpy.spin_once(self, timeout_sec=0.1)
@@ -225,6 +283,7 @@ class PickPlace(Node):
         last_dot = start
         while rclpy.ok() and time.monotonic() - start < timeout:
             rclpy.spin_once(self, timeout_sec=0.1)
+            self.check_cache()
             pos = self.get(names)
             err = max(abs(p - t) for p, t in zip(pos, target))
             if time.monotonic() - last_dot >= 30:
@@ -232,26 +291,49 @@ class PickPlace(Node):
                 print('       ... still moving, %.3f rad to go' % err, flush=True)
             if err < tol:
                 return 'reached'
-            if settle and self.sim_t is not None:
-                now = self.sim_t
+            now = self.sim_t
+            if now is None or sim0 is None:
+                continue
+            if settle and (settle_tol is None or err < settle_tol):
                 if not hist or now > hist[-1][0]:
                     hist.append((now, list(pos)))
                 hist = [h for h in hist if now - h[0] <= 0.6]
                 if now - sim0 >= min_sim and now - hist[0][0] >= 0.5:
                     if max(abs(x - y) for x, y in zip(hist[0][1], hist[-1][1])) < 0.003:
+                        if settle_tol is not None:
+                            print('       settled %.3f rad from the target (accepted: < %.2f rad, not moving)'
+                                  % (err, settle_tol), flush=True)
                         return 'settled'
-        self.get_logger().warn('Timed out waiting for %s (error %.3f rad)' % (names, err))
+            else:
+                hist = []
+            if sim_timeout is not None and now - sim0 > sim_timeout:
+                self.get_logger().warn('Timed out after %.1f sim s waiting for %s (error %.3f rad)'
+                                       % (now - sim0, names, err))
+                return None
+        self.get_logger().warn('Timed out (wall-clock backstop %.0f s) waiting for %s (error %.3f rad)'
+                               % (timeout, names, err))
         return None
 
-    def arm(self, points, seconds_each, tol=0.03, timeout=3600.0):
+    ARM_SETTLE_TOL = 0.06       # rad: arm accepted when within this and no longer moving
+
+    def arm(self, points, seconds_each, tol=0.03, timeout=10800.0, sim_margin=30.0, settle_tol='home'):
+        """Move through points; 'reached' within tol, None after the trajectory + sim_margin sim s.
+        settle_tol='home': a move ending in INIT_POSE (arm home) is also accepted ('settled') within
+        ARM_SETTLE_TOL when no longer moving; other moves need tol (pick / place precision)."""
         if not isinstance(points[0], (list, tuple)):
             points = [points]
+        if settle_tol == 'home':
+            home = max(abs(a - b) for a, b in zip(points[-1], INIT_POSE)) < 1e-6
+            settle_tol = self.ARM_SETTLE_TOL if home else None
         self.arm_pub.publish(self._traj(ARM_JOINTS, points, seconds_each))
-        return self._wait(ARM_JOINTS, points[-1], tol, timeout, False)
+        dur = seconds_each * len(points)
+        return self._wait(ARM_JOINTS, points[-1], tol, timeout, settle_tol is not None, min_sim=dur + 0.2,
+                          sim_timeout=dur + sim_margin, settle_tol=settle_tol)
 
-    def gripper(self, value, seconds, tol=0.03, timeout=1800.0):
+    def gripper(self, value, seconds, tol=0.03, timeout=10800.0, sim_margin=30.0):
         self.grip_pub.publish(self._traj(GRIP_JOINTS, [[value]], seconds))
-        return self._wait(GRIP_JOINTS, [value], tol, timeout, True, min_sim=seconds + 0.2)
+        return self._wait(GRIP_JOINTS, [value], tol, timeout, True, min_sim=seconds + 0.2,
+                          sim_timeout=seconds + sim_margin)
 
 
 ATTACH_TOPIC = '/medicine/attach'

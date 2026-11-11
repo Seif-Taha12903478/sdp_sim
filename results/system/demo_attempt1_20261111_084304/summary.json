@@ -1,0 +1,71 @@
+{
+  "started": "2026-11-11T08:43:04",
+  "out": "/home/ubuntu/sdp_sim/results/system/demo_20261111_084304",
+  "steps": {
+    "arm_home": true,
+    "scheduler_exit": -6
+  },
+  "leftover_processes": [],
+  "deliveries": [
+    {
+      "room": "1",
+      "patient": "Patient A",
+      "medicine": "Paracetamol",
+      "dose": "500 mg",
+      "slot": "S1",
+      "due": "2026-11-11T08:00:00",
+      "started": "2026-11-11T08:00:00",
+      "lateness_min": "0.0",
+      "success": "True",
+      "failed_step": "",
+      "placement_error_mm": "1.5565766706641353",
+      "table_raised": "True",
+      "right_container": "True",
+      "others_in_place": "True",
+      "sim_time_s": "185.32",
+      "wall_time_s": "4421.0",
+      "result_json": "/home/ubuntu/sdp_sim/results/system/deliveries/delivery_080000_R1_S1.json"
+    },
+    {
+      "room": "3",
+      "patient": "Patient C",
+      "medicine": "Ibuprofen",
+      "dose": "400 mg",
+      "slot": "S3",
+      "due": "2026-11-11T08:00:00",
+      "started": "2026-11-11T08:03:05",
+      "lateness_min": "3.08",
+      "success": "True",
+      "failed_step": "",
+      "placement_error_mm": "1.4995462834077653",
+      "table_raised": "True",
+      "right_container": "True",
+      "others_in_place": "True",
+      "sim_time_s": "237.58",
+      "wall_time_s": "5133.7",
+      "result_json": "/home/ubuntu/sdp_sim/results/system/deliveries/delivery_080305_R3_S3.json"
+    },
+    {
+      "room": "4",
+      "patient": "Patient D",
+      "medicine": "Metformin",
+      "dose": "500 mg",
+      "slot": "S4",
+      "due": "2026-11-11T08:02:00",
+      "started": "2026-11-11T08:07:03",
+      "lateness_min": "5.05",
+      "success": "False",
+      "failed_step": "7 arm home (carrying)",
+      "placement_error_mm": "",
+      "table_raised": "False",
+      "right_container": "False",
+      "others_in_place": "True",
+      "sim_time_s": "",
+      "wall_time_s": "4649.1",
+      "result_json": "/home/ubuntu/sdp_sim/results/system/deliveries/delivery_080703_R4_S4.json"
+    }
+  ],
+  "video": "/home/ubuntu/sdp_sim/media/system_demo.mp4",
+  "result": "2/3 deliveries successful",
+  "wall_h": 4.02
+}
