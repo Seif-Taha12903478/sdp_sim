@@ -7,8 +7,9 @@ practical; the user reviews everything.
 ## Next session
 Branch hospital-system (from main bedafd6) is DONE: demo attempt 2 (2026-11-11 13:13-18:54)
 4/4 SUCCESS (results/system/demo_20261111_131344/summary.txt, media/system_demo.mp4 113.8 s).
-Merging into main is THE USER'S CALL - do not merge or change main unless asked (main = the
-single-room fallback). Report bundle: ~/Desktop/sdp_system_bundle.zip (REPORT_NOTES.md inside).
+MERGED into main by the user's request on 2026-11-11 (fast-forward, main = 2a08b1d; branch
+hospital-system kept). The single-room version still runs from main (`ros2 launch robot_gazebo
+hospital.launch.py`, unchanged files); its last pure state is commit bedafd6. Report bundle: ~/Desktop/sdp_system_bundle.zip (REPORT_NOTES.md inside).
 Open (not started): placement 0.5-1.7 mm (robot stops 0.8 mm short of the slot when coming from
 +x, containers sit ~0.9 mm -x of their slot after spawn); scheduler exits -6 at rclpy shutdown
 after finishing (harmless abort); root cause of the frozen joint-state cache unknown (recovered
