@@ -13,8 +13,8 @@ Branch hospital-system (from main bedafd6). Tests a, b, route, c, d all PASSED o
 results/system/demo_<date>/summary.txt; touch <dir>/STOP to end after the current delivery;
 expect ~5 h wall: 4 x ~72 min). Check `pgrep -af "ign gazebo"` is empty first. Line speed
 0.12 on straights (scheduler default; run_demo.py forwards --fast-speed only if non-zero).
-Open items: amber cap renders like yellow (cap check off); placement 2.8 mm / tilt 0.6 deg in
-Room 3 vs 0.2 mm in the single room. Then the final summary to the user (added features, RTF
+Fixed 2026-11-11 before e: placement offset (pharmacy fine line-up), S3 cap purple, cap check ON
+in the demo, STOP file = after the current delivery. Then the final summary to the user (added features, RTF
 8.35 vs 10.68 %, every test result, video + screenshot paths media/system_*.png). Original
 phase-0 rules: results/system/PLAN.md. Never change main (the user's single-room fallback).
 Earlier, on main: report bundle ~/Desktop/sdp_report_bundle.zip; open decision: a 5-run
@@ -94,7 +94,16 @@ evaluation with the smart table (ask first).
   target, tilt 0.6 deg (single room: 0.2 mm / 0.0 deg - not investigated), lift 18.6 s, container on
   the raised platform z 0.830, the 5 other containers in their slots, parked (-0.002, 0, 0.03 deg).
   Row in results/deliveries.csv; logs results/system/delivery_room3_20261110_185826/.
-- Status (2026-11-10 20:15): a, b, route tests, c, d DONE. NOT started: e (the user starts it).
+- Fixes 2026-11-11: (1) the Room 3 placement offset came from the pharmacy line-up: translate()
+  stops within 2 mm (robot 2.4 mm short of S3, container 3.2 mm off the gripper centre, kept by
+  the weld -> placed 2.7 mm behind the target; 0.6 deg = transient at contact, final 0.0).
+  delivery.line_up(): goto + slow fine translate to 0.5 mm (falls back to the coarse pose on a
+  timeout). Cap-look run: robot 0.2 mm from every slot. (2) S3 cap amber -> purple (0.38, 0.08,
+  0.38): rendered HSV (150, 186, 169); test_pharmacy_pick.py --caps-only 9/9, all 6 caps read
+  right -> run_demo.py runs --cap-check by default (--no-cap-check). Delivery: arm home after the
+  cap check. (3) STOP file: scheduler --stop-file, ends after the current delivery.
+- Status (2026-11-11 08:45): a-d DONE + fixes above; e (demo) STARTED by Claude at the user's
+  request (results/system/demo_<date>/).
 
 ## Current state (2026-11-05 evening)
 GitHub backup: private repo https://github.com/Seif-Taha12903478/sdp_sim (remote

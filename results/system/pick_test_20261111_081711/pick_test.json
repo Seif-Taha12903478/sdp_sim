@@ -1,0 +1,116 @@
+{
+  "started": "20261111_081711",
+  "slots": {},
+  "caps": {
+    "S1": {
+      "expected": "white",
+      "seen": "white",
+      "hsv": [
+        0,
+        0,
+        255
+      ],
+      "match": true
+    },
+    "S2": {
+      "expected": "yellow",
+      "seen": "yellow",
+      "hsv": [
+        30,
+        200,
+        255
+      ],
+      "match": true
+    },
+    "S3": {
+      "expected": "purple",
+      "seen": "purple",
+      "hsv": [
+        150,
+        186,
+        169
+      ],
+      "match": true
+    },
+    "S4": {
+      "expected": "grey",
+      "seen": "grey",
+      "hsv": [
+        111,
+        19,
+        174
+      ],
+      "match": true
+    },
+    "S5": {
+      "expected": "black",
+      "seen": "black",
+      "hsv": [
+        0,
+        0,
+        55
+      ],
+      "match": true
+    },
+    "S6": {
+      "expected": "white",
+      "seen": "white",
+      "hsv": [
+        0,
+        0,
+        255
+      ],
+      "match": true
+    }
+  },
+  "checks": [
+    {
+      "check": "pharmacy setup",
+      "ok": true,
+      "msg": "[pharmacy] setup done"
+    },
+    {
+      "check": "arm home",
+      "ok": true,
+      "msg": ""
+    },
+    {
+      "check": "cap S1 read",
+      "ok": true,
+      "msg": "expected white, seen white, HSV (0, 0, 255), robot x 0.0218"
+    },
+    {
+      "check": "cap S2 read",
+      "ok": true,
+      "msg": "expected yellow, seen yellow, HSV (30, 200, 255), robot x 0.1218"
+    },
+    {
+      "check": "cap S3 read",
+      "ok": true,
+      "msg": "expected purple, seen purple, HSV (150, 186, 169), robot x 0.2218"
+    },
+    {
+      "check": "cap S4 read",
+      "ok": true,
+      "msg": "expected grey, seen grey, HSV (111, 19, 174), robot x 0.3218"
+    },
+    {
+      "check": "cap S5 read",
+      "ok": true,
+      "msg": "expected black, seen black, HSV (0, 0, 55), robot x 0.4218"
+    },
+    {
+      "check": "cap S6 read",
+      "ok": true,
+      "msg": "expected white, seen white, HSV (0, 0, 255), robot x 0.5218"
+    },
+    {
+      "check": "back home",
+      "ok": true,
+      "msg": "(0.0019, -0.0000, 0.00 deg)"
+    }
+  ],
+  "leftover_processes": [],
+  "wall_s": 1510.1,
+  "passed": "9/9"
+}

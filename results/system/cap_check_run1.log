@@ -1,0 +1,30 @@
+[evaluate 08:17:47] controllers active after 36 s
+[evaluate 08:18:10] PASS pharmacy setup [pharmacy] setup done
+       ... still moving, 0.502 rad to go
+[evaluate 08:18:59] PASS arm home 
+       ... still moving, 0.551 rad to go
+[evaluate 08:20:22] PASS cap S1 read expected white, seen white, HSV (0, 0, 255), robot x 0.0218
+       ... still moving, 0.455 rad to go
+       ... still moving, 0.604 rad to go
+[evaluate 08:22:59] PASS cap S2 read expected yellow, seen yellow, HSV (30, 200, 255), robot x 0.1218
+       ... still moving, 0.602 rad to go
+       ... still moving, 0.541 rad to go
+[evaluate 08:25:46] PASS cap S3 read expected purple, seen purple, HSV (150, 186, 169), robot x 0.2218
+       ... still moving, 0.289 rad to go
+       ... still moving, 0.436 rad to go
+[evaluate 08:28:09] PASS cap S4 read expected grey, seen grey, HSV (111, 19, 174), robot x 0.3218
+       ... still moving, 1.109 rad to go
+       ... still moving, 0.706 rad to go
+       ... still moving, 0.144 rad to go
+       ... still moving, 1.031 rad to go
+       ... still moving, 0.300 rad to go
+[evaluate 08:32:54] PASS cap S5 read expected black, seen black, HSV (0, 0, 55), robot x 0.4218
+       ... still moving, 1.058 rad to go
+       ... still moving, 0.403 rad to go
+       ... still moving, 0.969 rad to go
+       ... still moving, 0.248 rad to go
+[evaluate 08:37:33] PASS cap S6 read expected white, seen white, HSV (0, 0, 255), robot x 0.5218
+       ... still moving, 1.119 rad to go
+       ... still moving, 0.456 rad to go
+[evaluate 08:42:18] PASS back home (0.0019, -0.0000, 0.00 deg)
+[evaluate 08:42:21] 9/9 checks passed; results in /home/ubuntu/sdp_sim/results/system/pick_test_20261111_081711

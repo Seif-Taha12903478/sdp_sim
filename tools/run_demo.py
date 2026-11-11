@@ -46,7 +46,8 @@ def main():
     p.add_argument('--out', default=None)
     p.add_argument('--fast-speed', type=float, default=0.0,
                    help='scheduler --fast-speed (0 = not passed: the scheduler default 0.12 applies)')
-    p.add_argument('--cap-check', action='store_true')
+    p.add_argument('--no-cap-check', action='store_true',
+                   help='cap check is ON by default (all 6 caps read correctly, 2026-11-11)')
     p.add_argument('--max-hours', type=float, default=14.0, help='wall-clock limit for the scheduler')
     p.add_argument('--video', default=os.path.join(ROOT, 'media', 'system_demo.mp4'))
     a = p.parse_args()
@@ -95,7 +96,7 @@ def main():
         cmd += ['--stop-file', stop_file]
         if a.fast_speed:
             cmd += ['--fast-speed', str(a.fast_speed)]
-        if a.cap_check:
+        if not a.no_cap_check:
             cmd += ['--cap-check']
         ev.log('scheduler: %s' % ' '.join(cmd[2:]))
         sch = subprocess.Popen(cmd, stdout=open(sched_log, 'a'), stderr=subprocess.STDOUT, start_new_session=True)
