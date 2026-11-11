@@ -91,6 +91,8 @@ def main():
                                stdout=open(os.path.join(out, 'video.log'), 'w'), stderr=subprocess.STDOUT,
                                start_new_session=True)
         cmd = [PY, '-u', os.path.join(ROOT, 'scripts', 'hospital_scheduler.py'), '--demo']
+        stop_file = os.path.join(out, 'STOP')
+        cmd += ['--stop-file', stop_file]
         if a.fast_speed:
             cmd += ['--fast-speed', str(a.fast_speed)]
         if a.cap_check:
@@ -103,10 +105,9 @@ def main():
                 ev.log('scheduler wall-clock limit (%.1f h) reached - stopping it' % a.max_hours)
                 os.killpg(sch.pid, signal.SIGINT)
                 break
-            if os.path.exists(os.path.join(out, 'STOP')):
-                ev.log('STOP file found - stopping the scheduler')
-                os.killpg(sch.pid, signal.SIGINT)
-                break
+            if os.path.exists(stop_file) and not summary.get('stop_file_seen'):
+                ev.log('STOP file found - the scheduler ends after the current delivery')
+                summary['stop_file_seen'] = True
             if proc.poll() is not None or not gazebo_server_alive():
                 ev.log('the simulation is gone (launch exit %s) - stopping the scheduler' % proc.poll())
                 summary['error'] = 'simulation died during the demo'

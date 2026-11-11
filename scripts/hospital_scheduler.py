@@ -311,6 +311,7 @@ def main():
                    '(adopted 2026-11-10 after the Gazebo line test passed; 0 = off)')
     p.add_argument('--cap-check', action='store_true')
     p.add_argument('--no-setup', action='store_true', help='do not set up the pharmacy')
+    p.add_argument('--stop-file', default=None, help='if this file exists, start no further delivery')
     a = p.parse_args()
 
     import pharmacy as ph
@@ -364,6 +365,12 @@ def main():
     while True:
         now = clock.now()
         queue = order_queue(doses, now, lambda r: lengths[r])
+        if a.stop_file and os.path.exists(a.stop_file):
+            log('stop file %s found - no further deliveries' % a.stop_file, clock)
+            for q in doses:
+                if q.state == 'pending':
+                    q.state = 'not run'
+            break
         if queue:
             log('due now: %s' % ', '.join('%s room %d (due %s)' % (d.medicine, d.room, d.due.strftime('%H:%M'))
                                          for d in queue), clock)
