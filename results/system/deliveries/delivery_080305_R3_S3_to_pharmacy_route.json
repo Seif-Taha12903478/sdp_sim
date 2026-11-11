@@ -1,0 +1,38 @@
+{
+  "result": "arrived",
+  "error": null,
+  "events": [
+    {
+      "node": "pharmacy",
+      "action": "stop",
+      "how": "red stop (strips)",
+      "sim_t": 195.0,
+      "pose": [
+        0.2759,
+        0.0005,
+        0.09
+      ],
+      "marker_ahead": 0.2741
+    }
+  ],
+  "max_xte": 0.0005,
+  "frames": 15,
+  "fast_frames": 0,
+  "plan": {
+    "from": "home",
+    "to": "pharmacy",
+    "actions": [
+      [
+        "pharmacy",
+        "stop"
+      ]
+    ]
+  },
+  "final": [
+    0.2759,
+    0.0005,
+    0.09
+  ],
+  "sim_t_end": 195.0,
+  "sim_t_start": 191.5
+}

@@ -1,0 +1,4 @@
+[evaluate 13:14:08] controllers active after 24 s
+[evaluate 13:15:02] scheduler: /home/ubuntu/sdp_sim/scripts/hospital_scheduler.py --demo --stop-file /home/ubuntu/sdp_sim/results/system/demo_20261111_131344/STOP --cap-check
+[evaluate 18:52:35] scheduler exited with -6
+[evaluate 18:54:26] 4/4 deliveries successful; summary in /home/ubuntu/sdp_sim/results/system/demo_20261111_131344

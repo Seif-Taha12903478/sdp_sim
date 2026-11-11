@@ -5,16 +5,14 @@ so this Gazebo simulation is the final deliverable. Keep explanations short and
 practical; the user reviews everything.
 
 ## Next session
-Branch hospital-system (from main bedafd6). Tests a, b, route, c, d PASSED 2026-11-10; fixes
-2026-11-11 (see "Hospital system"). Demo attempt 1 (2026-11-11 08:43-12:44): 2/3 OK, stopped by
-the frozen joint-state cache (results/system/demo_attempt1_20261111_084304/). Arm wait fixed +
-tested; demo attempt 2 STARTED 2026-11-11 ~13:15 at the user's request (`bash
-~/sdp_sim/tools/run_demo.sh`, results/system/demo_<date>/, expected end ~18:40, 18:30-19:30).
-NEXT: check its summary.txt + media/system_demo.mp4, then the final summary to the user (added
-features, RTF 8.35 vs 10.68 %, every test result, video + screenshot paths media/system_*.png).
-Rooms 1+3 due 08:00 on the hospital clock -> Room 1 first, Room 4 08:02, Room 2 08:04; touch
-<dir>/STOP = end after the current delivery. Original phase-0 rules: results/system/PLAN.md.
-Never change main (the user's single-room fallback). Earlier, on main: report bundle
+Branch hospital-system (from main bedafd6) is DONE: demo attempt 2 (2026-11-11 13:13-18:54)
+4/4 SUCCESS (results/system/demo_20261111_131344/summary.txt, media/system_demo.mp4 113.8 s).
+Merging into main is THE USER'S CALL - do not merge or change main unless asked (main = the
+single-room fallback). Report bundle: ~/Desktop/sdp_system_bundle.zip (REPORT_NOTES.md inside).
+Open (not started): placement 0.5-1.7 mm (robot stops 0.8 mm short of the slot when coming from
++x, containers sit ~0.9 mm -x of their slot after spawn); scheduler exits -6 at rclpy shutdown
+after finishing (harmless abort); root cause of the frozen joint-state cache unknown (recovered
+by check_cache, 0 recoveries needed in attempt 2). Earlier, on main: report bundle
 ~/Desktop/sdp_report_bundle.zip; open decision: a 5-run evaluation with the smart table (ask first).
 
 ## Hospital system (branch hospital-system, 2026-11-10)
@@ -114,7 +112,16 @@ Never change main (the user's single-room fallback). Earlier, on main: report bu
   tools/test_arm_home_held.py (via run_in_sim, 21 min): PASS - carrying med_S1, arm home reached
   in 3.6 sim s (err 0.029 rad: carried arm home ends close to the 0.03 tol), and with the cache
   frozen on purpose: detected after 15 s, recovered, reached in 3.6 sim s.
-- Status (2026-11-11 13:15): a-d DONE + fixes; demo attempt 2 running.
+- Demo attempt 2 (tools/run_demo.sh, cap check on, 2026-11-11 13:13-18:54, 5.68 h wall, clean
+  shutdown, no Gazebo left): 4/4 SUCCESS on the hospital clock. Room 1 (S1 Paracetamol, due 08:00,
+  late 0.0 min) placement 2.0 mm at contact / 1.7 final, 185.2 sim s, 67 min wall; Room 3 (S3,
+  08:00, late 3.1) 1.4 / 1.4 mm, 237.7 s, 103 min; Room 4 (S4, 08:02, late 5.1) 0.6 / 0.5 mm,
+  238.8 s, 93 min; Room 2 (S2, 08:04, late 7.0) 1.7 / 1.7 mm, 181.4 s, 74 min. All caps read
+  right, every attach/detach confirmed 1st try, tables raised (lift 18.4-18.7 s, container z
+  0.830, tilt 0.0), other containers moved <= 0.14 mm, parked within 2 mm; no cache recovery
+  needed. Placement error = robot-at-slot x (+0.8 mm from +x, -0.2 from -x) - container x in
+  the slot (-0.8..-1.0 mm). Video media/system_demo.mp4 (1707 frames, 113.8 s, 800x600).
+- Status (2026-11-11 19:50): hospital-system DONE; bundle ~/Desktop/sdp_system_bundle.zip.
 
 ## Current state (2026-11-05 evening)
 GitHub backup: private repo https://github.com/Seif-Taha12903478/sdp_sim (remote

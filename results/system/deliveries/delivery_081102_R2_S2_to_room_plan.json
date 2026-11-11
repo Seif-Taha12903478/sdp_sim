@@ -1,0 +1,42 @@
+{
+  "from": "pharmacy",
+  "to": "R2",
+  "path": [
+    "pharmacy",
+    "home",
+    "J1",
+    "R2"
+  ],
+  "length": 3.2,
+  "start_heading": 180.0,
+  "turn_round": false,
+  "events": [
+    {
+      "node": "home",
+      "colour": "red",
+      "x": -0.08,
+      "y": 0.0,
+      "edge_heading": 180.0,
+      "action": "pass",
+      "out_heading": 180.0
+    },
+    {
+      "node": "J1",
+      "colour": "green",
+      "x": -0.75,
+      "y": 0.0,
+      "edge_heading": 180.0,
+      "action": "left",
+      "out_heading": -90.0
+    },
+    {
+      "node": "R2",
+      "colour": "red",
+      "x": -0.75,
+      "y": -1.9,
+      "edge_heading": -90.0,
+      "action": "stop",
+      "out_heading": -90.0
+    }
+  ]
+}

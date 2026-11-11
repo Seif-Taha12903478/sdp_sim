@@ -1,0 +1,59 @@
+{
+  "result": "arrived",
+  "error": null,
+  "events": [
+    {
+      "node": "J1",
+      "action": "right",
+      "how": "seen, turn right",
+      "sim_t": 824.5,
+      "pose": [
+        -0.7508,
+        -0.375,
+        90.0
+      ],
+      "marker_ahead": 0.375,
+      "after_turn": [
+        -0.75,
+        -0.0019,
+        0.27
+      ]
+    },
+    {
+      "node": "home",
+      "action": "stop",
+      "how": "red stop (strips)",
+      "sim_t": 841.0,
+      "pose": [
+        -0.3534,
+        0.0004,
+        0.14
+      ],
+      "marker_ahead": 0.2734
+    }
+  ],
+  "max_xte": 0.0019,
+  "frames": 71,
+  "fast_frames": 28,
+  "plan": {
+    "from": "R2",
+    "to": "home",
+    "actions": [
+      [
+        "J1",
+        "right"
+      ],
+      [
+        "home",
+        "stop"
+      ]
+    ]
+  },
+  "final": [
+    -0.3534,
+    0.0004,
+    0.14
+  ],
+  "sim_t_end": 841.0,
+  "sim_t_start": 812.26
+}

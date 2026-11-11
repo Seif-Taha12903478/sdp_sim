@@ -1,0 +1,75 @@
+{
+  "result": "arrived",
+  "error": null,
+  "events": [
+    {
+      "node": "J2",
+      "action": "left",
+      "how": "seen, turn left",
+      "sim_t": 375.0,
+      "pose": [
+        -3.6492,
+        0.3736,
+        -90.0
+      ],
+      "marker_ahead": 0.3736,
+      "after_turn": [
+        -3.65,
+        0.0019,
+        -0.27
+      ]
+    },
+    {
+      "node": "J1",
+      "action": "straight",
+      "how": "seen, blind pass",
+      "sim_t": 410.5,
+      "pose": [
+        -1.1324,
+        0.0008,
+        -0.0
+      ],
+      "marker_ahead": 0.3824
+    },
+    {
+      "node": "home",
+      "action": "stop",
+      "how": "red stop (strips)",
+      "sim_t": 420.26,
+      "pose": [
+        -0.3524,
+        0.0007,
+        0.03
+      ],
+      "marker_ahead": 0.2724
+    }
+  ],
+  "max_xte": 0.0019,
+  "frames": 186,
+  "fast_frames": 88,
+  "plan": {
+    "from": "R3",
+    "to": "home",
+    "actions": [
+      [
+        "J2",
+        "left"
+      ],
+      [
+        "J1",
+        "straight"
+      ],
+      [
+        "home",
+        "stop"
+      ]
+    ]
+  },
+  "final": [
+    -0.3524,
+    0.0007,
+    0.03
+  ],
+  "sim_t_end": 420.26,
+  "sim_t_start": 362.76
+}

@@ -1,0 +1,22 @@
+{
+  "from": "home",
+  "to": "pharmacy",
+  "path": [
+    "home",
+    "pharmacy"
+  ],
+  "length": 0.63,
+  "start_heading": 0.0,
+  "turn_round": false,
+  "events": [
+    {
+      "node": "pharmacy",
+      "colour": "red",
+      "x": 0.55,
+      "y": 0.0,
+      "edge_heading": 0.0,
+      "action": "stop",
+      "out_heading": 0.0
+    }
+  ]
+}

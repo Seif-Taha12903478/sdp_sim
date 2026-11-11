@@ -1,0 +1,42 @@
+{
+  "from": "R3",
+  "to": "home",
+  "path": [
+    "R3",
+    "J2",
+    "J1",
+    "home"
+  ],
+  "length": 5.47,
+  "start_heading": -90.0,
+  "turn_round": false,
+  "events": [
+    {
+      "node": "J2",
+      "colour": "green",
+      "x": -3.65,
+      "y": 0.0,
+      "edge_heading": -90.0,
+      "action": "left",
+      "out_heading": 0.0
+    },
+    {
+      "node": "J1",
+      "colour": "green",
+      "x": -0.75,
+      "y": 0.0,
+      "edge_heading": 0.0,
+      "action": "straight",
+      "out_heading": 0.0
+    },
+    {
+      "node": "home",
+      "colour": "red",
+      "x": -0.08,
+      "y": 0.0,
+      "edge_heading": 0.0,
+      "action": "stop",
+      "out_heading": 0.0
+    }
+  ]
+}

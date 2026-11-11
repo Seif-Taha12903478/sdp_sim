@@ -1,0 +1,10 @@
+Hospital system demo 2026-11-11T13:13:44
+4/4 deliveries successful
+
+Room 1  Patient A  Paracetamol  500 mg  slot S1  due 08:00 start 08:00:00 late 0.0 min  OK  placement 2.014937960852938 mm  raised True  right True  others True  sim 185.16 s  wall 4029.5 s
+Room 3  Patient C  Ibuprofen    400 mg  slot S3  due 08:00 start 08:03:05 late 3.08 min  OK  placement 1.4392425096970383 mm  raised True  right True  others True  sim 237.72 s  wall 6186.2 s
+Room 4  Patient D  Metformin    500 mg  slot S4  due 08:02 start 08:07:03 late 5.05 min  OK  placement 0.5645010473959339 mm  raised True  right True  others True  sim 238.83999999999997 s  wall 5589.9 s
+Room 2  Patient B  Amoxicillin  250 mg  slot S2  due 08:04 start 08:11:02 late 7.03 min  OK  placement 1.7087783012043354 mm  raised True  right True  others True  sim 181.38 s  wall 4422.4 s
+
+video: /home/ubuntu/sdp_sim/media/system_demo.mp4
+wall time 5.68 h

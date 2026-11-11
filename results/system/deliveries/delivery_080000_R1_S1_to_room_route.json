@@ -1,0 +1,75 @@
+{
+  "result": "arrived",
+  "error": null,
+  "events": [
+    {
+      "node": "home",
+      "action": "pass",
+      "how": "blind from the start (too close to see)",
+      "sim_t": 65.0,
+      "pose": [
+        0.0233,
+        0.0,
+        179.8
+      ],
+      "marker_ahead": 0.1033
+    },
+    {
+      "node": "J1",
+      "action": "right",
+      "how": "seen, turn right",
+      "sim_t": 70.0,
+      "pose": [
+        -0.3742,
+        -0.0006,
+        -179.94
+      ],
+      "marker_ahead": 0.3758,
+      "after_turn": [
+        -0.7481,
+        -0.0,
+        90.27
+      ]
+    },
+    {
+      "node": "R1",
+      "action": "stop",
+      "how": "red stop (strips)",
+      "sim_t": 98.5,
+      "pose": [
+        -0.7508,
+        1.6266,
+        90.0
+      ],
+      "marker_ahead": 0.2734
+    }
+  ],
+  "max_xte": 0.0019,
+  "frames": 90,
+  "fast_frames": 27,
+  "plan": {
+    "from": "pharmacy",
+    "to": "R1",
+    "actions": [
+      [
+        "home",
+        "pass"
+      ],
+      [
+        "J1",
+        "right"
+      ],
+      [
+        "R1",
+        "stop"
+      ]
+    ]
+  },
+  "final": [
+    -0.7508,
+    1.6266,
+    90.0
+  ],
+  "sim_t_end": 98.5,
+  "sim_t_start": 65.0
+}
