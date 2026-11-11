@@ -39,6 +39,8 @@ def main():
     p.add_argument('--slots', nargs='+', default=['S1', 'S3', 'S6'])
     p.add_argument('--no-launch', action='store_true')
     p.add_argument('--no-caps', action='store_true', help='skip the cap look at every slot')
+    p.add_argument('--caps-only', action='store_true',
+                   help='only the cap look (no picks); every cap read is then a pass/fail check')
     a = p.parse_args()
     stamp = dt.datetime.now().strftime('%Y%m%d_%H%M%S')
     out = os.path.join(ROOT, 'results', 'system', 'pick_test_' + stamp)
@@ -103,8 +105,7 @@ def main():
 
         def at_slot(s):
             sx, sy = pharm.slots[s]
-            base.goto(sx, sy - pharm.m['pharmacy']['reach_left'], 0.0)
-            return base.pose()
+            return dv.line_up(base, sx, sy - pharm.m['pharmacy']['reach_left'], 0.0)
 
         # ---- cap look at every slot (calibration of the optional cap check)
         if not a.no_caps:
@@ -120,12 +121,16 @@ def main():
                 got, hsv = ph.classify_cap(img, ph.CAP_ROI)
                 want = pharm.inv[s]['cap']
                 res['caps'][s] = {'expected': want, 'seen': got, 'hsv': hsv, 'match': got == want}
-                ev.log('cap look %s (calibration, not a pass/fail check): expected %s, seen %s, HSV %s'
-                       % (s, want, got, hsv))
+                if a.caps_only:
+                    check('cap %s read' % s, got == want, 'expected %s, seen %s, HSV %s, robot x %.4f'
+                          % (want, got, hsv, x))
+                else:
+                    ev.log('cap look %s (calibration, not a pass/fail check): expected %s, seen %s, HSV %s'
+                           % (s, want, got, hsv))
                 node.arm(jp.INIT_POSE, 3.0)
 
         # ---- pick and replace
-        for s in a.slots:
+        for s in ([] if a.caps_only else a.slots):
             name = ph.container_name(s)
             weld = Weld(node, '/' + name)
             before = ph.gz_all_poses('med_')

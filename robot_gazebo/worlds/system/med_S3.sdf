@@ -29,7 +29,7 @@
       <visual name="cap">
         <pose>0 0 0.036 0 0 0</pose>
         <geometry><cylinder><radius>0.017</radius><length>0.012</length></cylinder></geometry>
-        <material><ambient>1.000 0.620 0.050 1</ambient><diffuse>1.000 0.620 0.050 1</diffuse><specular>0.3 0.3 0.3 1</specular></material>
+        <material><ambient>0.380 0.080 0.380 1</ambient><diffuse>0.380 0.080 0.380 1</diffuse><specular>0.3 0.3 0.3 1</specular></material>
       </visual>
     </link>
   </model>

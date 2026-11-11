@@ -28,7 +28,7 @@ import system_layout as L           # noqa: E402
 
 INV = {'S1': {'medicine': 'Paracetamol', 'dose': '500 mg', 'cap': 'white', 'quantity': 1},
        'S2': {'medicine': 'Amoxicillin', 'dose': '250 mg', 'cap': 'yellow', 'quantity': 1},
-       'S3': {'medicine': 'Ibuprofen', 'dose': '400 mg', 'cap': 'amber', 'quantity': 1},
+       'S3': {'medicine': 'Ibuprofen', 'dose': '400 mg', 'cap': 'purple', 'quantity': 1},
        'S4': {'medicine': 'Metformin', 'dose': '500 mg', 'cap': 'grey', 'quantity': 0},
        'S6': {'medicine': 'Paracetamol', 'dose': '500 mg', 'cap': 'white', 'quantity': 1}}
 

@@ -110,6 +110,24 @@ def arm_plan():
     return pa, jp.build_plan(pa)
 
 
+# pharmacy line-up: translate() alone stops within 2 mm and the grasp keeps that offset
+# (Room 3 test d 2026-11-10: robot 2.4 mm short of S3 -> container placed 2.7 mm off the target)
+FINE_TOL = 0.0005       # m
+
+
+def line_up(base, gx, gy, gyaw=0.0):
+    """goto (2 mm) + a slow fine translate to FINE_TOL; if that times out, keep the coarse pose."""
+    base.goto(gx, gy, gyaw)
+    x, y, yaw, _ = base.pose()
+    c, s = math.cos(yaw), math.sin(yaw)
+    dx, dy = gx - x, gy - y
+    try:
+        base.translate(c * dx + s * dy, -s * dx + c * dy, vmax=0.01, tol=FINE_TOL, timeout_sim=20.0)
+    except RuntimeError as e:
+        log('fine line-up: %s - keeping the coarse pose' % e)
+    return base.pose()
+
+
 def _check(res, what):
     if res is None:
         raise RuntimeError(what + ' failed or timed out')
@@ -264,8 +282,7 @@ def main():
         log('pharmacy stop at (%.4f, %.4f, %.2f deg); slot %s at x %.3f -> move %+.3f m along the line'
             % (x, y, math.degrees(yaw), a.slot, sx, sx - x))
         out['pharmacy_stop'] = [x, y, math.degrees(yaw)]
-        base.goto(sx, sy - pharm.m['pharmacy']['reach_left'], 0.0)
-        x, y, yaw, _ = base.pose()
+        x, y, yaw, _ = line_up(base, sx, sy - pharm.m['pharmacy']['reach_left'], 0.0)
         out['at_slot'] = [x, y, math.degrees(yaw)]
         log('at slot %s: robot (%.4f, %.4f, %.2f deg)' % (a.slot, x, y, math.degrees(yaw)))
 
@@ -297,6 +314,7 @@ def main():
         log('cap check: expected %s, seen %s (HSV %s)' % (inv.get('cap'), got, hsv))
         if got != inv.get('cap'):
             raise RuntimeError('wrong medicine? cap %s, inventory says %s for %s' % (got, inv.get('cap'), a.slot))
+        check(node.arm(jp.INIT_POSE, d), 'arm home after the cap check')
 
     def do_pick():
         pick(node, weld, cname, d)

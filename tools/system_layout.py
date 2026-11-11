@@ -513,7 +513,7 @@ def draw(path):
 
 # ------------------------------------------------------------------ inventory (config/inventory.yaml)
 INVENTORY = os.path.join(ROOT, 'config', 'inventory.yaml')
-CAP_RGB = {'white': (0.95, 0.95, 0.93), 'yellow': (1.0, 0.86, 0.10), 'amber': (1.0, 0.62, 0.05),
+CAP_RGB = {'white': (0.95, 0.95, 0.93), 'yellow': (1.0, 0.86, 0.10), 'purple': (0.38, 0.08, 0.38),
            'grey': (0.36, 0.37, 0.39), 'black': (0.10, 0.10, 0.10)}
 
 

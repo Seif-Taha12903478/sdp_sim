@@ -8,13 +8,13 @@
 #
 # All containers are the same 3 x 6 cm, 30 g cylinder (the gripper does not change);
 # they differ by cap colour and a printed label (medicine + dose).
-# cap: white | yellow | amber | grey | black   (no blue / red / green: line, stop
+# cap: white | yellow | purple | grey | black   (no blue / red / green: line, stop
 #      markers and junction markers use those colours)
 # After editing: python3 ~/sdp_sim/tools/make_system_world.py   (labels, caps)
 slots:
   S1: {medicine: Paracetamol, dose: 500 mg, cap: white,  quantity: 1}
   S2: {medicine: Amoxicillin, dose: 250 mg, cap: yellow, quantity: 1}
-  S3: {medicine: Ibuprofen,   dose: 400 mg, cap: amber,  quantity: 1}
+  S3: {medicine: Ibuprofen,   dose: 400 mg, cap: purple, quantity: 1}
   S4: {medicine: Metformin,   dose: 500 mg, cap: grey,   quantity: 1}
   S5: {medicine: Omeprazole,  dose: 20 mg,  cap: black,  quantity: 1}
   S6: {medicine: Paracetamol, dose: 500 mg, cap: white,  quantity: 1}

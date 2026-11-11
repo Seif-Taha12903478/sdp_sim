@@ -41,7 +41,7 @@ CAP_HSV = {                 # cap colour check (wrist camera): OpenCV HSV classe
     'grey': lambda h, s, v: s < 45 and 70 <= v < 175,
     'black': lambda h, s, v: v < 70,
     'yellow': lambda h, s, v: 22 <= h <= 36 and s >= 110 and v >= 90,
-    'amber': lambda h, s, v: 11 <= h < 22 and s >= 110 and v >= 90,
+    'purple': lambda h, s, v: 135 <= h <= 165 and s >= 90 and v >= 60,   # was amber: rendered like yellow
 }
 
 
