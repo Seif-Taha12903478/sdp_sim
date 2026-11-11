@@ -6,8 +6,9 @@ practical; the user reviews everything.
 
 ## Next session
 Branch hospital-system (from main bedafd6). Tests a, b, route, c, d all PASSED on 2026-11-10
-(details in "Hospital system"). NEXT = test e, the demo, which THE USER starts in the morning:
-    bash ~/sdp_sim/tools/run_demo.sh
+(details in "Hospital system"). Test e (the demo) was STARTED 2026-11-11 08:43 at the user's
+request (`bash ~/sdp_sim/tools/run_demo.sh`; output results/system/demo_20261111_084304/,
+expected end ~13:15-14:00). NEXT: check its summary.txt + media/system_demo.mp4, then the final summary.
 (detached; launch video world, scheduler --demo on the hospital clock 08:00: Rooms 1 + 3 due
 08:00 -> Room 1 first, Room 4 08:02, Room 2 08:04; video media/system_demo.mp4; summary in
 results/system/demo_<date>/summary.txt; touch <dir>/STOP to end after the current delivery;
@@ -102,8 +103,8 @@ evaluation with the smart table (ask first).
   0.38): rendered HSV (150, 186, 169); test_pharmacy_pick.py --caps-only 9/9, all 6 caps read
   right -> run_demo.py runs --cap-check by default (--no-cap-check). Delivery: arm home after the
   cap check. (3) STOP file: scheduler --stop-file, ends after the current delivery.
-- Status (2026-11-11 08:45): a-d DONE + fixes above; e (demo) STARTED by Claude at the user's
-  request (results/system/demo_<date>/).
+- Status (2026-11-11 08:45): a-d DONE + fixes above; e (demo) STARTED 08:43 by Claude at the user's
+  request (results/system/demo_20261111_084304/).
 
 ## Current state (2026-11-05 evening)
 GitHub backup: private repo https://github.com/Seif-Taha12903478/sdp_sim (remote
