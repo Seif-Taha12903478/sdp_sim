@@ -1,0 +1,48 @@
+armacy] S4 Metformin    500 mg  grey   qty 1  med_S4: (0.3214, 0.2001, 0.1297) tilt 0.2 deg, 0.9 mm from the slot - IN SLOT
+[pharmacy] S5 Omeprazole   20 mg   black  qty 1  med_S5: (0.4216, 0.2001, 0.1295) tilt 0.2 deg, 0.8 mm from the slot - IN SLOT
+[pharmacy] S6 Paracetamol  500 mg  white  qty 1  med_S6: (0.5216, 0.2001, 0.1291) tilt 0.2 deg, 0.7 mm from the slot - IN SLOT
+[pharmacy] setup done
+
+lined up at (0.0218, 0.0000)
+       ... still moving, 1.062 rad to go
+       ... still moving, 0.635 rad to go
+       ... still moving, 0.100 rad to go
+       ... still moving, 1.235 rad to go
+       ... still moving, 0.761 rad to go
+       ... still moving, 0.290 rad to go
+       ... still moving, 0.570 rad to go
+       ... still moving, 0.430 rad to go
+       ... still moving, 0.239 rad to go
+       ... still moving, 0.060 rad to go
+       ... still moving, 0.448 rad to go
+       ... still moving, 0.276 rad to go
+       ... still moving, 0.124 rad to go
+[delivery] gripper at 0.780 rad
+[0m[INFO] [1794387518.262687840] [jetarm_pick_place]: DetachableJoint /med_S1: attached[0m
+[delivery] attach (pick) confirmed by /med_S1/attached after 1 attempt(s)
+       ... still moving, 0.563 rad to go
+       ... still moving, 0.456 rad to go
+       ... still moving, 0.238 rad to go
+       ... still moving, 0.094 rad to go
+[delivery] lifted: med_S1 z 0.227
+       ... still moving, 1.225 rad to go
+       ... still moving, 0.708 rad to go
+       ... still moving, 0.105 rad to go
+[check] PASS normal: arm home reached in 3.6 sim s, err 0.0291 rad, container z 0.272, recoveries 0
+back to pick_lift
+       ... still moving, 1.256 rad to go
+       ... still moving, 0.719 rad to go
+       ... still moving, 0.518 rad to go
+       ... still moving, 0.439 rad to go
+       ... still moving, 0.359 rad to go
+       ... still moving, 0.293 rad to go
+       ... still moving, 0.207 rad to go
+       ... still moving, 0.140 rad to go
+       ... still moving, 0.081 rad to go
+cache frozen on purpose
+       joint-state cache FROZEN: last callback 15 s wall ago at sim t 40.66, fresh message at sim t 41.22 - loaded it and re-created the subscription (recovery 1)
+       ... still moving, 1.254 rad to go
+       ... still moving, 0.834 rad to go
+       ... still moving, 0.353 rad to go
+[check] PASS frozen: arm home reached in 3.6 sim s, err 0.0291 rad, container z 0.272, recoveries 1
+[result] PASS {"normal": {"result": "reached", "sim_s": 3.620000000000001, "err_rad": 0.029147667230639267, "container_z": 0.2722439971758771, "recoveries": 0}, "frozen": {"result": "reached", "sim_s": 3.6000000000000014, "err_rad": 0.029147668131920552, "container_z": 0.27223666393116247, "recoveries": 1}}

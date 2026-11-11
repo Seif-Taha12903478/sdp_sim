@@ -1,0 +1,10 @@
+{
+  "command": [
+    "python3",
+    "/home/ubuntu/sdp_sim/tools/test_arm_home_held.py"
+  ],
+  "deadline": "2026-11-11T13:10",
+  "leftover_processes": [],
+  "exit_code": 0,
+  "wall_s": 1273.7
+}

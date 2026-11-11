@@ -1,0 +1,4 @@
+[evaluate 12:48:45] controllers active after 30 s; arm home
+[evaluate 12:49:36] running: python3 /home/ubuntu/sdp_sim/tools/test_arm_home_held.py
+[evaluate 13:09:27] command exited with 0
+[evaluate 13:09:29] done in 1274 s wall; logs in /home/ubuntu/sdp_sim/results/system/arm_home_held_20261111_124815

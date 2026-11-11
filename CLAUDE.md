@@ -5,21 +5,17 @@ so this Gazebo simulation is the final deliverable. Keep explanations short and
 practical; the user reviews everything.
 
 ## Next session
-Branch hospital-system (from main bedafd6). Tests a, b, route, c, d all PASSED on 2026-11-10
-(details in "Hospital system"). Test e (the demo) was STARTED 2026-11-11 08:43 at the user's
-request (`bash ~/sdp_sim/tools/run_demo.sh`; output results/system/demo_20261111_084304/,
-expected end ~13:15-14:00). NEXT: check its summary.txt + media/system_demo.mp4, then the final summary.
-(detached; launch video world, scheduler --demo on the hospital clock 08:00: Rooms 1 + 3 due
-08:00 -> Room 1 first, Room 4 08:02, Room 2 08:04; video media/system_demo.mp4; summary in
-results/system/demo_<date>/summary.txt; touch <dir>/STOP to end after the current delivery;
-expect ~5 h wall: 4 x ~72 min). Check `pgrep -af "ign gazebo"` is empty first. Line speed
-0.12 on straights (scheduler default; run_demo.py forwards --fast-speed only if non-zero).
-Fixed 2026-11-11 before e: placement offset (pharmacy fine line-up), S3 cap purple, cap check ON
-in the demo, STOP file = after the current delivery. Then the final summary to the user (added features, RTF
-8.35 vs 10.68 %, every test result, video + screenshot paths media/system_*.png). Original
-phase-0 rules: results/system/PLAN.md. Never change main (the user's single-room fallback).
-Earlier, on main: report bundle ~/Desktop/sdp_report_bundle.zip; open decision: a 5-run
-evaluation with the smart table (ask first).
+Branch hospital-system (from main bedafd6). Tests a, b, route, c, d PASSED 2026-11-10; fixes
+2026-11-11 (see "Hospital system"). Demo attempt 1 (2026-11-11 08:43-12:44): 2/3 OK, stopped by
+the frozen joint-state cache (results/system/demo_attempt1_20261111_084304/). Arm wait fixed +
+tested; demo attempt 2 STARTED 2026-11-11 ~13:15 at the user's request (`bash
+~/sdp_sim/tools/run_demo.sh`, results/system/demo_<date>/, expected end ~18:40, 18:30-19:30).
+NEXT: check its summary.txt + media/system_demo.mp4, then the final summary to the user (added
+features, RTF 8.35 vs 10.68 %, every test result, video + screenshot paths media/system_*.png).
+Rooms 1+3 due 08:00 on the hospital clock -> Room 1 first, Room 4 08:02, Room 2 08:04; touch
+<dir>/STOP = end after the current delivery. Original phase-0 rules: results/system/PLAN.md.
+Never change main (the user's single-room fallback). Earlier, on main: report bundle
+~/Desktop/sdp_report_bundle.zip; open decision: a 5-run evaluation with the smart table (ask first).
 
 ## Hospital system (branch hospital-system, 2026-11-10)
 - Layout = tools/system_layout.py (the numbers; `python3 tools/system_layout.py` prints the
@@ -103,8 +99,22 @@ evaluation with the smart table (ask first).
   0.38): rendered HSV (150, 186, 169); test_pharmacy_pick.py --caps-only 9/9, all 6 caps read
   right -> run_demo.py runs --cap-check by default (--no-cap-check). Delivery: arm home after the
   cap check. (3) STOP file: scheduler --stop-file, ends after the current delivery.
-- Status (2026-11-11 08:45): a-d DONE + fixes above; e (demo) STARTED 08:43 by Claude at the user's
-  request (results/system/demo_20261111_084304/).
+- Demo attempt 1 (2026-11-11 08:43-12:44, results/system/demo_attempt1_20261111_084304/, 4.0 h):
+  Room 1 OK 1.6 mm, Room 3 OK 1.5 mm (fine line-up works; was 2.8), Room 4 FAILED at step 7 "arm
+  home (carrying)": delivery.py's /joint_states cache froze at 0.040 rad error (both publishers
+  showed the arm exactly home; the main thread kept spinning at ~40 % CPU without running the
+  callback; root cause in rclpy not found), the 3600 s WALL arm timeout failed the delivery,
+  Room 2 not run. RTF meanwhile 2 % (load avg ~16).
+- Arm-wait fix (jetarm_pick_place.PickPlace._wait, 2026-11-11): timeout on SIM time (trajectory +
+  30 s; wall clock only a 3 h backstop); check_cache(): no /joint_states callback for 15 s wall ->
+  read one fresh message via a separate probe node/executor; newer than the cache = frozen ->
+  load it, re-create the subscription, log "joint-state cache FROZEN"; arm HOME (target INIT_POSE)
+  also accepted within 0.06 rad when not moving ('settled'; other moves still need 0.03).
+  tools/test_arm_wait.py (offline, ROS domain 77, fake publisher): 7/7. Gazebo
+  tools/test_arm_home_held.py (via run_in_sim, 21 min): PASS - carrying med_S1, arm home reached
+  in 3.6 sim s (err 0.029 rad: carried arm home ends close to the 0.03 tol), and with the cache
+  frozen on purpose: detected after 15 s, recovered, reached in 3.6 sim s.
+- Status (2026-11-11 13:15): a-d DONE + fixes; demo attempt 2 running.
 
 ## Current state (2026-11-05 evening)
 GitHub backup: private repo https://github.com/Seif-Taha12903478/sdp_sim (remote
