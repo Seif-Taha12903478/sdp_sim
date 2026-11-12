@@ -35,7 +35,7 @@ done
 
 echo "--- checking Gazebo plugins"
 PLUG=$(dirname "$(find /usr -name 'libignition-gazebo-detachable-joint-system.so' 2>/dev/null | head -1)")
-for p in velocity-control odometry-publisher sensors detachable-joint contact joint-position-controller joint-state-publisher; do
+for p in sensors detachable-joint contact joint-controller joint-position-controller joint-state-publisher; do
   if ls "$PLUG"/libignition-gazebo-$p-system.so >/dev/null 2>&1; then echo "  ok   $p"; else echo "  MISSING $p"; fi
 done
 python3 -c "import cv2, numpy; print('  ok   python3 cv2', cv2.__version__)" || echo "  MISSING python3-opencv (sudo apt install python3-opencv)"
