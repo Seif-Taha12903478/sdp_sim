@@ -1,3 +1,23 @@
+# Python
 __pycache__/
 *.pyc
+
+# Run outputs. results/ is ignored as a whole; the result files that the docs cite
+# (summaries, CSVs, JSONs, short logs) are committed with `git add -f`.
 results/
+
+# Editor, OS and temporary files
+*.swp
+*~
+.vscode/
+.idea/
+.DS_Store
+*.bak
+*.bak.*
+*.pid
+*.tmp
+
+# colcon output, in case the repo is built as a workspace by mistake
+build/
+install/
+log/
