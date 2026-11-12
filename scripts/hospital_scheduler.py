@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Smart medication scheduler of the hospital system (branch hospital-system).
+"""Smart medication scheduler of the hospital system.
 
     python3 hospital_scheduler.py                 # real time (Asia/Dubai), config/doses.yaml, runs forever
     python3 hospital_scheduler.py --demo          # demo: 4 doses on a HOSPITAL CLOCK, then exit
     python3 hospital_scheduler.py --list          # the doses of today and their queue order
-    python3 hospital_scheduler.py --once          # run what is due now (real time), then exit
+    python3 hospital_scheduler.py --once          # run the doses due right now (real time), then exit
     python3 hospital_scheduler.py --now 3         # test: one dose for room 3 due now (real time), then exit
 
 Needs a running hospital_system.launch.py (headless is fine). At start it sets up the
@@ -206,6 +206,25 @@ class Stock:
                    and d['dose'].replace(' ', '').lower() == dose.replace(' ', '').lower())
 
 
+def plan_slots(doses, stock, route_len):
+    """The doses in run order with the slot each one would get: [(dose, slot or None)].
+    Every container serves one dose, so a slot is marked used (in `stock`) as it is planned -
+    a second dose of a medicine gets the next container, or None = out of stock."""
+    out = []
+    for d in sorted(doses, key=lambda d: (d.due, route_len(d.room), d.id)):
+        s = stock.slot_for(d.medicine, d.dose)
+        if s is not None:
+            stock.used.add(s)
+        out.append((d, s))
+    return out
+
+
+def rel_path(path):
+    """Path relative to the repository when it lies inside it (deliveries.csv is committed)."""
+    path = os.path.abspath(path)
+    return os.path.relpath(path, ROOT) if path.startswith(ROOT + os.sep) else path
+
+
 def route_lengths():
     """Room -> route length pharmacy -> room (m), for the queue's tie-break."""
     import route_planner as rp
@@ -241,7 +260,9 @@ def write_row(path, row):
 # ------------------------------------------------------------------ one delivery
 def run_delivery(d, clock, a, out_dir):
     import scoring
-    stamp = clock.now().strftime('%H%M%S')
+    # <run start, wall clock>_<clock time>: the hospital clock starts at 08:00 in every demo, so the
+    # clock time alone made a second demo overwrite the first one's files (demo attempts 1 and 2)
+    stamp = '%s_%s' % (a.run_id, clock.now().strftime('%H%M%S'))
     rj = os.path.join(out_dir, 'delivery_%s_R%d_%s.json' % (stamp, d.room, d.slot))
     label = '%s, Room %d, %s %s (slot %s), due %s' % (d.patient, d.room, d.medicine, d.dose, d.slot,
                                                        d.due.strftime('%H:%M'))
@@ -270,7 +291,7 @@ def run_delivery(d, clock, a, out_dir):
     row = scoring.score_delivery(res, mission_exit_ok=(code == 0))
     row.update(clock=clock.name, due=d.due.isoformat(), started=started.isoformat(), finished=finished.isoformat(),
                lateness_min=lateness_min(started, d.due), patient=d.patient, room=d.room, medicine=d.medicine,
-               dose=d.dose, slot=d.slot, container='med_' + d.slot, wall_time_s=round(wall, 1), result_json=rj)
+               dose=d.dose, slot=d.slot, container='med_' + d.slot, wall_time_s=round(wall, 1), result_json=rel_path(rj))
     log('END %s: %s%s; placement %s mm, table raised %s, right container %s, others in place %s' % (
         label, 'SUCCESS' if row['success'] else 'FAILED', '' if row['success'] else ' (%s: %s)' % (
             row.get('failed_step'), row.get('error')),
@@ -302,7 +323,8 @@ def main():
     p.add_argument('--doses', default=DOSES)
     p.add_argument('--demo', action='store_true', help='4 demo doses on the hospital clock, then exit')
     p.add_argument('--demo-start', default='08:00', help='hospital clock at the start of the demo (HH:MM)')
-    p.add_argument('--once', action='store_true', help='real time: run the doses due now, then exit')
+    p.add_argument('--once', action='store_true', help='real time: run the doses due right now (not more than '
+                   '1 min ago; earlier doses of today are not caught up), then exit')
     p.add_argument('--list', action='store_true')
     p.add_argument('--now', type=int, default=None, metavar='ROOM',
                    help='test: one dose for this room (demo patient / medicine) due now, real time, then exit')
@@ -313,6 +335,9 @@ def main():
     p.add_argument('--no-setup', action='store_true', help='do not set up the pharmacy')
     p.add_argument('--stop-file', default=None, help='if this file exists, start no further delivery')
     a = p.parse_args()
+    a.run_id = dt.datetime.now().strftime('%Y%m%d_%H%M%S')      # in the result file names
+    if a.now is not None and a.now not in [e[1] for e in DEMO]:
+        p.error('--now %d: no such room (rooms: %s)' % (a.now, ', '.join(str(e[1]) for e in sorted(DEMO, key=lambda e: e[1]))))
 
     import pharmacy as ph
     inv = ph.load_inventory()
@@ -323,8 +348,7 @@ def main():
         clock = RealClock(tz_name)
         today = clock.now().date()
         doses = doses_for_day(entries, today, clock.tz)
-        for d in sorted(doses, key=lambda d: (d.due, lengths[d.room], d.id)):
-            s = stock.slot_for(d.medicine, d.dose)
+        for d, s in plan_slots(doses, stock, lambda r: lengths[r]):
             print('%s  %-10s Room %d  %-12s %-7s slot %s  (route %.2f m)' % (
                 d.due.strftime('%H:%M'), d.patient, d.room, d.medicine, d.dose, s or 'OUT OF STOCK', lengths[d.room]))
         return
@@ -359,8 +383,14 @@ def main():
     else:
         clock = RealClock(tz_name)
         start = clock.now()
-        doses = [d for d in doses_for_day(entries, start.date(), clock.tz) if d.due >= start - dt.timedelta(minutes=1)]
+        day = start.date()
+        today = doses_for_day(entries, day, clock.tz)
+        doses = [d for d in today if d.due >= start - dt.timedelta(minutes=1)]
         log('real time (%s): %d doses left today' % (tz_name, len(doses)), clock)
+        past = [d for d in today if d not in doses]
+        if past:
+            log('not run (due more than 1 min before the start): %s' % ', '.join(
+                '%s room %d %s' % (d.medicine, d.room, d.due.strftime('%H:%M')) for d in past), clock)
     done_keys = set()
     while True:
         now = clock.now()
@@ -402,10 +432,12 @@ def main():
         if not pending:
             if a.demo or a.once:
                 break
-            # real time: tomorrow's doses
-            tomorrow = clock.now().date() + dt.timedelta(days=1)
-            doses = [d for d in doses_for_day(entries, tomorrow, clock.tz) if d.key() not in done_keys]
-            log('all doses of today handled; next day: %d doses' % len(doses), clock)
+            # real time: the doses of the next day (the day after the one just handled, also when
+            # its last delivery ended after midnight - those doses are then run late, not skipped)
+            day += dt.timedelta(days=1)
+            doses = [d for d in doses_for_day(entries, day, clock.tz) if d.key() not in done_keys]
+            log('all doses of %s handled; %s: %d doses' % ((day - dt.timedelta(days=1)).isoformat(), day.isoformat(),
+                                                           len(doses)), clock)
             continue
         if a.once and all(d.due > now for d in pending):
             break

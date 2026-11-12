@@ -95,8 +95,7 @@ class Scheduler(unittest.TestCase):
         dues = sorted(d.due for d in ds)
         self.assertEqual(dues[0], dues[1], 'two doses due at the same time')
         self.assertLessEqual((dues[-1] - dues[0]).total_seconds(), 10 * 60, 'a few hospital minutes apart')
-        stock = hs.Stock(hs.load_inventory_for_tests() if hasattr(hs, 'load_inventory_for_tests') else
-                         __import__('pharmacy').load_inventory())
+        stock = hs.Stock(__import__('pharmacy').load_inventory())
         for d in ds:
             self.assertIsNotNone(stock.slot_for(d.medicine, d.dose), 'demo medicine %s in stock' % d.medicine)
 
@@ -114,6 +113,10 @@ class Scheduler(unittest.TestCase):
         self.assertIsNone(st.slot_for('Metformin', '500 mg'), 'quantity 0 = empty slot')
         self.assertIsNone(st.slot_for('Aspirin', '100 mg'), 'not in the inventory')
         self.assertEqual(st.left('Ibuprofen', '400 mg'), 1)
+        # --list plans like a real run: a container serves one dose (3 Paracetamol doses, 2 containers)
+        ds = [hs.Dose(i + 1, 'P', 1, 'Paracetamol', '500 mg', self.t0 + dt.timedelta(hours=i)) for i in range(3)]
+        plan = hs.plan_slots(ds, hs.Stock(copy.deepcopy(INV)), lambda r: self.lengths[r])
+        self.assertEqual([s for _, s in plan], ['S1', 'S6', None], 'second container, then out of stock')
 
     def test_hospital_clock(self):
         sim = {'t': 100.0}
@@ -148,6 +151,22 @@ class Scheduler(unittest.TestCase):
         self.assertEqual([r['patient'] for r in rows], ['old', 'new'])
         self.assertEqual(rows[1]['room'], '3')
         self.assertEqual(rows[0]['room'], '')
+        # the single-room scheduler shares this file: it must keep the hospital columns and values
+        import scheduler as single
+        single.log = lambda msg: None
+        single.write_log_row(path, {'due': 'z', 'patient': 'single', 'bed': 1, 'success': True})
+        with open(path, newline='') as fh:
+            rd = csv.DictReader(fh)
+            rows = list(rd)
+        self.assertEqual([r['patient'] for r in rows], ['old', 'new', 'single'])
+        self.assertEqual(rows[1]['room'], '3', 'hospital column kept by the single-room scheduler')
+        self.assertTrue(set(hs.LOG_FIELDS) <= set(rd.fieldnames) and 'bed' in rd.fieldnames)
+        self.assertEqual(rows[2]['bed'], '1')
+        hs.write_row(path, {'due': 'w', 'patient': 'hospital again', 'room': 2, 'slot': 'S2'})
+        with open(path, newline='') as fh:
+            rows = list(csv.DictReader(fh))
+        self.assertEqual([(r['patient'], r['room'], r['bed']) for r in rows][2:],
+                         [('single', '', '1'), ('hospital again', '2', '')])
 
 
 def _res(room=3, slot='S3', placed_err=0.0005, tilt_q=(0, 0, 0, 1), raised=True, others_move=0.0, wrong=False):
