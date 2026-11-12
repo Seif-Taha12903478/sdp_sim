@@ -25,7 +25,7 @@ Computer Science and Engineering, Fall 2026. **Supervisor:** Dr. Arfan Ghani.
 **Team:** Seif Elwalid Elsenousy Taha, Mohammed Yousef Ahmed Hajeeh Alblooshi, Salem Alnuaimi,
 Yousef Abdulla Yousef Abdulla Bin Salman.
 
-**Final report:** [docs/TrackMed_SDP_Report.pdf](docs/TrackMed_SDP_Report.pdf) (164 pages: requirements, design,
+**Final report:** [docs/TrackMed_SDP_Report.pdf](docs/TrackMed_SDP_Report.pdf) (165 pages: requirements, design,
 implementation, testing and results of the whole project).
 
 ## Demo
