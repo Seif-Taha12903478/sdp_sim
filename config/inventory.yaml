@@ -1,4 +1,4 @@
-# Pharmacy inventory (hospital system, branch hospital-system).
+# Pharmacy inventory of the hospital system.
 #
 # The pick counter has 6 slots, 0.10 m apart (positions: tools/system_layout.py SLOT_X).
 # One physical container per slot: quantity 1 = a container stands in the slot,

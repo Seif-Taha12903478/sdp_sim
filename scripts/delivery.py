@@ -111,7 +111,7 @@ def arm_plan():
 
 
 # pharmacy line-up: translate() alone stops within 2 mm and the grasp keeps that offset
-# (Room 3 test d 2026-11-10: robot 2.4 mm short of S3 -> container placed 2.7 mm off the target)
+# (Room 3 test d 2026-11-10: robot 1.9 mm short of S3 -> container placed 2.7 mm off the target)
 FINE_TOL = 0.0005       # m
 
 

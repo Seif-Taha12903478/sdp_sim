@@ -16,10 +16,12 @@ Groups
   old     the TESTED line_follower.LineFollower.on_image, unchanged, on the single-room
           route: must stop where Gazebo did (patient stop (1.6992, 1.4723)); this also
           calibrates the camera model (the old offline test of 2026-11-04 is not in the repo)
-  legs    route_follower.RouteLogic on every delivery leg (home->pharmacy, pharmacy slot ->
-          room, room -> home) from the start poses the mission drives to, with offsets
-  fast    the same legs at --fast-speed 0.12 on long straights
-  faults  a missing junction marker, a wrong-coloured marker: the robot must stop with an error
+  legs    route_follower.RouteLogic on 17 delivery legs (home->pharmacy; pharmacy slot -> room:
+          S1-S6 for Room 1, S3 and S6 for Rooms 2-4; room -> home), each from 3 starts (the pose
+          the mission drives to, and +-12 mm / +-1 deg off it) = 51 runs
+  fast    the same 51 runs at --fast-speed 0.12 on long straights
+  faults  a missing junction marker, a wrong-coloured junction marker, a missing room stop marker:
+          the robot must stop with an error
 """
 import argparse
 import math

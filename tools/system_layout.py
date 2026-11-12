@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Layout of the hospital system (branch hospital-system): ONE source for the numbers.
+"""Layout of the hospital system: ONE source for the numbers.
 
     python3 ~/sdp_sim/tools/system_layout.py      # checks + route table + results/system/layout.png
     python3 ~/sdp_sim/tools/system_layout.py OUT.png   # same, drawing to OUT.png
@@ -425,7 +425,7 @@ def draw(path):
     axi = fig.add_axes([0.745, 0.215, 0.245, 0.22])
     axi.axis('off')
     inv = load_inventory()
-    cells = [[s, '%s %s' % (inv[s]['medicine'], inv[s]['dose']), inv[s]['cap'], str(inv[s]['quantity']), '%.3f' % SLOT_X[s]]
+    cells = [[s, '%s %s' % (inv[s]['medicine'], inv[s]['dose']), inv[s]['cap'], str(inv[s]['quantity']), '%.4f' % SLOT_X[s]]
              for s in SLOT_X if s in inv]
     if cells:
         ti = axi.table(cellText=cells, colLabels=['slot', 'medicine + dose', 'cap', 'qty', 'x (m)'], loc='upper center',
@@ -476,7 +476,7 @@ def draw(path):
     ax.tick_params(labelsize=8)
     ax.set_xlabel('x (m)')
     ax.set_ylabel('y (m)')
-    ax.set_title('Hospital system - top view (branch hospital-system): corridor, pharmacy, Rooms 1-4, line network', fontsize=12)
+    ax.set_title('Hospital system - top view: corridor, pharmacy, Rooms 1-4, line network', fontsize=12)
     h = [Line2D([], [], color=LINEC, lw=2.6, label='blue line (3 cm tape)'),
          Patch(fc=REDC, label='red stop marker 15 cm (rooms, pharmacy, home)'),
          Patch(fc=GRNC, label='green junction marker 15 cm (J1, J2)'),
@@ -538,7 +538,7 @@ def load_inventory_caps(path=INVENTORY):
 
 if __name__ == '__main__':
     check()
-    print('\nslots: %s' % ', '.join('%s %.3f' % kv for kv in SLOT_X.items()))
+    print('\nslots: %s' % ', '.join('%s %.4f' % kv for kv in SLOT_X.items()))
     print('pharmacy stop %.4f, home stop %.4f, junction -> room stop %.4f, -> marker %.4f'
           % (P_STOP, HOME_STOP, BRANCH_STOP, BRANCH_MARK))
     tot = 0.0

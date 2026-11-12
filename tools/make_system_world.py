@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generates the hospital-system world (branch hospital-system) - edit THIS file, not the outputs.
+"""Generates the hospital-system world - edit THIS file, not the outputs.
 
     python3 ~/sdp_sim/tools/make_system_world.py      then  bash ~/sdp_sim/install.sh
 
@@ -493,7 +493,7 @@ def main():
         i = L.room_info(r)
         print('room %d: stop (%.3f, %.3f, %+.0f deg), place target (%.3f, %.3f), platform centre (%.3f, %.3f)'
               % ((r,) + tuple(i['stop']) + tuple(i['place_target']) + tuple(i['platform_center'])))
-    print('pharmacy stop x %.4f; slots %s' % (L.P_STOP, ', '.join('%s %.3f' % kv for kv in L.SLOT_X.items())))
+    print('pharmacy stop x %.4f; slots %s' % (L.P_STOP, ', '.join('%s %.4f' % kv for kv in L.SLOT_X.items())))
     return n_vis
 
 

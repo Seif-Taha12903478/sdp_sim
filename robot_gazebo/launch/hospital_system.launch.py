@@ -1,4 +1,4 @@
-"""Hospital system world (branch hospital-system): corridor, pharmacy, 4 patient rooms.
+"""Hospital system world: corridor, pharmacy, 4 patient rooms.
 
     ros2 launch robot_gazebo hospital_system.launch.py gui:=false            # headless (tests)
     ros2 launch robot_gazebo hospital_system.launch.py gui:=false video:=true  # overview cam 2 Hz
