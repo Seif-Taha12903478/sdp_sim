@@ -130,7 +130,7 @@ by check_cache, 0 recoveries needed in attempt 2). Earlier, on main: report bund
 - Status (2026-11-11 19:50): hospital-system DONE; bundle ~/Desktop/sdp_system_bundle.zip.
 
 ## Current state (2026-11-05 evening)
-GitHub backup: private repo https://github.com/Seif-Taha12903478/sdp_sim (remote
+GitHub backup: repo https://github.com/Seif-Taha12903478/trackmed-medication-delivery-robot (renamed from sdp_sim on 2026-11-12; the local folder stays ~/sdp_sim) (remote
 `origin`). gh 2.103.0 is installed in ~/.local/bin (no sudo), logged in,
 `gh auth setup-git` done: `git push` works. Push after each commit.
 

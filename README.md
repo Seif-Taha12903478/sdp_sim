@@ -1,6 +1,6 @@
 # TrackMed - An Autonomous Mobile Manipulator for Scheduled Medication Delivery in Hospitals
 
-[![offline tests](https://github.com/Seif-Taha12903478/sdp_sim/actions/workflows/offline-tests.yml/badge.svg)](https://github.com/Seif-Taha12903478/sdp_sim/actions/workflows/offline-tests.yml)
+[![offline tests](https://github.com/Seif-Taha12903478/trackmed-medication-delivery-robot/actions/workflows/offline-tests.yml/badge.svg)](https://github.com/Seif-Taha12903478/trackmed-medication-delivery-robot/actions/workflows/offline-tests.yml)
 
 TrackMed is a mobile manipulator: a Hiwonder JetArm Pro 5-DOF arm on a mecanum chassis
 with a wrist camera. It delivers medication on a schedule, without a human in the loop.
@@ -194,7 +194,7 @@ Every test, how to reproduce it and its result files: [docs/TESTING.md](docs/TES
      are installed next to Hiwonder's under new names; no Hiwonder file is changed.
 4. **This repository** - it must be at `~/sdp_sim`:
    ```bash
-   git clone https://github.com/Seif-Taha12903478/sdp_sim.git ~/sdp_sim
+   git clone https://github.com/Seif-Taha12903478/trackmed-medication-delivery-robot.git ~/sdp_sim
    ```
 5. **Environment** (the Hiwonder xacro reads `CAMERA_TYPE`):
    ```bash
