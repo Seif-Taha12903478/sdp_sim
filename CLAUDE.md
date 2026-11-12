@@ -6,18 +6,49 @@ practical; the user reviews everything.
 
 ## Next session
 Repo prepared for the professors (2026-11-12, on main): README.md (entry point, project name
-TrackMed), docs/ (ARCHITECTURE, TESTING, USER_GUIDE, TROUBLESHOOTING), LICENSE (MIT; Hiwonder
-files NOT in the repo - their package.xml declare no licence), tools/run_offline_tests.sh (6
-groups, also run by .github/workflows/offline-tests.yml in ros:humble), media/system_demo_preview.gif,
-tag v1.0. Visibility / collaborators are the user's job - never change them.
+TrackMed), docs/ (ARCHITECTURE, TESTING, USER_GUIDE, TROUBLESHOOTING), LICENSE (plain MIT) +
+NOTICE (third-party text; Hiwonder files NOT in the repo - their package.xml declare no
+licence), tools/run_offline_tests.sh (6 groups, also run by .github/workflows/offline-tests.yml
+in ros:humble), media/system_demo_preview.gif, tags v1.0 and v1.1. Visibility / collaborators
+are the user's job - never change them. docs/TrackMed_SDP_Report.pdf is the user's file - never
+touch it.
+v1.1 (2026-11-12) = v1.0 + the fixes of the pre-submission review, NO Gazebo run after them
+(offline tests + stubs only):
+- run_offline_tests.sh worlds: also normalises this checkout's own path (failed after install.sh
+  had regenerated the worlds on a machine where the repo is not /home/ubuntu/sdp_sim); rescore
+  group also compares wall_time_valid.
+- scripts/scheduler.py write_log_row keeps the header already in results/deliveries.csv (it used
+  to rewrite the file with the single-room columns and DROP the 9 hospital columns).
+- hospital_scheduler.py: --list plans the slots like a real run (plan_slots: a container serves
+  one dose, else OUT OF STOCK); result files delivery_<run start>_<clock>_R<n>_S<k>.json (a new
+  demo no longer overwrites older ones); result_json relative to the repo; --now with an unknown
+  room = clear error; real time: doses already past are logged, day roll-over = next day.
+- run_demo.py: the video stays in the demo folder; --video FILE copies it (media/system_demo.mp4
+  is no longer overwritten by default).
+- rescore.py keeps a recorded wall_time_valid (the file-time check marked every run of a cloned
+  folder invalid). measure_rtf.py: relative launch_log.
+- jetarm_pick_place.py: home / grip / goto exit 1 when the move fails (was 0); wait_ready 300 s
+  wall (was 30); run / attach / detach marked LEGACY + warning (not deleted).
+- route_follower.py: returns when next_event() ended the route (was a TypeError; only for a plan
+  without a stop event). install.sh checks the plugins really used (joint-controller added).
+- config/doses.yaml: ONE dose per room (a delivered container stays on its raised table, stock
+  is not refilled: a second delivery to a room stops at "place"). Real-time scheduler mode still
+  NOT run in Gazebo.
+- results/deliveries.csv + rtf.csv: paths relative to the repo; rows 3-4 -> results/room_mission/;
+  rows 6-8 (demo attempt 1) result_json emptied (those files were overwritten by attempt 2).
+- Docs: slot offsets corrected (see below), 17 legs x 3 starts, what "placement error" includes,
+  limitations (one dose per room, no motion watchdog), docs/TESTING.md section 5 = known code
+  issues NOT fixed (scheduler -6 exit, delivery.py catches only RuntimeError, unused code,
+  evaluate.gazebo_pids kills by program name, fixed /tmp paths).
 Branch hospital-system (from main bedafd6) is DONE: demo attempt 2 (2026-11-11 13:13-18:54)
 4/4 SUCCESS (results/system/demo_20261111_131344/summary.txt, media/system_demo.mp4 113.8 s).
 MERGED into main by the user's request on 2026-11-11 (fast-forward, main = 2a08b1d; branch
 hospital-system kept). The single-room version still runs from main (`ros2 launch robot_gazebo
 hospital.launch.py`, unchanged files); its last pure state is commit bedafd6. Report bundle: ~/Desktop/sdp_system_bundle.zip (REPORT_NOTES.md inside).
-Open (not started): placement 0.5-1.7 mm (robot stops 0.8 mm short of the slot when coming from
-+x, containers sit ~0.9 mm -x of their slot after spawn); scheduler exits -6 at rclpy shutdown
-after finishing (harmless abort); root cause of the frozen joint-state cache unknown (recovered
+Open (not started): placement 0.5-1.7 mm (robot lines up within 0.5 mm of the slot, on the side
+it comes from; containers sit 1.1-1.3 mm -x of their slot after spawn); scheduler --demo exits -6
+at rclpy shutdown after finishing (harmless abort; probable cause: the SimTime spin thread is
+never shut down - "terminate called without an active exception"; --now 3 exited 0); root cause of the frozen joint-state cache unknown (recovered
 by check_cache, 0 recoveries needed in attempt 2). Earlier, on main: report bundle
 ~/Desktop/sdp_report_bundle.zip; open decision: a 5-run evaluation with the smart table (ask first).
 
@@ -34,7 +65,7 @@ by check_cache, 0 recoveries needed in attempt 2). Earlier, on main: report bund
   left) and turn-round circle are identical. Room 2.80 x 2.60 m inside (far wall 12 cm
   closer than in the single room). Junction -> room stop 1.622 m, -> marker 1.900 m.
 - Pharmacy: pick counter top 0.10 m, front edge y 0.17 (like the old station), 6 slots
-  S1..S6 x 0.022..0.522 (0.10 m apart) at y 0.20; cabinet visual. Turn round there =
+  S1..S6 x 0.0223..0.5223 (0.10 m apart) at y 0.20; cabinet visual. Turn round there =
   strafe right (south, away from the counter) 0.12, rotate, strafe right: the 0.27 m
   circle is 0.290 m from the counter edge at every slot (need > 0.285).
 - Generator tools/make_system_world.py (never edit outputs): hospital_system{,_video,
@@ -71,8 +102,10 @@ by check_cache, 0 recoveries needed in attempt 2). Earlier, on main: report bund
   recorder, scheduler --demo, shutdown, summary; STOP file).
 - Tests: tools/offline_route_sim.py (synthetic camera, rewritten - the 2026-11-04 one was
   not in the repo: the TESTED follower on the old route stops at (1.6993, 1.4752) in
-  38.8-39.0 s, Gazebo (1.6992, 1.4723) in 38.6-39.0 s; 51/51 delivery legs incl. +-12 mm /
-  +-1 deg start offsets, stops within 16 mm; 51/51 at 0.12 m/s; 3/3 fault cases stop),
+  38.8-39.0 s (one of the 4 frame phases: 1.4767), Gazebo (1.6992, 1.4723) in 38.6-39.0 s; 51/51
+  delivery-leg runs = 17 legs (Room 1 from S1-S6, Rooms 2-4 from S3 and S6, + returns + home ->
+  pharmacy) x 3 starts (nominal, +-12 mm / +-1 deg), stops within 16 mm; the same 51/51 at
+  0.12 m/s; 3/3 fault cases stop),
   tools/test_system_offline.py (19 unit tests), tools/system_photos.py (world loads, 4
   tables lowered, 6 containers in their slots, media/system_*.png), test_route_gazebo.py,
   test_pharmacy_pick.py, run_in_sim.py (test d: `-- python3 scripts/hospital_scheduler.py --now 3`).
@@ -96,10 +129,10 @@ by check_cache, 0 recoveries needed in attempt 2). Earlier, on main: report bund
   the raised platform z 0.830, the 5 other containers in their slots, parked (-0.002, 0, 0.03 deg).
   Row in results/deliveries.csv; logs results/system/delivery_room3_20261110_185826/.
 - Fixes 2026-11-11: (1) the Room 3 placement offset came from the pharmacy line-up: translate()
-  stops within 2 mm (robot 2.4 mm short of S3, container 3.2 mm off the gripper centre, kept by
+  stops within 2 mm (robot 1.9 mm short of S3, container 3.2 mm off the gripper centre, kept by
   the weld -> placed 2.7 mm behind the target; 0.6 deg = transient at contact, final 0.0).
   delivery.line_up(): goto + slow fine translate to 0.5 mm (falls back to the coarse pose on a
-  timeout). Cap-look run: robot 0.2 mm from every slot. (2) S3 cap amber -> purple (0.38, 0.08,
+  timeout). Cap-look run: robot 0.5 mm from every slot. (2) S3 cap amber -> purple (0.38, 0.08,
   0.38): rendered HSV (150, 186, 169); test_pharmacy_pick.py --caps-only 9/9, all 6 caps read
   right -> run_demo.py runs --cap-check by default (--no-cap-check). Delivery: arm home after the
   cap check. (3) STOP file: scheduler --stop-file, ends after the current delivery.
@@ -125,11 +158,14 @@ by check_cache, 0 recoveries needed in attempt 2). Earlier, on main: report bund
   238.8 s, 93 min; Room 2 (S2, 08:04, late 7.0) 1.7 / 1.7 mm, 181.4 s, 74 min. All caps read
   right, every attach/detach confirmed 1st try, tables raised (lift 18.4-18.7 s, container z
   0.830, tilt 0.0), other containers moved <= 0.14 mm, parked within 2 mm; no cache recovery
-  needed. Placement error = robot-at-slot x (+0.8 mm from +x, -0.2 from -x) - container x in
-  the slot (-0.8..-1.0 mm). Video media/system_demo.mp4 (1707 frames, 113.8 s, 800x600).
+  needed. Placement error = robot-at-slot x (+0.5 mm from +x, -0.5 from -x: the 0.5 mm fine
+  tolerance) - container x in the slot (-1.1..-1.3 mm); slot x = 0.0223 + 0.1 k (earlier notes
+  used the rounded 0.022). The error is relative to where the robot STOPPED at the room (target
+  = stop pose + 0.20 m left); the stops were 5.1-6.6 mm from the map stop, the containers
+  3.8-6.2 mm from the map's place target. Video media/system_demo.mp4 (1707 frames, 113.8 s, 800x600).
 - Status (2026-11-11 19:50): hospital-system DONE; bundle ~/Desktop/sdp_system_bundle.zip.
 
-## Current state (2026-11-05 evening)
+## State on 2026-11-05 evening (single room; history - the newest state is "Next session")
 GitHub backup: repo https://github.com/Seif-Taha12903478/trackmed-medication-delivery-robot (renamed from sdp_sim on 2026-11-12; the local folder stays ~/sdp_sim) (remote
 `origin`). gh 2.103.0 is installed in ~/.local/bin (no sudo), logged in,
 `gh auth setup-git` done: `git push` works. Push after each commit.
@@ -167,13 +203,14 @@ weld is released and the arm is home, it lifts the medicine from 0.10 m to 0.80 
 - The ogre2 renderer shows a blank view in this VM. Always use `--render-engine ogre`
   (already in hospital.launch.py and in the patched worlds.launch.py). Ogre 1 sometimes
   segfaults when models are added; if Gazebo crashes, relaunch.
-- `sudo` is passwordless (/etc/sudoers.d/90-ubuntu-nopasswd). Ask the user before any sudo.
+- Ask the user before any sudo.
 - New terminals source ROS via ~/.bashrc. In non-interactive shells run
   `source /opt/ros/humble/setup.bash && source ~/ros2_ws/install/setup.bash` first.
   `CAMERA_TYPE=GEMINI` must be set (it comes from ~/ros2_ws/.typerc via .bashrc); xacro needs it.
 
 ## Code layout
-- ~/sdp_sim is a git repository (branches main and hospital-room, see "Current state").
+- ~/sdp_sim is a git repository (branches main, hospital-room and hospital-system - both merged
+  into main).
   Commit after every milestone that works.
 - Hiwonder package: ~/ros2_ws/src/simulations/{jetarm_6dof_description,robot_gazebo,robot_moveit_config}.
   Do not edit Hiwonder files without a backup next to them. Our additions:
