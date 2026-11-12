@@ -1,0 +1,30 @@
+TrackMed - An Autonomous Mobile Manipulator for Scheduled Medication Delivery in Hospitals
+Copyright (c) 2026 Seif Elwalid Elsenousy Taha, Mohammed Yousef Ahmed Hajeeh Alblooshi,
+Salem Alnuaimi, Yousef Abdulla Yousef Abdulla Bin Salman (TrackMed team, American University
+of Ras Al Khaimah)
+
+The team's own code, worlds, media and documentation are licensed under the MIT licence,
+see the file LICENSE.
+
+Third-party material (NOT covered by the MIT licence)
+-----------------------------------------------------
+
+The MIT licence does not apply to Hiwonder's material, which keeps its own licence / terms
+of use:
+
+  * The Hiwonder JetArm ROS 2 packages (jetarm_6dof_description, robot_gazebo,
+    robot_moveit_config: robot URDF/xacro, meshes, controller configuration, launch
+    files). They are NOT included in this repository; get them from Hiwonder (see
+    README.md, "Installation"). Their package.xml files declare no licence
+    ("TODO: License declaration"; robot_moveit_config says BSD).
+  * Files in this repository that are derived from Hiwonder's files keep Hiwonder's
+    terms for the Hiwonder-derived parts:
+      - robot_gazebo/urdf/jetarm_mecanum.gazebo.xacro (instantiates Hiwonder's arm,
+        gripper and camera macros; the ros2_control / joint-state plugin blocks follow
+        Hiwonder's robot.gazebo.xacro)
+      - robot_gazebo/urdf/jetarm_mecanum_system.gazebo.xacro (generated; includes the file above)
+      - robot_gazebo/launch/hospital.launch.py, robot_gazebo/launch/hospital_system.launch.py
+        (structure follows Hiwonder's worlds.launch.py / spawn_model.launch.py and they
+        include Hiwonder's ros_ign_bridge.launch.py)
+    The arm kinematics in scripts/jetarm_pick_place.py use the link dimensions of
+    Hiwonder's URDF.
