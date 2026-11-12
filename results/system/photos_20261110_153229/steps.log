@@ -1,0 +1,53 @@
+$ /usr/bin/python3 /home/ubuntu/sdp_sim/scripts/jetarm_pick_place.py home
+       ... still moving, 0.359 rad to go
+reached
+
+$ /usr/bin/python3 /home/ubuntu/sdp_sim/scripts/pharmacy.py setup
+[pharmacy] med_S1 spawned in slot S1 (0.022, 0.200): welded at first appearance - releasing
+[pharmacy] detach med_S1 (spawn) confirmed after 1 attempt(s)
+[pharmacy] med_S2 spawned in slot S2 (0.122, 0.200): welded at first appearance - releasing
+[pharmacy] detach med_S2 (spawn) confirmed after 1 attempt(s)
+[pharmacy] med_S3 spawned in slot S3 (0.222, 0.200): welded at first appearance - releasing
+[pharmacy] detach med_S3 (spawn) confirmed after 1 attempt(s)
+[pharmacy] med_S4 spawned in slot S4 (0.322, 0.200): welded at first appearance - releasing
+[pharmacy] detach med_S4 (spawn) confirmed after 1 attempt(s)
+[pharmacy] med_S5 spawned in slot S5 (0.422, 0.200): welded at first appearance - releasing
+[pharmacy] detach med_S5 (spawn) confirmed after 1 attempt(s)
+[pharmacy] med_S6 spawned in slot S6 (0.522, 0.200): welded at first appearance - releasing
+[pharmacy] detach med_S6 (spawn) confirmed after 1 attempt(s)
+[pharmacy] S1 Paracetamol  500 mg  white  qty 1  med_S1: (0.0213, 0.2000, 0.1272) tilt 0.2 deg, 1.0 mm from the slot - IN SLOT
+[pharmacy] S2 Amoxicillin  250 mg  yellow qty 1  med_S2: (0.1214, 0.2000, 0.1268) tilt 0.2 deg, 0.9 mm from the slot - IN SLOT
+[pharmacy] S3 Ibuprofen    400 mg  amber  qty 1  med_S3: (0.2202, 0.2000, 0.1298) tilt 1.9 deg, 2.1 mm from the slot - IN SLOT
+[pharmacy] S4 Metformin    500 mg  grey   qty 1  med_S4: (0.3214, 0.2001, 0.1297) tilt 0.2 deg, 0.9 mm from the slot - IN SLOT
+[pharmacy] S5 Omeprazole   20 mg   black  qty 1  med_S5: (0.4216, 0.2001, 0.1295) tilt 0.2 deg, 0.8 mm from the slot - IN SLOT
+[pharmacy] S6 Paracetamol  500 mg  white  qty 1  med_S6: (0.5217, 0.2001, 0.1291) tilt 0.2 deg, 0.6 mm from the slot - IN SLOT
+[pharmacy] setup done
+[0m[INFO] [1794310429.069877830] [pharmacy_setup]: DetachableJoint /med_S1: attached[0m
+[0m[INFO] [1794310429.395239091] [pharmacy_setup]: DetachableJoint /med_S1: detached[0m
+[0m[INFO] [1794310431.029235506] [pharmacy_setup]: DetachableJoint /med_S2: attached[0m
+[0m[INFO] [1794310431.338205566] [pharmacy_setup]: DetachableJoint /med_S2: detached[0m
+[0m[INFO] [1794310432.655334238] [pharmacy_setup]: DetachableJoint /med_S3: attached[0m
+[0m[INFO] [1794310432.979440755] [pharmacy_setup]: DetachableJoint /med_S3: detached[0m
+[0m[INFO] [1794310434.419275325] [pharmacy_setup]: DetachableJoint /med_S4: attached[0m
+[0m[INFO] [1794310434.687818069] [pharmacy_setup]: DetachableJoint /med_S4: detached[0m
+[0m[INFO] [1794310436.237297158] [pharmacy_setup]: DetachableJoint /med_S5: attached[0m
+[0m[INFO] [1794310436.408096836] [pharmacy_setup]: DetachableJoint /med_S5: detached[0m
+[0m[INFO] [1794310438.247220229] [pharmacy_setup]: DetachableJoint /med_S6: attached[0m
+[0m[INFO] [1794310439.127577566] [pharmacy_setup]: DetachableJoint /med_S6: detached[0m
+
+$ /usr/bin/python3 /home/ubuntu/sdp_sim/tools/sim_screenshot.py /home/ubuntu/sdp_sim/media/system_top.png --topic /overview_cam/image --timeout 900 --wrist
+saved /home/ubuntu/sdp_sim/media/system_top.png (sim t=6.00)
+saved /home/ubuntu/sdp_sim/media/system_top_wrist.png (sim t=5.50)
+
+$ /usr/bin/python3 /home/ubuntu/sdp_sim/tools/sim_screenshot.py /home/ubuntu/sdp_sim/media/system_building.png --topic /room_cam/a/image --timeout 900
+saved /home/ubuntu/sdp_sim/media/system_building.png (sim t=8.00)
+
+$ /usr/bin/python3 /home/ubuntu/sdp_sim/tools/sim_screenshot.py /home/ubuntu/sdp_sim/media/system_corridor.png --topic /room_cam/b/image --timeout 900
+saved /home/ubuntu/sdp_sim/media/system_corridor.png (sim t=12.00)
+
+$ /usr/bin/python3 /home/ubuntu/sdp_sim/tools/sim_screenshot.py /home/ubuntu/sdp_sim/media/system_pharmacy.png --topic /room_cam/c/image --timeout 900
+saved /home/ubuntu/sdp_sim/media/system_pharmacy.png (sim t=16.00)
+
+$ /usr/bin/python3 /home/ubuntu/sdp_sim/tools/sim_screenshot.py /home/ubuntu/sdp_sim/media/system_room1.png --topic /room_cam/d/image --timeout 900
+saved /home/ubuntu/sdp_sim/media/system_room1.png (sim t=20.00)
+

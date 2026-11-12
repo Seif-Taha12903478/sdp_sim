@@ -1,0 +1,16 @@
+[evaluate 15:32:59] controllers active after 30 s
+[evaluate 15:33:02] smart tables: {1: 'lowered', 2: 'lowered', 3: 'lowered', 4: 'lowered'}
+[evaluate 15:33:43] arm home: exit 0
+[evaluate 15:34:00] pharmacy setup: exit 0
+[pharmacy] S1 Paracetamol  500 mg  white  qty 1  med_S1: (0.0213, 0.2000, 0.1272) tilt 0.2 deg, 1.0 mm from the slot - IN SLOT
+[pharmacy] S2 Amoxicillin  250 mg  yellow qty 1  med_S2: (0.1214, 0.2000, 0.1268) tilt 0.2 deg, 0.9 mm from the slot - IN SLOT
+[pharmacy] S3 Ibuprofen    400 mg  amber  qty 1  med_S3: (0.2202, 0.2000, 0.1298) tilt 1.9 deg, 2.1 mm from the slot - IN SLOT
+[pharmacy] S4 Metformin    500 mg  grey   qty 1  med_S4: (0.3214, 0.2001, 0.1297) tilt 0.2 deg, 0.9 mm from the slot - IN SLOT
+[pharmacy] S5 Omeprazole   20 mg   black  qty 1  med_S5: (0.4216, 0.2001, 0.1295) tilt 0.2 deg, 0.8 mm from the slot - IN SLOT
+[pharmacy] S6 Paracetamol  500 mg  white  qty 1  med_S6: (0.5217, 0.2001, 0.1291) tilt 0.2 deg, 0.6 mm from the slot - IN SLOT
+[evaluate 15:34:12] system_top.png: saved
+[evaluate 15:34:41] system_building.png: saved
+[evaluate 15:35:32] system_corridor.png: saved
+[evaluate 15:36:26] system_pharmacy.png: saved
+[evaluate 15:37:19] system_room1.png: saved
+[evaluate 15:37:21] done in 291 s; results in /home/ubuntu/sdp_sim/results/system/photos_20261110_153229

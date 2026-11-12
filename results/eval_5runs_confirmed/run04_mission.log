@@ -1,0 +1,73 @@
+[mission] evaluation run 4
+[mission] step 1/10 spawn container + release weld  (sim t 1.0, base 0.000 0.000 0.0 deg)
+[0m[INFO] [1793859172.808037306] [jetarm_pick_place]: DetachableJoint state: attached[0m
+[0m[INFO] [1793859173.008553083] [jetarm_pick_place]: DetachableJoint state: detached[0m
+[mission] detach (spawn) confirmed by /medicine/attached after 1 attempt(s)
+[mission] container at (4.725529782323847e-05, 0.19999998962964008, 0.12709984024863244)
+[mission] step 2/10 arm home  (sim t 1.2, base 0.000 0.000 0.0 deg)
+       ... still moving, 0.601 rad to go
+       ... still moving, 0.161 rad to go
+[mission] step 3/10 pick  (sim t 4.8, base 0.000 0.000 0.0 deg)
+       ... still moving, 1.035 rad to go
+       ... still moving, 0.495 rad to go
+       ... still moving, 0.917 rad to go
+       ... still moving, 0.046 rad to go
+       ... still moving, 0.558 rad to go
+       ... still moving, 0.370 rad to go
+       ... still moving, 0.100 rad to go
+       ... still moving, 0.336 rad to go
+       ... still moving, 0.081 rad to go
+[mission] gripper at 0.780 rad
+[0m[INFO] [1793859563.164873798] [jetarm_pick_place]: DetachableJoint state: attached[0m
+[mission] attach (pick) confirmed by /medicine/attached after 1 attempt(s)
+       ... still moving, 0.514 rad to go
+       ... still moving, 0.416 rad to go
+       ... still moving, 0.348 rad to go
+       ... still moving, 0.212 rad to go
+       ... still moving, 0.058 rad to go
+[mission] lifted: container z 0.227
+[mission] step 4/10 arm home (carrying)  (sim t 24.8, base 0.000 0.000 0.0 deg)
+       ... still moving, 1.508 rad to go
+       ... still moving, 1.397 rad to go
+       ... still moving, 1.264 rad to go
+       ... still moving, 1.021 rad to go
+       ... still moving, 0.844 rad to go
+       ... still moving, 0.489 rad to go
+       ... still moving, 0.040 rad to go
+[mission] step 5/10 follow line to the patient  (sim t 28.4, base 0.000 0.000 0.0 deg)
+[mission] running line_follower.py
+[mission]   line_follower: [INFO] [1793864129.539322807] [line_follower]: sim t=38.5  angle=-0.000 red=0.15 
+[mission]   line_follower: [INFO] [1793864132.436994800] [line_follower]: Red stop marker reached.
+[mission]   line_follower: [INFO] [1793864132.443016031] [line_follower]: sim t=38.7  angle=-0.000 red=0.21 arrived
+[mission] step 6/10 place on the bedside table  (sim t 67.6, base 1.699 1.472 90.0 deg)
+       ... still moving, 0.896 rad to go
+       ... still moving, 0.049 rad to go
+       ... still moving, 0.513 rad to go
+       ... still moving, 0.357 rad to go
+       ... still moving, 0.205 rad to go
+       ... still moving, 0.033 rad to go
+[0m[INFO] [1793864317.994391450] [jetarm_pick_place]: DetachableJoint state: detached[0m
+[mission] detach (place) confirmed by /medicine/attached after 1 attempt(s)
+       ... still moving, 0.448 rad to go
+       ... still moving, 0.185 rad to go
+       ... still moving, 0.482 rad to go
+       ... still moving, 0.206 rad to go
+[mission] after retreat: container (1.4990, 1.4720, 0.1300) tilt 0.2 deg, 0.3 mm from target
+[mission]   container after step 6: (1.4990, 1.4720, 0.1300) tilt 0.2 deg
+[mission] step 7/10 arm home  (sim t 84.0, base 1.699 1.472 90.0 deg)
+       ... still moving, 1.093 rad to go
+       ... still moving, 0.154 rad to go
+[mission]   container after step 7: (1.4991, 1.4721, 0.1300) tilt 0.0 deg
+[mission] step 8/10 turn round  (sim t 87.6, base 1.699 1.472 90.0 deg)
+[mission] before moving away: container (1.4991, 1.4721, 0.1300) tilt 0.0 deg, 0.2 mm from target
+[mission]   container after step 8: (1.4991, 1.4721, 0.1300) tilt 0.0 deg
+[mission] step 9/10 follow line home  (sim t 104.0, base 1.699 1.473 -90.3 deg)
+[mission] running line_follower.py
+[mission]   line_follower: [INFO] [1793865278.590023066] [line_follower]: sim t=38.0  angle=-0.000 red=0.21 
+[mission]   line_follower: [INFO] [1793865281.699339562] [line_follower]: Red stop marker reached.
+[mission]   line_follower: [INFO] [1793865281.708885695] [line_follower]: sim t=38.2  angle=-0.000 red=0.29 arrived
+[mission]   container after step 9: (1.4991, 1.4721, 0.1300) tilt 0.0 deg
+[mission] step 10/10 park at the start  (sim t 142.6, base 0.044 -0.001 -180.0 deg)
+[mission]   container after step 10: (1.4991, 1.4721, 0.1300) tilt 0.0 deg
+[mission] done: base at 0.0019 -0.0000 yaw -0.27 deg; cycle time 160.2 sim s
+[mission] container at (1.4991, 1.4721, 0.1300); target (1.4992, 1.4722); placement error 0.2 mm; tilt 0.0 deg; standing on the table: yes

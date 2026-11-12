@@ -1,0 +1,21 @@
+[evaluate 15:58:20] controllers active after 21 s
+[evaluate 15:59:04] PASS arm home 
+[evaluate 15:59:18] PASS pharmacy setup 
+[evaluate 16:00:05] PASS 1_home_to_pharmacy arrived arrived 
+[evaluate 16:00:05] PASS 1_home_to_pharmacy stop position stop (0.2794, 0.0006, 0.08 deg), expected (0.2723, 0.0000): 7.1 mm; 3.9 sim s; max line offset 0.6 mm
+[evaluate 16:00:05]    stop pharmacy: red stop (strips), marker 0.272 m ahead, robot [0.2778, 0.0006, 0.08]
+[evaluate 16:00:06] 2_pharmacy_to_R3: turn round first
+[evaluate 16:17:45] PASS 2_pharmacy_to_R3 arrived arrived 
+[evaluate 16:17:45] PASS 2_pharmacy_to_R3 stop position stop (-3.6508, 1.6379, 90.00 deg), expected (-3.6500, 1.6223): 15.6 mm; 76.9 sim s; max line offset 1.9 mm
+[evaluate 16:17:45]    pass home: seen, blind pass, marker 0.343 m ahead, robot [0.2628, 0.0006, -179.98]
+[evaluate 16:17:45]    straight J1: seen, blind pass, marker 0.373 m ahead, robot [-0.3765, -0.0006, -179.95]
+[evaluate 16:17:45]    right J2: seen, turn right, marker 0.373 m ahead, robot [-3.2765, -0.0008, 180.0], after turn [-3.6481, -0.0, 90.27]
+[evaluate 16:17:45]    stop R3: red stop (strips), marker 0.264 m ahead, robot [-3.6508, 1.6363, 90.0]
+[evaluate 16:17:45] 3_R3_to_home: turn round first
+[evaluate 16:35:15] PASS 3_R3_to_home arrived arrived 
+[evaluate 16:35:15] PASS 3_R3_to_home stop position stop (-0.3507, 0.0007, 0.03 deg), expected (-0.3577, 0.0000): 7.1 mm; 69.1 sim s; max line offset 1.9 mm
+[evaluate 16:35:15]    left J2: seen, turn left, marker 0.381 m ahead, robot [-3.6492, 0.3814, -90.0], after turn [-3.65, 0.0019, -0.27]
+[evaluate 16:35:15]    straight J1: seen, blind pass, marker 0.382 m ahead, robot [-1.1323, 0.0008, 0.0]
+[evaluate 16:35:15]    stop home: red stop (strips), marker 0.272 m ahead, robot [-0.3523, 0.0007, 0.03]
+[evaluate 16:36:57] PASS parked at home (-0.0019, 0.0000, 0.03 deg)
+[evaluate 16:36:59] 9/9 checks passed in 2340 s wall; results in /home/ubuntu/sdp_sim/results/system/route_test_20261110_155758

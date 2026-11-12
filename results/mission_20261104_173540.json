@@ -1,0 +1,79 @@
+{
+  "label": "delivery 1: Paracetamol 500 mg to Patient A (bed 1), due 2026-11-04 17:35",
+  "success": true,
+  "failed_step": null,
+  "error": null,
+  "steps": [
+    {
+      "step": 1,
+      "name": "spawn container + release weld",
+      "sim_t": 5.94
+    },
+    {
+      "step": 2,
+      "name": "arm home",
+      "sim_t": 6.44
+    },
+    {
+      "step": 3,
+      "name": "pick",
+      "sim_t": 10.08
+    },
+    {
+      "step": 4,
+      "name": "arm home (carrying)",
+      "sim_t": 30.44
+    },
+    {
+      "step": 5,
+      "name": "follow line to the patient",
+      "sim_t": 34.06
+    },
+    {
+      "step": 6,
+      "name": "place on the bedside table",
+      "sim_t": 73.32
+    },
+    {
+      "step": 7,
+      "name": "arm home",
+      "sim_t": 90.3
+    },
+    {
+      "step": 8,
+      "name": "turn round",
+      "sim_t": 93.9
+    },
+    {
+      "step": 9,
+      "name": "follow line home",
+      "sim_t": 110.24
+    },
+    {
+      "step": 10,
+      "name": "park at the start",
+      "sim_t": 148.8
+    }
+  ],
+  "wall_start": 1793784943.4024746,
+  "sim_start": 5.9,
+  "sim_time": 161.48,
+  "base_final": [
+    0.0019024226407248527,
+    -3.3976615060116744e-05,
+    -0.26025795287863224
+  ],
+  "wall_time": 1884.8734481334686,
+  "target": [
+    1.4992450744989254,
+    1.4734670346383325
+  ],
+  "container": [
+    1.499167879918555,
+    1.473449517244545,
+    0.12999963991689303
+  ],
+  "placement_error_mm": 0.0791572000746871,
+  "tilt_deg": 0.0017060121578150564,
+  "on_table": true
+}

@@ -1,0 +1,40 @@
+[mission] evaluation run 3
+[mission] step 1/10 spawn container + release weld  (sim t 1.5, base 0.000 0.000 0.0 deg)
+[mission] container at (0.0006106935889821414, 0.19999950436753114, 0.12761609912306077)
+[mission] step 2/10 arm home  (sim t 2.4, base 0.000 0.000 -0.0 deg)
+       ... still moving, 0.480 rad to go
+[mission] step 3/10 pick  (sim t 6.0, base 0.000 0.000 0.0 deg)
+       ... still moving, 0.288 rad to go
+       ... still moving, 0.405 rad to go
+       ... still moving, 0.353 rad to go
+       ... still moving, 0.202 rad to go
+[mission] gripper at 0.780 rad
+       ... still moving, 0.313 rad to go
+[mission] step 4/10 arm home (carrying)  (sim t 26.5, base 0.000 0.000 0.0 deg)
+       ... still moving, 0.290 rad to go
+[mission] step 5/10 follow line to the patient  (sim t 30.1, base 0.000 0.000 0.0 deg)
+[mission] running line_follower.py
+[mission]   line_follower: [INFO] [1793792345.556353792] [line_follower]: sim t=38.5  angle=-0.000 red=0.15 
+[mission]   line_follower: [INFO] [1793792348.065423789] [line_follower]: Red stop marker reached.
+[mission]   line_follower: [INFO] [1793792348.071655450] [line_follower]: sim t=38.8  angle=-0.000 red=0.21 arrived
+[mission] step 6/10 place on the bedside table  (sim t 69.3, base 1.699 1.473 90.0 deg)
+       ... still moving, 0.164 rad to go
+       ... still moving, 0.296 rad to go
+       ... still moving, 0.103 rad to go
+       ... still moving, 0.298 rad to go
+[mission]   container after step 6: (1.4980, 1.4739, 0.2268) tilt 4.1 deg
+[mission] step 7/10 arm home  (sim t 86.4, base 1.699 1.473 90.0 deg)
+       ... still moving, 0.269 rad to go
+[mission]   container after step 7: (1.6971, 1.5697, 0.2722) tilt 33.8 deg
+[mission] step 8/10 turn round  (sim t 90.0, base 1.699 1.473 90.0 deg)
+[mission]   container after step 8: (1.6983, 1.3791, 0.2716) tilt 34.3 deg
+[mission] step 9/10 follow line home  (sim t 106.4, base 1.699 1.474 -90.3 deg)
+[mission] running line_follower.py
+[mission]   line_follower: [INFO] [1793793141.954503305] [line_follower]: sim t=38.0  angle=-0.000 red=0.21 
+[mission]   line_follower: [INFO] [1793793144.562995347] [line_follower]: Red stop marker reached.
+[mission]   line_follower: [INFO] [1793793144.571515803] [line_follower]: sim t=38.2  angle=-0.000 red=0.28 arrived
+[mission]   container after step 9: (-0.0496, -0.0004, 0.2716) tilt 34.3 deg
+[mission] step 10/10 park at the start  (sim t 145.1, base 0.045 -0.001 -180.0 deg)
+[mission]   container after step 10: (0.0968, -0.0009, 0.2716) tilt 34.3 deg
+[mission] done: base at 0.0019 -0.0000 yaw -0.26 deg; cycle time 162.3 sim s
+[mission] container at (0.0968, -0.0009, 0.2716); target (1.4992, 1.4734); placement error 2034.8 mm; tilt 34.3 deg; standing on the table: NO

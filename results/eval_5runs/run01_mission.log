@@ -1,0 +1,39 @@
+[mission] evaluation run 1
+[mission] step 1/10 spawn container + release weld  (sim t 1.1, base 0.000 0.000 0.0 deg)
+[mission] container at (0.0005887945356569317, 0.1999994618174706, 0.13099867360414713)
+[mission] step 2/10 arm home  (sim t 1.7, base 0.000 0.000 -0.0 deg)
+       ... still moving, 0.868 rad to go
+       ... still moving, 0.085 rad to go
+[mission] step 3/10 pick  (sim t 5.5, base 0.000 0.000 -0.0 deg)
+       ... still moving, 0.850 rad to go
+       ... still moving, 0.121 rad to go
+       ... still moving, 0.905 rad to go
+       ... still moving, 0.087 rad to go
+       ... still moving, 0.545 rad to go
+       ... still moving, 0.232 rad to go
+       ... still moving, 0.267 rad to go
+[mission] gripper at 0.780 rad
+       ... still moving, 0.304 rad to go
+[mission] step 4/10 arm home (carrying)  (sim t 26.4, base -0.000 0.000 -0.0 deg)
+       ... still moving, 0.165 rad to go
+[mission] step 5/10 follow line to the patient  (sim t 30.0, base -0.000 0.000 -0.0 deg)
+[mission] running line_follower.py
+[mission]   line_follower: [INFO] [1793788147.524032492] [line_follower]: sim t=38.7  angle=-0.000 red=0.20 
+[mission]   line_follower: [INFO] [1793788150.318948957] [line_follower]: Red stop marker reached.
+[mission]   line_follower: [INFO] [1793788150.324921607] [line_follower]: sim t=39.0  angle=-0.000 red=0.26 arrived
+[mission] step 6/10 place on the bedside table  (sim t 69.3, base 1.699 1.476 90.0 deg)
+       ... still moving, 0.353 rad to go
+       ... still moving, 0.339 rad to go
+       ... still moving, 0.202 rad to go
+       ... still moving, 0.315 rad to go
+[mission] step 7/10 arm home  (sim t 86.5, base 1.699 1.476 90.0 deg)
+       ... still moving, 0.447 rad to go
+[mission] step 8/10 turn round  (sim t 90.1, base 1.699 1.476 90.0 deg)
+[mission] step 9/10 follow line home  (sim t 106.5, base 1.699 1.477 -90.3 deg)
+[mission] running line_follower.py
+[mission]   line_follower: [INFO] [1793789018.412765236] [line_follower]: sim t=38.0  angle=-0.000 red=0.21 
+[mission]   line_follower: [INFO] [1793789021.415573217] [line_follower]: Red stop marker reached.
+[mission]   line_follower: [INFO] [1793789021.420578141] [line_follower]: sim t=38.2  angle=-0.000 red=0.26 arrived
+[mission] step 10/10 park at the start  (sim t 145.0, base 0.048 -0.001 -180.0 deg)
+[mission] done: base at 0.0019 -0.0000 yaw -0.26 deg; cycle time 162.7 sim s
+[mission] container at (1.4951, 1.2762, 0.0300); target (1.4995, 1.4761); placement error 199.9 mm; tilt 180.0 deg; standing on the table: NO
