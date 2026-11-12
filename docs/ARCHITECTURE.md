@@ -31,7 +31,7 @@ flowchart LR
   end
   bridge[ros_gz_bridge]
   sched[hospital_scheduler.py] -->|subprocess per dose| deliv[delivery.py]
-  deliv -->|subprocess per leg| follow[route_follower.py<br/>+ line_follower.py]
+  deliv -->|subprocess per leg| follow["route_follower.py<br/>and line_follower.py"]
   deliv --> arm[jetarm_pick_place.py<br/>analytic IK]
   deliv --> moves[base_moves.py]
   deliv --> mw[medicine_weld.py]
@@ -46,7 +46,7 @@ flowchart LR
   base -->|/odom| moves
   arm -->|/arm_controller, /gripper_controller| bridge
   mw <-->|attach / detach / attached| bridge
-  st[smart_table.py --map] <-->|lift cmd, contacts, state| bridge
+  st["smart_table.py --map"] <-->|lift cmd, contacts, state| bridge
   bridge <--> gz
   bridge -->|/depth_cam/depth_cam| follow
   bridge -->|/joint_states| base
