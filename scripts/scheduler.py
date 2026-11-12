@@ -12,7 +12,7 @@ Schedule YAML (see ~/sdp_sim/schedule.yaml): a list `deliveries` of
 Times are wall-clock times of day (a schedule is about real time); inside a
 mission every wait is on simulation feedback. Deliveries that fall due while
 another mission runs are queued and run one after another (one robot). Each
-mission must end parked at the start (mission.py step 10) for the next one.
+mission must end parked at the start (mission.py step 11) for the next one.
 Every delivery is appended to the log CSV (default ~/sdp_sim/results/deliveries.csv)
 with its result (scored by tools/scoring.py, incl. the smart table's lift:
 table_raised, lift_time_s, container_on_platform_after_lift); the mission's JSON
@@ -71,6 +71,12 @@ def load(path):
     return out
 
 
+def rel_path(path):
+    """Path relative to the repository when it lies inside it (the CSV is committed)."""
+    path = os.path.abspath(path)
+    return os.path.relpath(path, ROOT) if path.startswith(ROOT + os.sep) else path
+
+
 def next_due(entry, after):
     kind, v = entry['spec']
     if kind == 'once':
@@ -80,21 +86,24 @@ def next_due(entry, after):
 
 
 def write_log_row(path, row):
-    """Append a row; if the file has an older header, rewrite it once with the
-    current columns (old rows keep their values, new columns stay empty)."""
-    if os.path.exists(path):
+    """Append a row. The file is shared with scripts/hospital_scheduler.py, whose rows have
+    more columns: the header already in the file is KEPT and only columns it lacks are added
+    (rewritten once; old rows keep every value, new columns stay empty)."""
+    fields = list(LOG_FIELDS)
+    if os.path.exists(path) and os.path.getsize(path) > 0:
         with open(path, newline='') as fh:
             rd = csv.DictReader(fh)
             header, old = rd.fieldnames or [], list(rd)
-        if header != LOG_FIELDS:
+        fields = header + [f for f in LOG_FIELDS if f not in header]
+        if fields != header:
             with open(path, 'w', newline='') as fh:
-                w = csv.DictWriter(fh, fieldnames=LOG_FIELDS, extrasaction='ignore')
+                w = csv.DictWriter(fh, fieldnames=fields, extrasaction='ignore')
                 w.writeheader()
                 w.writerows(old)
-            log('%s: upgraded to the current columns (%d old row(s) kept)' % (path, len(old)))
-    new = not os.path.exists(path)
+            log('%s: %d column(s) added (%d old row(s) kept)' % (path, len(fields) - len(header), len(old)))
+    new = not os.path.exists(path) or os.path.getsize(path) == 0
     with open(path, 'a', newline='') as fh:
-        w = csv.DictWriter(fh, fieldnames=LOG_FIELDS, extrasaction='ignore')
+        w = csv.DictWriter(fh, fieldnames=fields, extrasaction='ignore')
         if new:
             w.writeheader()
         w.writerow(row)
@@ -128,7 +137,7 @@ def run_delivery(entry, due, a):
            'tilt_deg': res.get('tilt_deg'), 'on_table': res.get('on_table'),
            'sim_time_s': round(res['sim_time'], 2) if res.get('sim_time') is not None else None,
            'wall_time_s': round(res['wall_time'], 1) if res.get('wall_time') is not None else None,
-           'result_json': rj if os.path.exists(rj) else ''}
+           'result_json': rel_path(rj) if os.path.exists(rj) else ''}
     # placement / tilt / attach-detach attempts scored like tools/evaluate.py
     sc = (scoring.score(res) if res.get('container') or res.get('placed') or res.get('weld') is not None
           else {})
