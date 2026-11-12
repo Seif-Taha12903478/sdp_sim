@@ -161,8 +161,9 @@ Every test, how to reproduce it and its result files: [docs/TESTING.md](docs/TES
     odometry or the joint states stopped, or a follower process was killed, the robot would
     keep its last motion and the mission would wait forever.
   - The only backstop is the demo runner's wall-clock limit (`--max-hours`, 14 h).
-- **Slow on small machines.** On the 2-core VM the real-time factor is ~8-10 %: one
-  delivery takes 65-105 min and the 4-delivery demo 5.7 h. For the same reason the full
+- **Slow on small machines.** On the 2-core VM the real-time factor is ~8-10 % with the
+  robot idle, but only ~4-5 % while it moves and the video is recorded: one hospital
+  delivery takes 67-103 min and the 4-delivery demo 5.7 h. For the same reason the full
   hospital demo was run once successfully (attempt 1 stopped after 2/3), not 5 times.
 - **Open issues:**
   - systematic placement offset of 0.5-2 mm;
