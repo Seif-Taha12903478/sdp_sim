@@ -2,6 +2,7 @@
 """Layout of the hospital system (branch hospital-system): ONE source for the numbers.
 
     python3 ~/sdp_sim/tools/system_layout.py      # checks + route table + results/system/layout.png
+    python3 ~/sdp_sim/tools/system_layout.py OUT.png   # same, drawing to OUT.png
 
 Used by tools/make_system_world.py (world, map YAML, container models), the planner
 (through config/hospital_map.yaml) and the offline line simulation.
@@ -547,6 +548,6 @@ if __name__ == '__main__':
         tot += s
         print('Room %d: legs %.2f / %.2f / %.2f m, sim %.0f s, wall %.0f min @5.5 %%' % ((r,) + legs + (s, s / 0.055 / 60)))
     print('demo: sim %.0f s' % tot)
-    out = os.path.join(ROOT, 'results', 'system', 'layout.png')
+    out = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'results', 'system', 'layout.png')
     os.makedirs(os.path.dirname(out), exist_ok=True)
     print('wrote', draw(out))
