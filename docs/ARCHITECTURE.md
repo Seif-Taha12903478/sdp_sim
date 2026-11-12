@@ -62,7 +62,8 @@ flowchart LR
   continuous yaw joints, each driven by a Gazebo JointController in velocity mode
   (`/base/vel_x|y|yaw`). `scripts/planar_base.py` turns `/controller/cmd_vel` (robot
   frame, like the real mecanum base: linear.x, linear.y, angular.z) into those world-frame
-  joint velocities and publishes `/odom` from the joint positions. Why: Gazebo's
+  joint velocities and publishes `/odom` from the joint positions. It holds the last
+  command until a new one arrives (no watchdog). Why: Gazebo's
   VelocityControl drifted the model upward ~1 mm per sim second, and floor friction ate
   most of the commanded speed at the 0.02 s step. The wheels are visual only.
 - Arm and gripper: ign_ros2_control with JointTrajectoryControllers
@@ -138,13 +139,18 @@ It lowers again when the container has been removed for 3 s. One process
   Asia/Dubai) or `--demo` (a hospital clock on sim time, starting at 08:00). The queue is
   ordered by due time, then by route length. It takes the first stocked slot of the
   medicine (`config/inventory.yaml`), runs `delivery.py`, scores the result with
-  `tools/scoring.py` and appends a row to `results/deliveries.csv`.
+  `tools/scoring.py` and appends a row to `results/deliveries.csv`. One run of the
+  simulation serves one dose per room: a delivered container stays on its raised table and
+  the stock is not refilled.
 - `scripts/pharmacy.py setup` spawns the containers one by one after the robot, because a
   weld forms when its container first appears, then releases each weld (confirmed).
 - Single-room world: `scripts/mission.py` (11 steps) + `scripts/scheduler.py` /
   `schedule.yaml` - the earlier stage of the same design.
 
 ### Scoring (`tools/scoring.py`)
+- **Placement error** = distance from the container to its target. The target is the spot
+  0.20 m to the left of where the robot actually stopped, so the error measures the pick
+  and place; the robot's stop error (5-7 mm at the rooms in the demo) is not in it.
 - **Single room**: success = mission completed AND container on the table within 30 mm
   of the target AND tilt < 10 deg. Smart-table runs also need the table raised and the
   container on the raised platform.

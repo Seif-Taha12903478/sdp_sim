@@ -121,10 +121,16 @@ Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 | Patient room with the smart table (scheduled missions) | 2 | **2/2 success**, table raised to 0.80 m | 0.27 mm, 0.25 mm | [results/room_mission/](results/room_mission/) |
 | Hospital system, one delivery (Room 3) | 1 | **success** | 2.8 mm | [results/system/delivery_room3_20261110_185826/](results/system/delivery_room3_20261110_185826/) |
 | **Hospital demo**: 4 scheduled deliveries, Rooms 1/3/4/2 | 4 | **4/4 success**, right container on the right raised table, others untouched (<= 0.14 mm) | 2.0 / 1.4 / 0.6 / 1.7 mm | [results/system/demo_20261111_131344/summary.txt](results/system/demo_20261111_131344/summary.txt) |
-| Offline route simulation (synthetic camera) | 109 checks | **109/109** (51 delivery legs incl. start offsets, fast mode, 3 fault cases) | stops within 16 mm | `tools/offline_route_sim.py` |
+| Offline route simulation (synthetic camera) | 109 checks | **109/109** (17 delivery legs x 3 start offsets = 51 runs, the same 51 in fast mode, 4 runs of the old route, 3 fault cases) | stops within 16 mm | `tools/offline_route_sim.py` |
 
 Success criterion (single room): mission completed, container on the table within 30 mm
 of the target, and tilt < 10 deg.
+
+What "placement error" means: the distance from the container to its target, where the
+target is the spot 0.20 m to the left of where the robot **actually stopped**. So it measures
+the pick and place, not the drive. The robot's stop error comes on top of it: in the demo the
+robot stopped 5-7 mm from the nominal room stop, and the containers stood 3.8-6.2 mm from
+the nominal place target of the map (the platform is 25 x 25 cm).
 
 Earlier history: the first 5-run evaluation scored 2/5 with one-shot attach/detach
 commands, which got lost. Confirmed, retried commands fixed that.
@@ -142,12 +148,25 @@ Every test, how to reproduce it and its result files: [docs/TESTING.md](docs/TES
   - The tape colours and thresholds are tuned to this world's lighting.
 - **One container per trip, one robot.** Later doses wait: up to 7 min late in the demo.
 - **The cap colour is the only identity check** before a pick (no barcode or label reading).
+- **One dose per room in one run of the simulation.**
+  - A delivered container stays on its raised table (nobody takes it in the simulation), and
+    the table lowers only when it is taken. A second delivery to the same room would stop at
+    "place" with the robot still holding the container.
+  - The pharmacy stock (6 containers) is not refilled.
+  - So `config/doses.yaml` has one dose per room. The real-time mode of the scheduler was
+    not run in Gazebo: the tested modes are `--now` (one delivery) and `--demo` (four).
+- **No motion watchdog.**
+  - The base driver holds the last velocity command until a new one arrives.
+  - The nodes wait on simulated feedback without a wall-clock limit. If the camera, the
+    odometry or the joint states stopped, or a follower process was killed, the robot would
+    keep its last motion and the mission would wait forever.
+  - The only backstop is the demo runner's wall-clock limit (`--max-hours`, 14 h).
 - **Slow on small machines.** On the 2-core VM the real-time factor is ~8-10 %: one
-  delivery takes 60-100 min and the 4-delivery demo 5.7 h. For the same reason the full
+  delivery takes 65-105 min and the 4-delivery demo 5.7 h. For the same reason the full
   hospital demo was run once successfully (attempt 1 stopped after 2/3), not 5 times.
 - **Open issues:**
   - systematic placement offset of 0.5-2 mm;
-  - the scheduler exits with code -6 inside rclpy shutdown after finishing (harmless);
+  - the demo scheduler exits with code -6 inside rclpy shutdown after finishing (harmless);
   - the cause of one frozen joint-state cache (demo attempt 1) is unknown; it is now
     detected and recovered.
 - **Install path is fixed.** The repo must be cloned to `~/sdp_sim`: the launch files
@@ -232,7 +251,7 @@ ros2 launch robot_gazebo hospital_system.launch.py gui:=false     # terminal 1
 python3 ~/sdp_sim/scripts/jetarm_pick_place.py home                # terminal 2
 python3 ~/sdp_sim/scripts/hospital_scheduler.py --list             # today's doses and their order
 python3 ~/sdp_sim/scripts/hospital_scheduler.py --now 3            # one delivery to Room 3 now
-python3 ~/sdp_sim/scripts/hospital_scheduler.py                    # real schedule, runs forever
+python3 ~/sdp_sim/scripts/hospital_scheduler.py                    # real schedule (config/doses.yaml, real time)
 ```
 
 **The demo** (self-contained: launch, video, 4 scheduled deliveries, shutdown, summary;
@@ -241,9 +260,12 @@ python3 ~/sdp_sim/scripts/hospital_scheduler.py                    # real schedu
 bash ~/sdp_sim/tools/run_demo.sh
 tail -f ~/sdp_sim/results/system/demo_<date>/scheduler.log
 ```
+A new run writes its summary and video into its own `demo_<date>` folder and its delivery
+results under new file names. The committed results and `media/system_demo.mp4` stay.
 
 **Edit the schedule or the inventory:**
-- `config/doses.yaml`: patient, room 1-4, medicine, dose, daily times.
+- `config/doses.yaml`: patient, room 1-4, medicine, dose, daily times (one dose per room, see
+  "Limitations").
 - `config/inventory.yaml`: slot S1-S6, medicine, dose, cap colour, quantity 0/1.
 
 See [docs/USER_GUIDE.md](docs/USER_GUIDE.md), which also covers adding a room.
@@ -262,7 +284,7 @@ runs in GitHub Actions on every push. The Gazebo tests (route, pick, single deli
 
 ## Repository structure
 ```
-README.md, LICENSE, install.sh       entry point, licence, installer
+README.md, LICENSE, NOTICE, install.sh   entry point, licence, third-party notes, installer
 schedule.yaml                        single-room schedule (scripts/scheduler.py)
 config/                              hospital system: doses.yaml, inventory.yaml, hospital_map.yaml (generated)
 scripts/                             ROS 2 nodes and the mission code
@@ -272,7 +294,7 @@ scripts/                             ROS 2 nodes and the mission code
   mission.py, scheduler.py, medicine_container.sdf     single room
 robot_gazebo/                        our files for Hiwonder's robot_gazebo package (installed by install.sh)
   launch/                            hospital.launch.py, hospital_system.launch.py
-  urdf/                              jetarm_mecanum(.system).gazebo.xacro - arm on the planar base
+  urdf/                              jetarm_mecanum.gazebo.xacro, jetarm_mecanum_system.gazebo.xacro - arm on the planar base
   worlds/                            generated worlds, textures, container models (do not edit by hand)
 tools/                               world generators, tests, evaluation, video, demo runner
   system_layout.py, make_system_world.py, make_hospital_world.py
@@ -286,7 +308,8 @@ CLAUDE.md                            development log / notes for the AI assistan
 ```
 
 ## Branches
-- `main` - the final version (hospital system + single room). Tagged `v1.0`.
+- `main` - the final version (hospital system + single room). Tagged `v1.1` (`v1.0` + the fixes
+  of the pre-submission review; see the release notes).
 - `hospital-room` - the single-room stage with the smart table (merged into `main`;
   kept for reference).
 - `hospital-system` - development branch of the hospital system (merged into `main`;
@@ -299,6 +322,6 @@ the smart table, is commit `b60e882`.
 MIT for the team's own code, worlds, media and documentation - see [LICENSE](LICENSE).
 Hiwonder's packages are not part of this repository. Files derived from them
 (`robot_gazebo/urdf/*.xacro`, `robot_gazebo/launch/*.py`) keep Hiwonder's terms for the
-Hiwonder-derived parts.
+Hiwonder-derived parts - see [NOTICE](NOTICE).
 
 Developed with AI assistance (Claude) for code and documentation; all design decisions, testing and results were reviewed by the team.

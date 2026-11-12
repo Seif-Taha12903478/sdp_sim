@@ -9,7 +9,7 @@ factor (RTF) is:
 
 What that means in practice:
 - one single-room mission takes ~50 min;
-- one hospital delivery takes 60-100 min;
+- one hospital delivery takes 65-105 min;
 - the 4-delivery demo takes ~5.7 h.
 
 What helps:
@@ -74,7 +74,8 @@ check the Hiwonder packages are built:
 
 ## The robot does not follow the line / the camera sees the gripper
 A fresh launch starts the arm in its zero pose. Run
-`python3 scripts/jetarm_pick_place.py home` first, so the wrist camera looks at the floor.
+`python3 scripts/jetarm_pick_place.py home` first, so the wrist camera looks at the floor
+(it waits up to 5 min for the controllers and exits with code 1 if the arm does not arrive).
 `scripts/line_follower.py` writes a debug image to `/tmp/line_follower_debug.jpg`.
 
 The colour thresholds were tuned under the world's ambient light of 0.8. Do not change
@@ -87,6 +88,22 @@ resends up to 5 times and the logs show "confirmed after N attempt(s)".
 
 A container spawned into a running simulation is NOT welded again: the weld forms only
 when the container first appears. Restart the simulation instead of re-spawning.
+
+## A second delivery to the same room fails at "place" / a dose is "out of stock"
+One run of the simulation serves one dose per room. The delivered container stays on its
+raised table (the table lowers only when the medicine is taken, and nobody takes it in the
+simulation), and the 6 containers are not refilled. Restart the simulation to run the
+schedule again. `python3 scripts/hospital_scheduler.py --list` shows the slot every dose
+would get.
+
+## The robot keeps moving / a mission never ends after a process died
+There is no motion watchdog: the base driver holds the last velocity command. If a
+follower process is killed, stop the base by hand:
+```bash
+ros2 topic pub --once /controller/cmd_vel geometry_msgs/msg/Twist "{}"
+```
+The missions wait on simulated feedback, so they wait forever when the simulation or a
+camera stops. Stop them with Ctrl+C and check `pgrep -af "ign gazebo"`.
 
 ## The scheduler exits with code -6 after finishing
 A known, harmless abort inside rclpy shutdown, after all results are written. Check

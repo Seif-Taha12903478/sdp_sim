@@ -9,7 +9,7 @@ All commands assume the installation from README.md: the repo in `~/sdp_sim`, RO
 ```bash
 ros2 launch robot_gazebo hospital_system.launch.py gui:=false   # terminal 1 (headless)
 python3 ~/sdp_sim/scripts/jetarm_pick_place.py home              # terminal 2: arm to its ready pose
-python3 ~/sdp_sim/scripts/hospital_scheduler.py                  # real time, runs forever
+python3 ~/sdp_sim/scripts/hospital_scheduler.py                  # real time, config/doses.yaml
 ```
 
 `gui:=false` starts the server only; the cameras still render. Drop it to get the Gazebo
@@ -17,17 +17,18 @@ window, which is slower. `video:=true` runs the overview camera at 2 Hz for reco
 
 | scheduler command | what it does |
 |---|---|
-| `hospital_scheduler.py` | real local time (time zone of `config/doses.yaml`), runs the doses as they fall due, forever |
-| `hospital_scheduler.py --once` | runs what is due now, then exits |
-| `hospital_scheduler.py --now 3` | one dose for Room 3 due now (test), then exits |
+| `hospital_scheduler.py` | real local time (time zone of `config/doses.yaml`), runs the doses as they fall due until stopped (Ctrl+C). Not tested in Gazebo; one dose per room, see section 2 |
+| `hospital_scheduler.py --once` | runs the doses that are due right now (not more than 1 min ago), then exits. Earlier doses of today are not caught up; the log lists them |
+| `hospital_scheduler.py --now 3` | one dose for Room 3 (1-4) due now (test), then exits |
 | `hospital_scheduler.py --demo` | the 4-dose demo on a hospital clock starting 08:00, then exits |
-| `hospital_scheduler.py --list` | prints today's doses and their queue order (no simulation needed) |
+| `hospital_scheduler.py --list` | prints today's doses in queue order with the slot each one gets, or OUT OF STOCK (no simulation needed) |
 | `--cap-check` | look at the container's cap colour before the pick (on in the demo) |
 | `--stop-file FILE` | when FILE exists, no further delivery is started |
 
 At start the scheduler sets up the pharmacy (`scripts/pharmacy.py setup`: the containers
 are spawned into their slots). Each delivery is appended to `results/deliveries.csv`. Its
-JSON result goes to `results/system/deliveries/`.
+JSON result goes to `results/system/deliveries/delivery_<run start>_<clock time>_R<room>_<slot>.json`
+(the run start is in the name, so a later run never overwrites it).
 
 **The whole demo, unattended** (launch, video, scheduler, shutdown, summary, ~5-6 h):
 ```bash
@@ -35,8 +36,8 @@ bash ~/sdp_sim/tools/run_demo.sh            # detached; survives closing the ter
 tail -f ~/sdp_sim/results/system/demo_<date>/scheduler.log
 touch ~/sdp_sim/results/system/demo_<date>/STOP     # optional: stop after the current delivery
 ```
-The run writes `summary.txt` / `summary.json` in its demo folder and copies the video to
-`media/system_demo.mp4` (this overwrites the committed video).
+The run writes `summary.txt`, `summary.json` and the video `system_demo.mp4` into its demo
+folder. To replace the committed video as well, add `--video ~/sdp_sim/media/system_demo.mp4`.
 
 **One delivery by hand**, after the pharmacy is set up and with the robot parked at home:
 `python3 ~/sdp_sim/scripts/delivery.py --room 3 --slot S3 --patient "Patient C"`.
@@ -46,7 +47,7 @@ The run writes `summary.txt` / `summary.json` in its demo folder and copies the 
 ```yaml
 time_zone: Asia/Dubai
 doses:
-  - {patient: Patient A, room: 1, medicine: Paracetamol, dose: 500 mg, times: ["08:00", "20:00"]}
+  - {patient: Patient A, room: 1, medicine: Paracetamol, dose: 500 mg, times: ["08:00"]}
 ```
 - `room`: 1-4 (Rooms 1 and 2 at junction J1, Rooms 3 and 4 at J2).
 - `medicine` + `dose` must match an entry of `config/inventory.yaml` exactly.
@@ -58,7 +59,18 @@ How the queue works:
   waits; its lateness is logged.
 - No stocked container for a dose -> logged as "out of stock" and skipped.
 
-Check your edit without a simulation: `python3 scripts/hospital_scheduler.py --list`.
+Limits of one run of the simulation - keep **one dose per room**, and no more doses of a
+medicine than it has containers:
+- A delivered container stays on its raised table: nobody takes it in the simulation, and
+  the table lowers only when it is taken. A second delivery to the same room stops at
+  "place" (table not lowered), with the robot still holding the container, and the
+  scheduler ends.
+- The stock is not refilled: every container serves one dose. From the second day on,
+  every dose is out of stock.
+- To run the schedule again, restart the simulation.
+
+Check your edit without a simulation: `python3 scripts/hospital_scheduler.py --list`. It
+shows the slot every dose would get, or OUT OF STOCK.
 
 `--demo` ignores this file. Its schedule is built into `hospital_scheduler.py`: Rooms 1 + 3
 at 08:00, Room 4 at 08:02, Room 2 at 08:04.
