@@ -1,0 +1,38 @@
+# Runs every offline test (tools/run_offline_tests.sh) in a ROS 2 Humble container on every push.
+# Gazebo is not needed: the Gazebo tests (tools/test_*_gazebo / run_in_sim.py) are run by hand,
+# see docs/TESTING.md.
+name: offline tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  offline-tests:
+    runs-on: ubuntu-22.04
+    container: ros:humble
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Python dependencies
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            python3-opencv python3-numpy python3-yaml python3-matplotlib tzdata
+
+      - name: Run the offline tests
+        run: |
+          source /opt/ros/humble/setup.bash
+          bash tools/run_offline_tests.sh
+
+      - name: Upload the test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: offline-test-logs
+          path: results/offline_tests/
