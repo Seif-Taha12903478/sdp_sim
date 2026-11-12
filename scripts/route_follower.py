@@ -162,6 +162,8 @@ class RouteLogic:
             if d <= BLIND_END:
                 self.record(ev, 'already passed at the start', x, y, yaw, t, d)
                 self.next_event(x, y)
+                if self.result:             # that was the last event: next_event() stopped with an error
+                    return
                 ev = self.event()
                 d = self.ahead(ev, x, y)
             else:
@@ -171,6 +173,8 @@ class RouteLogic:
         if self.mode == 'blind':
             if d <= BLIND_END:
                 self.next_event(x, y)
+                if self.result:             # no event left (a plan must end with a stop): error set
+                    return
                 ev = self.event()
                 d = self.ahead(ev, x, y)
                 e = self.xte(ev, x, y)
