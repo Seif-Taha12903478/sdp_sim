@@ -1,12 +1,12 @@
 started,label,git_commit,launch_args,rtf,wall_s,sim_s,win_mean,win_std,win_min,win_max,launch_log
-20261105_153728,before: main world (b60e882),b60e882,,0.08235,179.7,14.8,0.08601,0.00443,0.07866,0.08955,/home/ubuntu/sdp_sim/results/rtf_20261105_153728_launch.log
-20261105_154705,before: main world (b60e882) #2,b60e882,,0.06947,179.1,12.44,0.07176,0.00932,0.05769,0.0835,/home/ubuntu/sdp_sim/results/rtf_20261105_154705_launch.log
-20261105_155225,before: main world (b60e882) #3 quiet,b60e882,,0.06749,179.6,12.12,0.06639,0.00541,0.05894,0.0732,/home/ubuntu/sdp_sim/results/rtf_20261105_155225_launch.log
-20261105_192811,"after: hospital room + smart table, interleaved",0b117fe,,0.08988,179.8,16.16,0.0899,0.00403,0.08377,0.09485,/home/ubuntu/sdp_sim/results/rtf_20261105_192811_launch.log
-20261105_193258,"before: original world+launch (b60e882), interleaved",0b117fe,,0.10332,179.8,18.58,0.10284,0.0063,0.09275,0.10761,/home/ubuntu/sdp_sim/results/rtf_20261105_193258_launch.log
-20261105_193719,"after: hospital room + smart table, interleaved",0b117fe,,0.085,179.8,15.28,0.08333,0.00785,0.07127,0.0915,/home/ubuntu/sdp_sim/results/rtf_20261105_193719_launch.log
-20261105_194147,"before: original world+launch (b60e882), interleaved",0b117fe,,0.08414,179.7,15.12,0.08943,0.01502,0.06928,0.10327,/home/ubuntu/sdp_sim/results/rtf_20261105_194147_launch.log
-20261110_153918,"after: hospital system (4 rooms, 6 containers), interleaved #1",dd303cc,hospital_system.launch.py,0.07457,179.7,13.4,0.07341,0.00409,0.06824,0.07956,/home/ubuntu/sdp_sim/results/rtf_20261110_153918_launch.log
-20261110_154414,"before: single-room world (main), interleaved #1",dd303cc,hospital.launch.py,0.10667,180.0,19.2,0.10587,0.00475,0.09831,0.10943,/home/ubuntu/sdp_sim/results/rtf_20261110_154414_launch.log
-20261110_154834,"after: hospital system (4 rooms, 6 containers), interleaved #2",dd303cc,hospital_system.launch.py,0.09233,179.8,16.6,0.09224,0.00098,0.09081,0.09345,/home/ubuntu/sdp_sim/results/rtf_20261110_154834_launch.log
-20261110_155315,"before: single-room world (main), interleaved #2",dd303cc,hospital.launch.py,0.10697,179.9,19.24,0.107,0.00078,0.10599,0.10784,/home/ubuntu/sdp_sim/results/rtf_20261110_155315_launch.log
+20261105_153728,before: main world (b60e882),b60e882,,0.08235,179.7,14.8,0.08601,0.00443,0.07866,0.08955,results/rtf_20261105_153728_launch.log
+20261105_154705,before: main world (b60e882) #2,b60e882,,0.06947,179.1,12.44,0.07176,0.00932,0.05769,0.0835,results/rtf_20261105_154705_launch.log
+20261105_155225,before: main world (b60e882) #3 quiet,b60e882,,0.06749,179.6,12.12,0.06639,0.00541,0.05894,0.0732,results/rtf_20261105_155225_launch.log
+20261105_192811,"after: hospital room + smart table, interleaved",0b117fe,,0.08988,179.8,16.16,0.0899,0.00403,0.08377,0.09485,results/rtf_20261105_192811_launch.log
+20261105_193258,"before: original world+launch (b60e882), interleaved",0b117fe,,0.10332,179.8,18.58,0.10284,0.0063,0.09275,0.10761,results/rtf_20261105_193258_launch.log
+20261105_193719,"after: hospital room + smart table, interleaved",0b117fe,,0.085,179.8,15.28,0.08333,0.00785,0.07127,0.0915,results/rtf_20261105_193719_launch.log
+20261105_194147,"before: original world+launch (b60e882), interleaved",0b117fe,,0.08414,179.7,15.12,0.08943,0.01502,0.06928,0.10327,results/rtf_20261105_194147_launch.log
+20261110_153918,"after: hospital system (4 rooms, 6 containers), interleaved #1",dd303cc,hospital_system.launch.py,0.07457,179.7,13.4,0.07341,0.00409,0.06824,0.07956,results/rtf_20261110_153918_launch.log
+20261110_154414,"before: single-room world (main), interleaved #1",dd303cc,hospital.launch.py,0.10667,180.0,19.2,0.10587,0.00475,0.09831,0.10943,results/rtf_20261110_154414_launch.log
+20261110_154834,"after: hospital system (4 rooms, 6 containers), interleaved #2",dd303cc,hospital_system.launch.py,0.09233,179.8,16.6,0.09224,0.00098,0.09081,0.09345,results/rtf_20261110_154834_launch.log
+20261110_155315,"before: single-room world (main), interleaved #2",dd303cc,hospital.launch.py,0.10697,179.9,19.24,0.107,0.00078,0.10599,0.10784,results/rtf_20261110_155315_launch.log

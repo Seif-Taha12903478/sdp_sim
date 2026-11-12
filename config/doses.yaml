@@ -4,9 +4,15 @@
 # times: list of daily due times "HH:MM" (24 h) in the hospital's time zone.
 # Normal mode uses the real local time (time_zone below). --demo ignores this file and
 # makes its own 4-dose schedule on a hospital clock (simulated time from 08:00).
+#
+# ONE dose per room, each medicine at most as often as it has containers: within one run of the
+# simulation the pharmacy stock is not refilled (6 containers, config/inventory.yaml) and a
+# delivered container stays on its raised bedside table - nobody takes it in the simulation -
+# so a second delivery to the same room would stop at "place" (table not lowered). Check an
+# edit with:  python3 scripts/hospital_scheduler.py --list   (shows the slot of every dose)
 time_zone: Asia/Dubai
 doses:
-  - {patient: Patient A, room: 1, medicine: Paracetamol, dose: 500 mg, times: ["08:00", "20:00"]}
-  - {patient: Patient B, room: 2, medicine: Amoxicillin, dose: 250 mg, times: ["08:00", "16:00"]}
+  - {patient: Patient A, room: 1, medicine: Paracetamol, dose: 500 mg, times: ["08:00"]}
+  - {patient: Patient B, room: 2, medicine: Amoxicillin, dose: 250 mg, times: ["08:00"]}
   - {patient: Patient C, room: 3, medicine: Ibuprofen,   dose: 400 mg, times: ["12:00"]}
-  - {patient: Patient D, room: 4, medicine: Metformin,   dose: 500 mg, times: ["08:00", "18:00"]}
+  - {patient: Patient D, room: 4, medicine: Metformin,   dose: 500 mg, times: ["08:00"]}
