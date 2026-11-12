@@ -5,6 +5,11 @@ so this Gazebo simulation is the final deliverable. Keep explanations short and
 practical; the user reviews everything.
 
 ## Next session
+Repo prepared for the professors (2026-11-12, on main): README.md (entry point, project name
+TrackMed), docs/ (ARCHITECTURE, TESTING, USER_GUIDE, TROUBLESHOOTING), LICENSE (MIT; Hiwonder
+files NOT in the repo - their package.xml declare no licence), tools/run_offline_tests.sh (6
+groups, also run by .github/workflows/offline-tests.yml in ros:humble), media/system_demo_preview.gif,
+tag v1.0. Visibility / collaborators are the user's job - never change them.
 Branch hospital-system (from main bedafd6) is DONE: demo attempt 2 (2026-11-11 13:13-18:54)
 4/4 SUCCESS (results/system/demo_20261111_131344/summary.txt, media/system_demo.mp4 113.8 s).
 MERGED into main by the user's request on 2026-11-11 (fast-forward, main = 2a08b1d; branch
