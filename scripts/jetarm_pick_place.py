@@ -15,8 +15,16 @@ Commands
   home            move to Hiwonder's 'init_pose'
   grip VALUE      move gripper joint r_joint (1.4 = open, 0 = fully closed)
   goto J1..J5     move the arm to the given joint angles (radians)
-  run             full pick-and-place sequence
-  attach/detach   attach / release the container (assisted grasp, see below)
+  run             LEGACY: full pick-and-place sequence of the first test stage
+  attach/detach   LEGACY: attach / release the container with a one-shot command
+home / grip / goto exit with code 1 when the move fails or times out.
+
+LEGACY commands (run, attach, detach): kept from the first pick-and-place test, NOT used
+by the missions. They send the weld command ONCE with `ign topic` and then sleep 6 s of
+wall-clock time: such commands were lost or late in the first evaluation (2/5), and a
+wall-clock sleep is almost no simulated time on a slow machine. Use
+scripts/medicine_weld.py (confirmed, resent, judged on sim time) and scripts/mission.py /
+scripts/delivery.py instead. They print a warning when used.
 
 Note: Gazebo attaches the container to the gripper as soon as it is spawned.
 'run' starting at step 1 releases it first; otherwise run 'detach' right after
@@ -38,7 +46,7 @@ Options (before the command)
   --carry-grip V    gripper value for assisted grasp (default 0.75)
   --physical        squeeze grasp (no attach); uses --closed
   --duration S      simulated seconds per move  (default 3.0)
-  --only A-B        run only steps A..B of 'run'. Assisted: 1 open, 2 above,
+  --only A-B        (legacy 'run') only steps A..B. Assisted: 1 open, 2 above,
                     3 descend, 4 close, 5 attach, 6 lift, 7 above drop-off,
                     8 descend, 9 detach, 10 open, 11 retreat, 12 home.
                     (--physical has no attach/detach steps: 10 steps.)
@@ -233,14 +241,22 @@ class PickPlace(Node):
     def get(self, names):
         return [self.pos[n] for n in names]
 
-    def wait_ready(self, timeout=30.0):
-        end = time.monotonic() + timeout
+    def wait_ready(self, timeout=300.0):
+        """Wait for joint states and both controllers (wall clock: nothing simulated can be
+        waited on before they exist). 300 s, not 30: right after a launch on a slow machine the
+        controllers come up minutes later."""
+        start = last_note = time.monotonic()
+        end = start + timeout
         while rclpy.ok() and time.monotonic() < end:
             rclpy.spin_once(self, timeout_sec=0.1)
             if (all(n in self.pos for n in ARM_JOINTS + GRIP_JOINTS) and
                     self.arm_pub.get_subscription_count() > 0 and
                     self.grip_pub.get_subscription_count() > 0):
                 return
+            if time.monotonic() - last_note >= 20:
+                last_note = time.monotonic()
+                print('       waiting for the simulation (joint states + arm / gripper controllers), '
+                      '%.0f of %.0f s' % (last_note - start, timeout), flush=True)
         missing = [n for n in ARM_JOINTS + GRIP_JOINTS if n not in self.pos]
         raise RuntimeError(
             'Not ready: no %s data for %s; arm topic subscribers=%d, gripper topic '
@@ -339,6 +355,17 @@ class PickPlace(Node):
 ATTACH_TOPIC = '/medicine/attach'
 DETACH_TOPIC = '/medicine/detach'
 
+LEGACY_WARNING = (
+    "WARNING: '%s' is a LEGACY command of the first pick-and-place test, not used by the missions.\n"
+    "         It sends the weld command once with `ign topic` and waits 6 s of WALL-CLOCK time, without\n"
+    "         confirmation: such commands were lost or late in the first evaluation (2/5 runs).\n"
+    "         Use scripts/medicine_weld.py attach|detach (confirmed, resent) and scripts/mission.py or\n"
+    "         scripts/delivery.py for a whole pick and place.")
+
+
+def legacy_warning(cmd):
+    print(LEGACY_WARNING % cmd, file=sys.stderr, flush=True)
+
 
 def ign_publish(topic):
     """Publish an empty message on a Gazebo transport topic."""
@@ -355,6 +382,7 @@ def ign_publish(topic):
 
 
 def do_attach_detach(topic, label):
+    """LEGACY (see the module docstring): one-shot command + a wall-clock sleep, unconfirmed."""
     if not ign_publish(topic):
         return None
     time.sleep(6)           # let the simulation process the message
@@ -362,6 +390,8 @@ def do_attach_detach(topic, label):
 
 
 def cmd_run(node, a):
+    """LEGACY (see the module docstring): the first pick-and-place test sequence."""
+    legacy_warning('run')
     plan = build_plan(a)
     d = a.duration
     close_to = a.closed if a.physical else a.carry_grip
@@ -426,15 +456,21 @@ def main():
     p.add_argument('--open', type=float, default=1.4)
     p.add_argument('--closed', type=float, default=0.52)
     p.add_argument('--carry-grip', type=float, default=0.75)
-    p.add_argument('--physical', action='store_true')
+    p.add_argument('--physical', action='store_true', help="(legacy 'run') squeeze grasp without the weld")
     p.add_argument('--duration', type=float, default=3.0)
     p.add_argument('--only', default=None,
-                   help="run only these steps of 'run', e.g. 1-4 or 5-5")
+                   help="(legacy 'run') only these steps, e.g. 1-4 or 5-5")
     sub = p.add_subparsers(dest='cmd', required=True)
-    for n in ('plan', 'state', 'home', 'run', 'attach', 'detach'):
-        sub.add_parser(n)
-    g = sub.add_parser('grip'); g.add_argument('value', type=float)
-    t = sub.add_parser('goto'); t.add_argument('values', type=float, nargs=5)
+    legacy = 'LEGACY (first test stage, not used by the missions; one-shot weld command, wall-clock sleep): '
+    for n, h in (('plan', 'print the joint angles of every waypoint (no ROS needed)'),
+                 ('state', 'print the current joint positions'),
+                 ('home', "move the arm to Hiwonder's init_pose (exit 1 if it fails)"),
+                 ('run', legacy + 'full pick-and-place sequence'),
+                 ('attach', legacy + 'attach the container - use medicine_weld.py'),
+                 ('detach', legacy + 'release the container - use medicine_weld.py')):
+        sub.add_parser(n, help=h)
+    g = sub.add_parser('grip', help='move the gripper joint (1.4 = open)'); g.add_argument('value', type=float)
+    t = sub.add_parser('goto', help='move the arm to five joint angles (rad)'); t.add_argument('values', type=float, nargs=5)
     a = p.parse_args()
 
     if a.cmd == 'plan':
@@ -444,6 +480,7 @@ def main():
             sys.exit(str(e))
         return
     if a.cmd in ('attach', 'detach'):
+        legacy_warning(a.cmd)
         topic = ATTACH_TOPIC if a.cmd == 'attach' else DETACH_TOPIC
         print(do_attach_detach(topic, a.cmd + ' sent') or 'failed')
         return
@@ -456,27 +493,31 @@ def main():
 
     rclpy.init()
     node = PickPlace()
+    code = 0
     try:
         node.wait_ready()
         if a.cmd == 'state':
             print('arm    :', [round(v, 4) for v in node.get(ARM_JOINTS)])
             print('gripper:', round(node.get(GRIP_JOINTS)[0], 4))
-        elif a.cmd == 'home':
-            print(node.arm(INIT_POSE, a.duration))
-        elif a.cmd == 'grip':
-            print(node.gripper(a.value, a.duration))
-        elif a.cmd == 'goto':
-            print(node.arm(a.values, a.duration))
+        elif a.cmd in ('home', 'grip', 'goto'):
+            res = (node.gripper(a.value, a.duration) if a.cmd == 'grip' else
+                   node.arm(INIT_POSE if a.cmd == 'home' else a.values, a.duration))
+            print(res)
+            if res is None:         # failed or timed out: callers check the exit code
+                print("'%s' failed or timed out" % a.cmd, file=sys.stderr)
+                code = 1
         elif a.cmd == 'run':
             cmd_run(node, a)
     except KeyboardInterrupt:
         print('\nAborted.')
+        code = 1
     except RuntimeError as e:
         sys.exit(str(e))
     finally:
         node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
+    sys.exit(code)
 
 
 if __name__ == '__main__':
