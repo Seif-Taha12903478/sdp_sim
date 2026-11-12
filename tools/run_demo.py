@@ -2,7 +2,7 @@
 """Test step e of the hospital system: the whole demo, self-contained, ~5-6 h wall.
 
     bash ~/sdp_sim/tools/run_demo.sh          # starts THIS script detached (survives logout)
-    python3 ~/sdp_sim/tools/run_demo.py [--out DIR] [--fast-speed 0.12] [--max-hours 14]
+    python3 ~/sdp_sim/tools/run_demo.py [--out DIR] [--fast-speed 0.12] [--max-hours 14] [--video FILE]
 
 1. no simulation may be running
 2. ros2 launch robot_gazebo hospital_system.launch.py gui:=false video:=true (own process group)
@@ -12,9 +12,11 @@
 5. scripts/hospital_scheduler.py --demo: pharmacy setup, 4 doses on the hospital clock
    (Rooms 1 + 3 due 08:00, Room 4 08:02, Room 2 08:04), queue, deliveries, deliveries.csv
 6. recorder finished (or stopped), simulation shut down, no Gazebo process left
-7. summary.txt + summary.json in the output dir; the video is copied to media/system_demo.mp4
+7. summary.txt + summary.json + system_demo.mp4 in the output dir (--video FILE also copies the
+   video, e.g. to media/system_demo.mp4 - the committed video of the final demo)
 Everything goes to <out>/: run.log (this script), launch.log, scheduler.log, video.log,
-the delivery JSONs (results/system/deliveries/) are listed in the summary. Touch <out>/STOP
+the delivery JSONs (results/system/deliveries/delivery_<run start>_<clock>_R<n>_S<k>.json) are listed
+in the summary. Touch <out>/STOP
 to end after the current delivery (the scheduler is stopped, the video closed cleanly).
 """
 import argparse
@@ -49,7 +51,8 @@ def main():
     p.add_argument('--no-cap-check', action='store_true',
                    help='cap check is ON by default (all 6 caps read correctly, 2026-11-11)')
     p.add_argument('--max-hours', type=float, default=14.0, help='wall-clock limit for the scheduler')
-    p.add_argument('--video', default=os.path.join(ROOT, 'media', 'system_demo.mp4'))
+    p.add_argument('--video', default=None, help='also copy the video here (e.g. media/system_demo.mp4 - that '
+                   'OVERWRITES the committed video); default: it stays in the output dir only')
     a = p.parse_args()
     stamp = dt.datetime.now().strftime('%Y%m%d_%H%M%S')
     out = a.out or os.path.join(ROOT, 'results', 'system', 'demo_' + stamp)
@@ -151,9 +154,11 @@ def main():
                 'sim_time_s', 'wall_time_s', 'result_json')
         summary['deliveries'] = [{k: r.get(k) for k in keys} for r in rows]
         if os.path.exists(video_tmp) and os.path.getsize(video_tmp) > 0:
-            os.makedirs(os.path.dirname(a.video), exist_ok=True)
-            shutil.copy2(video_tmp, a.video)
-            summary['video'] = a.video
+            summary['video'] = video_tmp
+            if a.video:
+                os.makedirs(os.path.dirname(os.path.abspath(a.video)), exist_ok=True)
+                shutil.copy2(video_tmp, a.video)
+                summary['video_copy'] = a.video
         ok = [r for r in rows if str(r.get('success')) == 'True']
         summary['result'] = '%d/%d deliveries successful' % (len(ok), len(rows))
         save()

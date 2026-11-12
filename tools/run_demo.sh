@@ -6,7 +6,8 @@
 #   bash ~/sdp_sim/tools/run_demo.sh [extra args for run_demo.py, e.g. --fast-speed 0.12]
 #
 # Progress:  tail -f ~/sdp_sim/results/system/demo_<date>/scheduler.log
-# Result:    ~/sdp_sim/results/system/demo_<date>/summary.txt, video media/system_demo.mp4
+# Result:    ~/sdp_sim/results/system/demo_<date>/summary.txt and system_demo.mp4 (add
+#            --video ~/sdp_sim/media/system_demo.mp4 to replace the committed video too)
 # Stop early (after the current delivery):  touch ~/sdp_sim/results/system/demo_<date>/STOP
 # Keep the laptop awake: a sleeping host pauses the VM (the run continues afterwards, but
 # the wall times are then wrong).

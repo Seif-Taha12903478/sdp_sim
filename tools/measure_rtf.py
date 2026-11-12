@@ -116,7 +116,9 @@ def main():
         w.writerow([stamp, a.label, commit, ' '.join([a.launch] + a.launch_arg), round(rtf, 5),
                     round(pts[-1][0] - pts[0][0], 1), round(pts[-1][1] - pts[0][1], 2),
                     round(st.mean(wins), 5) if wins else '', round(sd, 5), round(min(wins), 5) if wins else '',
-                    round(max(wins), 5) if wins else '', launch_log])
+                    round(max(wins), 5) if wins else '',
+                    os.path.relpath(launch_log, ROOT) if os.path.abspath(launch_log).startswith(ROOT + os.sep)
+                    else launch_log])
     print('appended to', a.out)
 
 
