@@ -25,6 +25,9 @@ Computer Science and Engineering, Fall 2026. **Supervisor:** Dr. Arfan Ghani.
 **Team:** Seif Elwalid Elsenousy Taha, Mohammed Yousef Ahmed Hajeeh Alblooshi, Salem Alnuaimi,
 Yousef Abdulla Yousef Abdulla Bin Salman.
 
+**Final report:** [docs/TrackMed_SDP_Report.pdf](docs/TrackMed_SDP_Report.pdf) (164 pages: requirements, design,
+implementation, testing and results of the whole project).
+
 ## Demo
 
 ![Hospital demo: four scheduled deliveries (17 s preview, top view, wrist camera inset)](media/system_demo_preview.gif)
@@ -275,7 +278,7 @@ tools/                               world generators, tests, evaluation, video,
   system_layout.py, make_system_world.py, make_hospital_world.py
   run_offline_tests.sh, test_*.py, offline_route_sim.py, evaluate.py, rescore.py, scoring.py
   run_demo.sh/.py, run_in_sim.py, record_video.py, sim_screenshot.py, measure_rtf.py
-docs/                                ARCHITECTURE, TESTING, USER_GUIDE, TROUBLESHOOTING
+docs/                                final report (PDF), ARCHITECTURE, TESTING, USER_GUIDE, TROUBLESHOOTING
 media/                               videos, GIF preview, screenshots
 results/                             committed result files cited in docs/TESTING.md
 .github/workflows/offline-tests.yml  CI
