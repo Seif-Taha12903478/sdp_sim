@@ -7,15 +7,17 @@
 #   layout   tools/system_layout.py - clearance / geometry checks of the hospital layout
 #   worlds   tools/make_hospital_world.py + make_system_world.py run in a temporary copy;
 #            the generated worlds, robot xacro, map and container models must equal the
-#            committed files (absolute repo path normalised); the generators assert colours
+#            committed files (absolute repo path normalised: /home/ubuntu/sdp_sim or this
+#            checkout's own path); the generators assert colours
 #            and clearances themselves
 #   rescore  tools/rescore.py on copies of results/eval_5runs*/: the scores re-computed from
-#            the raw run JSONs must equal the committed runs.csv
+#            the raw run JSONs (and the recorded wall-time validity) must equal the committed
+#            runs.csv
 #   armwait  tools/test_arm_wait.py - 7 tests of the sim-time arm wait + frozen-cache recovery
 #            (rclpy, fake /joint_states publisher in ROS domain 77)
 #   route    tools/offline_route_sim.py - the line/route follower against a synthetic wrist
-#            camera: 109 checks (old route, 51 delivery legs incl. start offsets, fast mode,
-#            3 fault cases)
+#            camera: 109 checks (4 runs of the old route, 17 delivery legs x 3 start offsets =
+#            51 runs, the same 51 in fast mode, 3 fault cases)
 # Needs ROS 2 Humble (sourced here if found in /opt/ros/humble), python3-opencv, numpy, yaml,
 # matplotlib. Logs: results/offline_tests/<group>.log. Exit code 0 = all passed.
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
@@ -54,7 +56,9 @@ t_worlds() {
   local files
   files=$(find robot_gazebo config -type f ! -path '*__pycache__*' | sort)
   for f in $files; do
-    if ! cmp -s <(sed "s|/home/ubuntu/sdp_sim|ROOT|g" "$f") <(sed "s|$G|ROOT|g" "$G/$f"); then
+    # the committed files name /home/ubuntu/sdp_sim; after install.sh regenerated them on another
+    # machine they name this checkout ($REPO) - both are normalised
+    if ! cmp -s <(sed "s|$REPO|ROOT|g; s|/home/ubuntu/sdp_sim|ROOT|g" "$f") <(sed "s|$G|ROOT|g" "$G/$f"); then
       echo "DIFFERS from the generator output: $f"; n=$((n + 1))
     fi
   done
@@ -71,6 +75,8 @@ t_rescore() {
 import csv, sys
 new, old = (list(csv.DictReader(open(p))) for p in sys.argv[1:3])
 cols = ('success', 'mission_ok', 'placement_error_mm', 'tilt_deg', 'at_target', 'on_table')
+if 'wall_time_valid' in old[0]:          # recorded during the run: a re-score must keep it
+    cols += ('wall_time_valid',)
 bad = [(r['run'], c, r[c], o[c]) for r, o in zip(new, old) for c in cols if r[c] != o[c]]
 ok = sum(r['success'] == 'True' for r in new)
 print('%s: %d runs re-scored, %d/%d success, mismatches: %s' % (sys.argv[3], len(new), ok, len(new), bad or 'none'))

@@ -12,10 +12,13 @@ time.monotonic() (immune to clock and time-zone changes); the mission JSON's own
 wall_time is only a fallback and a cross-check (flagged if they differ by > 5 s).
 started_utc is rebuilt from the first ROS log stamp (UTC epoch seconds) in
 runNN_launch.log when runs.csv has none (older evaluate.py wrote local time only).
-wall_time_valid: false when the wall clock and the monotonic clock disagree by > 60 s
-over the mission (wall_start_unix + result-file time vs. monotonic wall_time), i.e. the
-VM was paused; or set by hand with --invalid-wall RUN[:reason] (kept in
-wall_time_invalid.json in the folder). Invalid wall times are left out of the stats.
+wall_time_valid: the value already recorded in runs.csv is kept (evaluate.py measures it
+during the run). Only for a run without one: false when the wall clock and the monotonic
+clock disagree by > 60 s over the mission (wall_start_unix + result-file time vs.
+monotonic wall_time), i.e. the VM was paused - that check needs the ORIGINAL result file
+(a git checkout or a copy has a new file time). Or set by hand with --invalid-wall
+RUN[:reason] (kept in wall_time_invalid.json in the folder). Invalid wall times are left
+out of the stats.
 """
 import argparse
 import csv
@@ -85,13 +88,17 @@ def main():
         else:
             mission_wall = round(jw, 2) if jw is not None else None
         valid = True
-        if res.get('wall_start_unix') and res.get('wall_time') is not None:
+        recorded = str(o.get('wall_time_valid'))
+        if recorded in ('True', 'False'):
+            # measured by evaluate.py during the run (or by an earlier rescore): keep it. The file
+            # time below is only right for the ORIGINAL result file - a git checkout or a copy
+            # sets a new one, which made every run of a cloned folder look like a paused VM.
+            valid = recorded == 'True'
+        elif res.get('wall_start_unix') and res.get('wall_time') is not None:
             jump = (os.path.getmtime(rj) - res['wall_start_unix']) - float(res['wall_time'])
             if abs(jump) > 60:
                 valid = False
                 notes.append('wall time invalid: clock jumped %+.0f s during the mission (VM paused?)' % jump)
-        if o.get('wall_time_valid') in ('False', False):
-            valid = False
         if str(run) in invalid:
             valid = False
             notes.append('wall time invalid: %s' % invalid[str(run)])
