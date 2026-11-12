@@ -9,7 +9,8 @@ Repo prepared for the professors (2026-11-12, on main): README.md (entry point, 
 TrackMed), docs/ (ARCHITECTURE, TESTING, USER_GUIDE, TROUBLESHOOTING), LICENSE (plain MIT) +
 NOTICE (third-party text; Hiwonder files NOT in the repo - their package.xml declare no
 licence), tools/run_offline_tests.sh (6 groups, also run by .github/workflows/offline-tests.yml
-in ros:humble), media/system_demo_preview.gif, tags v1.0 and v1.1. Visibility / collaborators
+in ros:humble), media/system_demo_preview.gif, tags v1.0, v1.1 and v1.2 (= v1.1 + the final report after its
+review; code unchanged). Visibility / collaborators
 are the user's job - never change them. docs/TrackMed_SDP_Report.pdf is the user's file - never
 touch it.
 v1.1 (2026-11-12) = v1.0 + the fixes of the pre-submission review, NO Gazebo run after them

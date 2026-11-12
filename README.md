@@ -309,8 +309,9 @@ CLAUDE.md                            development log / notes for the AI assistan
 ```
 
 ## Branches
-- `main` - the final version (hospital system + single room). Tagged `v1.1` (`v1.0` + the fixes
-  of the pre-submission review; see the release notes).
+- `main` - the final version (hospital system + single room). Tagged `v1.2` (`v1.1` = `v1.0` +
+  the fixes of the pre-submission review; `v1.2` = `v1.1` + the final report after its review;
+  see the release notes).
 - `hospital-room` - the single-room stage with the smart table (merged into `main`;
   kept for reference).
 - `hospital-system` - development branch of the hospital system (merged into `main`;
